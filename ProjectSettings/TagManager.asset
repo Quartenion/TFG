@@ -8,14 +8,14 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Obstacle
   - Water
   - UI
-  - SyringeHUD
-  - 
-  - 
-  - 
-  - 
+  - SyringeHUD_Red
+  - Viewmodel
+  - Jumpable
+  - Stairs
+  - SyringeHUD_Blue
   - 
   - 
   - 

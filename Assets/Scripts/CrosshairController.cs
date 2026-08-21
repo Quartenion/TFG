@@ -19,6 +19,10 @@ public class CrosshairController : MonoBehaviour
     [SerializeField] private float _returnSpeed = 12f;
 
     [Header("Rotacion de los pinchos")]
+    [Tooltip("TEMPORAL: desactiva la rotacion de los pinchos del crosshair (se quedan en su base). " +
+             "Util para comprobar el alineamiento con las notas. Reactivalo cuando cuadre.")]
+    [SerializeField] private bool _enableSpikeRotation = false;
+
     [Tooltip("Velocidad base de rotacion en grados/segundo. Negativo = sentido contrario")]
     [SerializeField] private float _baseSpikeRotationSpeed = 45f;
     [Tooltip("Si esta activado, el pincho se gira sobre si mismo ademas de orbitar el centro")]
@@ -41,6 +45,11 @@ public class CrosshairController : MonoBehaviour
     [Tooltip("Para leer el estado de combo/bonus. Si es null, no se aplica el boost de bonus.")]
     [SerializeField] private RhythmInput _rhythmInput;
 
+    [Header("Aspecto")]
+    [Tooltip("Color de los pinchos del crosshair, para que combinen con el aro (tenue). Se aplica al iniciar. " +
+             "La nota que converge aporta el blanco al ponerse hittable.")]
+    [SerializeField] private Color _spikeColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+
     [Header("Input")]
     [Tooltip("Si esta activado, el script escucha el clic directamente. Desactivalo si usas RhythmInput.")]
     [SerializeField] private bool _listenForMouseClick = false;
@@ -58,6 +67,11 @@ public class CrosshairController : MonoBehaviour
     private float _currentAngularVelocity;
     // Impulso adicional del clic, decae solo
     private float _clickImpulse;
+
+    /// <summary>Angulo acumulado de rotacion de los pinchos (grados). Para sincronizar otros objetos.</summary>
+    public float CurrentRotationAngle => _currentRotationAngle;
+    /// <summary>Velocidad angular actual (grados/segundo).</summary>
+    public float CurrentAngularVelocity => _currentAngularVelocity + _clickImpulse;
 
     // Action del nuevo Input System para el clic izquierdo del raton
     private InputAction _clickAction;
@@ -82,6 +96,10 @@ public class CrosshairController : MonoBehaviour
                 _spikeInwardDirections[i] = toCenter.sqrMagnitude > 0.0001f
                     ? toCenter.normalized
                     : Vector2.zero;
+
+                // Tinte tenue para que los pinchos combinen con el aro (no blancos).
+                Image img = _spikes[i].GetComponent<Image>();
+                if (img != null) img.color = _spikeColor;
             }
         }
 
@@ -127,9 +145,16 @@ public class CrosshairController : MonoBehaviour
         // La velocidad final = velocidad inercial + impulso del clic
         float finalSpeed = _currentAngularVelocity + _clickImpulse;
 
-        _currentRotationAngle += finalSpeed * Time.deltaTime;
-        if (_currentRotationAngle > 360f) _currentRotationAngle -= 360f;
-        else if (_currentRotationAngle < -360f) _currentRotationAngle += 360f;
+        if (_enableSpikeRotation)
+        {
+            _currentRotationAngle += finalSpeed * Time.deltaTime;
+            if (_currentRotationAngle > 360f) _currentRotationAngle -= 360f;
+            else if (_currentRotationAngle < -360f) _currentRotationAngle += 360f;
+        }
+        else
+        {
+            _currentRotationAngle = 0f;   // congelado en la base
+        }
 
         if (_heart != null)
         {

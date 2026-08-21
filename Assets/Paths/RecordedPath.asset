@@ -1,0 +1,1864 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2419bba9ef6ca384d8c95018bec41c98, type: 3}
+  m_Name: RecordedPath
+  m_EditorClassIdentifier: Assembly-CSharp::RecordedPath
+  bpm: 120
+  walkSpeed: 12
+  frames:
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 0
+    beatIndex: 0
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 40
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 40
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 40
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 40
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 40
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 40
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 40
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 40
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    songTime: 40
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383334, z: 480.47885}
+    songTime: 40.058662
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.5383335, z: 481.1406}
+    songTime: 40.101315
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.6884379, z: 481.76584}
+    songTime: 40.14399
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.7466666, z: 482.43716}
+    songTime: 40.20798
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.7466664, z: 483.10156}
+    songTime: 40.271996
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.9152365, z: 483.8046}
+    songTime: 40.314648
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.9549999, z: 484.43024}
+    songTime: 40.378662
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 1.955, z: 485.08258}
+    songTime: 40.421314
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.101121, z: 485.75848}
+    songTime: 40.48533
+    beatIndex: 80
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.1633334, z: 486.40912}
+    songTime: 40.54932
+    beatIndex: 81
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.1633334, z: 487.09692}
+    songTime: 40.61331
+    beatIndex: 81
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.3070374, z: 487.75415}
+    songTime: 40.634647
+    beatIndex: 81
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.3716667, z: 488.40918}
+    songTime: 40.69866
+    beatIndex: 81
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.3716667, z: 489.04376}
+    songTime: 40.762653
+    beatIndex: 81
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.478097, z: 489.6975}
+    songTime: 40.80533
+    beatIndex: 81
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.58, z: 490.3544}
+    songTime: 40.86932
+    beatIndex: 81
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.58, z: 491.0206}
+    songTime: 40.93331
+    beatIndex: 81
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.6096818, z: 491.6169}
+    songTime: 40.954647
+    beatIndex: 81
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.7883332, z: 492.26407}
+    songTime: 41.01866
+    beatIndex: 82
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.7883332, z: 492.9267}
+    songTime: 41.082653
+    beatIndex: 82
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.8524206, z: 493.55084}
+    songTime: 41.125328
+    beatIndex: 82
+    isGrounded: 0
+  - position: {x: -0.00000038504754, y: 2.9966667, z: 494.19336}
+    songTime: 41.18932
+    beatIndex: 82
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 2.996667, z: 494.8361}
+    songTime: 41.25331
+    beatIndex: 82
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.078571, z: 495.4618}
+    songTime: 41.274647
+    beatIndex: 82
+    isGrounded: 0
+  - position: {x: -0.00000038504754, y: 3.205, z: 496.0969}
+    songTime: 41.33866
+    beatIndex: 82
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.205, z: 496.76816}
+    songTime: 41.402653
+    beatIndex: 82
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.205, z: 497.3742}
+    songTime: 41.445328
+    beatIndex: 82
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.4133332, z: 498.0042}
+    songTime: 41.487984
+    beatIndex: 82
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.4133332, z: 498.66528}
+    songTime: 41.551994
+    beatIndex: 83
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.4133332, z: 499.3257}
+    songTime: 41.615986
+    beatIndex: 83
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.6212823, z: 499.9804}
+    songTime: 41.65866
+    beatIndex: 83
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.6216667, z: 500.57632}
+    songTime: 41.722652
+    beatIndex: 83
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.621667, z: 501.2293}
+    songTime: 41.765327
+    beatIndex: 83
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.8120668, z: 501.8673}
+    songTime: 41.807983
+    beatIndex: 83
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.83, z: 502.45578}
+    songTime: 41.871994
+    beatIndex: 83
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.83, z: 503.09683}
+    songTime: 41.935986
+    beatIndex: 83
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 3.9728985, z: 503.75272}
+    songTime: 41.97866
+    beatIndex: 83
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.0383334, z: 504.39877}
+    songTime: 42.042652
+    beatIndex: 84
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.0383334, z: 505.03665}
+    songTime: 42.085327
+    beatIndex: 84
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.123845, z: 505.67175}
+    songTime: 42.127983
+    beatIndex: 84
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.2466664, z: 506.3218}
+    songTime: 42.191994
+    beatIndex: 84
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.2466664, z: 507.00778}
+    songTime: 42.255985
+    beatIndex: 84
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.247719, z: 507.59464}
+    songTime: 42.319977
+    beatIndex: 84
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.455, z: 508.25006}
+    songTime: 42.36265
+    beatIndex: 84
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.455, z: 508.90204}
+    songTime: 42.40533
+    beatIndex: 84
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.497652, z: 509.52008}
+    songTime: 42.46932
+    beatIndex: 84
+    isGrounded: 0
+  - position: {x: -0.00000038504754, y: 4.6633334, z: 510.1741}
+    songTime: 42.511997
+    beatIndex: 85
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.6633334, z: 510.8093}
+    songTime: 42.55465
+    beatIndex: 85
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.7182784, z: 511.41833}
+    songTime: 42.618664
+    beatIndex: 85
+    isGrounded: 0
+  - position: {x: -0.00000038504754, y: 4.8716664, z: 512.0638}
+    songTime: 42.661316
+    beatIndex: 85
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.8716664, z: 512.7374}
+    songTime: 42.72533
+    beatIndex: 85
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 4.8716664, z: 513.4098}
+    songTime: 42.789318
+    beatIndex: 85
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.08, z: 514.0289}
+    songTime: 42.85331
+    beatIndex: 85
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.08, z: 514.74426}
+    songTime: 42.895985
+    beatIndex: 85
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.1050973, z: 515.44214}
+    songTime: 42.938663
+    beatIndex: 85
+    isGrounded: 0
+  - position: {x: -0.00000038504754, y: 5.288334, z: 516.1239}
+    songTime: 43.00265
+    beatIndex: 86
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.2883334, z: 516.77686}
+    songTime: 43.066643
+    beatIndex: 86
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.3384995, z: 517.39874}
+    songTime: 43.130657
+    beatIndex: 86
+    isGrounded: 0
+  - position: {x: -0.00000038504754, y: 5.4966664, z: 518.09955}
+    songTime: 43.17331
+    beatIndex: 86
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.4966664, z: 518.73303}
+    songTime: 43.21599
+    beatIndex: 86
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.4966664, z: 519.4114}
+    songTime: 43.279976
+    beatIndex: 86
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.705, z: 520.06256}
+    songTime: 43.34399
+    beatIndex: 86
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.705, z: 520.71466}
+    songTime: 43.40798
+    beatIndex: 86
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.705, z: 521.3939}
+    songTime: 43.450657
+    beatIndex: 86
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.9133334, z: 522.03534}
+    songTime: 43.49331
+    beatIndex: 86
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.9133334, z: 522.6201}
+    songTime: 43.557323
+    beatIndex: 87
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 5.9133334, z: 523.309}
+    songTime: 43.599976
+    beatIndex: 87
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.119555, z: 523.9541}
+    songTime: 43.66399
+    beatIndex: 87
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.1216664, z: 524.6602}
+    songTime: 43.72798
+    beatIndex: 87
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.1216664, z: 525.2697}
+    songTime: 43.791996
+    beatIndex: 87
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.3293023, z: 525.97363}
+    songTime: 43.83465
+    beatIndex: 87
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.33, z: 526.65765}
+    songTime: 43.877323
+    beatIndex: 87
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.33, z: 527.3305}
+    songTime: 43.941315
+    beatIndex: 87
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.536138, z: 527.9532}
+    songTime: 43.98399
+    beatIndex: 87
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.538333, z: 528.60614}
+    songTime: 44.04798
+    beatIndex: 88
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.5383334, z: 529.2711}
+    songTime: 44.090656
+    beatIndex: 88
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.7451234, z: 529.96075}
+    songTime: 44.154648
+    beatIndex: 88
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.746667, z: 530.56604}
+    songTime: 44.218662
+    beatIndex: 88
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.7466674, z: 531.25433}
+    songTime: 44.282654
+    beatIndex: 88
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.9504104, z: 531.93243}
+    songTime: 44.32533
+    beatIndex: 88
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.955, z: 532.5893}
+    songTime: 44.36798
+    beatIndex: 88
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 6.955, z: 533.22107}
+    songTime: 44.431995
+    beatIndex: 88
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.151182, z: 533.89044}
+    songTime: 44.495987
+    beatIndex: 88
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.163333, z: 534.5633}
+    songTime: 44.55998
+    beatIndex: 89
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.163333, z: 535.223}
+    songTime: 44.602654
+    beatIndex: 89
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.357646, z: 535.8824}
+    songTime: 44.64533
+    beatIndex: 89
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.3716674, z: 536.49286}
+    songTime: 44.70932
+    beatIndex: 89
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.371667, z: 537.1733}
+    songTime: 44.77331
+    beatIndex: 89
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.5340576, z: 537.79065}
+    songTime: 44.815987
+    beatIndex: 89
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.58, z: 538.4783}
+    songTime: 44.87998
+    beatIndex: 89
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.58, z: 539.1363}
+    songTime: 44.922653
+    beatIndex: 89
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.754426, z: 539.81903}
+    songTime: 44.986645
+    beatIndex: 89
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.788333, z: 540.48535}
+    songTime: 45.05066
+    beatIndex: 90
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.788333, z: 541.1937}
+    songTime: 45.09331
+    beatIndex: 90
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.9790816, z: 541.8686}
+    songTime: 45.157326
+    beatIndex: 90
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.996667, z: 542.55347}
+    songTime: 45.199978
+    beatIndex: 90
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 7.996667, z: 543.2374}
+    songTime: 45.263992
+    beatIndex: 90
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.182104, z: 543.8504}
+    songTime: 45.32798
+    beatIndex: 90
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.205, z: 544.5335}
+    songTime: 45.391994
+    beatIndex: 90
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.205, z: 545.2241}
+    songTime: 45.43465
+    beatIndex: 90
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.408678, z: 545.93195}
+    songTime: 45.49866
+    beatIndex: 90
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.413333, z: 546.6146}
+    songTime: 45.541317
+    beatIndex: 91
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.413333, z: 547.26056}
+    songTime: 45.605328
+    beatIndex: 91
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.6199875, z: 547.95905}
+    songTime: 45.66932
+    beatIndex: 91
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.621667, z: 548.6082}
+    songTime: 45.73331
+    beatIndex: 91
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.621667, z: 549.2146}
+    songTime: 45.75465
+    beatIndex: 91
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.820711, z: 549.90405}
+    songTime: 45.81866
+    beatIndex: 91
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.83, z: 550.5893}
+    songTime: 45.882652
+    beatIndex: 91
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 8.83, z: 551.26917}
+    songTime: 45.946644
+    beatIndex: 91
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.036386, z: 551.9559}
+    songTime: 46.01066
+    beatIndex: 92
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.038333, z: 552.6618}
+    songTime: 46.05331
+    beatIndex: 92
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.038333, z: 553.3282}
+    songTime: 46.117325
+    beatIndex: 92
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.246667, z: 554.02216}
+    songTime: 46.181316
+    beatIndex: 92
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.246667, z: 554.7436}
+    songTime: 46.22399
+    beatIndex: 92
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.246667, z: 555.3329}
+    songTime: 46.266644
+    beatIndex: 92
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.455, z: 556.0107}
+    songTime: 46.330658
+    beatIndex: 92
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.455, z: 556.6125}
+    songTime: 46.37331
+    beatIndex: 92
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.455, z: 557.32715}
+    songTime: 46.437325
+    beatIndex: 92
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.65652, z: 557.9177}
+    songTime: 46.501316
+    beatIndex: 93
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.663333, z: 558.605}
+    songTime: 46.54399
+    beatIndex: 93
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.663333, z: 559.2631}
+    songTime: 46.607983
+    beatIndex: 93
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.857772, z: 559.88293}
+    songTime: 46.650658
+    beatIndex: 93
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.871667, z: 560.5208}
+    songTime: 46.71465
+    beatIndex: 93
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 9.871667, z: 561.1913}
+    songTime: 46.778664
+    beatIndex: 93
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.062619, z: 561.8693}
+    songTime: 46.821316
+    beatIndex: 93
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.08, z: 562.5372}
+    songTime: 46.86399
+    beatIndex: 93
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.08, z: 563.25745}
+    songTime: 46.927982
+    beatIndex: 93
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.279597, z: 563.9069}
+    songTime: 46.991997
+    beatIndex: 93
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.288333, z: 564.6013}
+    songTime: 47.055984
+    beatIndex: 94
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.288334, z: 565.2555}
+    songTime: 47.119976
+    beatIndex: 94
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.495154, z: 565.9611}
+    songTime: 47.162655
+    beatIndex: 94
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.496667, z: 566.61255}
+    songTime: 47.20533
+    beatIndex: 94
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.496667, z: 567.27106}
+    songTime: 47.26932
+    beatIndex: 94
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.700339, z: 567.9319}
+    songTime: 47.33331
+    beatIndex: 94
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.704999, z: 568.5275}
+    songTime: 47.35465
+    beatIndex: 94
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.705, z: 569.1982}
+    songTime: 47.418663
+    beatIndex: 94
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.9013405, z: 569.8912}
+    songTime: 47.482655
+    beatIndex: 94
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.913333, z: 570.55884}
+    songTime: 47.546642
+    beatIndex: 95
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 10.913333, z: 571.2006}
+    songTime: 47.610657
+    beatIndex: 95
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.095022, z: 571.8389}
+    songTime: 47.65331
+    beatIndex: 95
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.121667, z: 572.4807}
+    songTime: 47.695988
+    beatIndex: 95
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.121667, z: 573.15717}
+    songTime: 47.759975
+    beatIndex: 95
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.3078, z: 573.8527}
+    songTime: 47.82399
+    beatIndex: 95
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 574.4561}
+    songTime: 47.88798
+    beatIndex: 95
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 575.1481}
+    songTime: 47.930656
+    beatIndex: 95
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 575.8467}
+    songTime: 47.973312
+    beatIndex: 95
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 576.43506}
+    songTime: 48.037323
+    beatIndex: 96
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 577.12354}
+    songTime: 48.101315
+    beatIndex: 96
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 577.76404}
+    songTime: 48.14399
+    beatIndex: 96
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 578.4555}
+    songTime: 48.20798
+    beatIndex: 96
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 579.18146}
+    songTime: 48.271996
+    beatIndex: 96
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 579.86316}
+    songTime: 48.314648
+    beatIndex: 96
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 580.5481}
+    songTime: 48.378662
+    beatIndex: 96
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 581.1891}
+    songTime: 48.442654
+    beatIndex: 96
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.330001, z: 581.7957}
+    songTime: 48.46399
+    beatIndex: 96
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 582.3756}
+    songTime: 48.52798
+    beatIndex: 97
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 583.04706}
+    songTime: 48.591995
+    beatIndex: 97
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 583.6982}
+    songTime: 48.634647
+    beatIndex: 97
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 584.33276}
+    songTime: 48.69866
+    beatIndex: 97
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.330001, z: 585.046}
+    songTime: 48.762653
+    beatIndex: 97
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 585.7437}
+    songTime: 48.80533
+    beatIndex: 97
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 586.38745}
+    songTime: 48.86932
+    beatIndex: 97
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 587.0309}
+    songTime: 48.911995
+    beatIndex: 97
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 587.688}
+    songTime: 48.975986
+    beatIndex: 97
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 588.43195}
+    songTime: 49.039978
+    beatIndex: 98
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.330001, z: 589.11566}
+    songTime: 49.103992
+    beatIndex: 98
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 589.84174}
+    songTime: 49.146645
+    beatIndex: 98
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 590.4428}
+    songTime: 49.21066
+    beatIndex: 98
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 591.1105}
+    songTime: 49.25331
+    beatIndex: 98
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.330001, z: 591.7614}
+    songTime: 49.317326
+    beatIndex: 98
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 592.3963}
+    songTime: 49.359978
+    beatIndex: 98
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.330001, z: 593.06744}
+    songTime: 49.423992
+    beatIndex: 98
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 593.68207}
+    songTime: 49.466644
+    beatIndex: 98
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 594.3955}
+    songTime: 49.53066
+    beatIndex: 99
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 595.06384}
+    songTime: 49.57331
+    beatIndex: 99
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 595.71606}
+    songTime: 49.637325
+    beatIndex: 99
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 596.3486}
+    songTime: 49.701317
+    beatIndex: 99
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 596.9934}
+    songTime: 49.74399
+    beatIndex: 99
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 597.58765}
+    songTime: 49.807983
+    beatIndex: 99
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 598.3249}
+    songTime: 49.871994
+    beatIndex: 99
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 598.98126}
+    songTime: 49.89331
+    beatIndex: 99
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 599.628}
+    songTime: 49.957325
+    beatIndex: 99
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 600.31946}
+    songTime: 50.021317
+    beatIndex: 100
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 600.999}
+    songTime: 50.085327
+    beatIndex: 100
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 601.6451}
+    songTime: 50.14932
+    beatIndex: 100
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 602.3113}
+    songTime: 50.21331
+    beatIndex: 100
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 602.9784}
+    songTime: 50.23465
+    beatIndex: 100
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 603.66376}
+    songTime: 50.29866
+    beatIndex: 100
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 604.35114}
+    songTime: 50.36265
+    beatIndex: 100
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 605.03955}
+    songTime: 50.426643
+    beatIndex: 100
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 605.6661}
+    songTime: 50.490658
+    beatIndex: 100
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 606.3554}
+    songTime: 50.53331
+    beatIndex: 101
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 607.0326}
+    songTime: 50.575985
+    beatIndex: 101
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 607.69086}
+    songTime: 50.639977
+    beatIndex: 101
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 608.3625}
+    songTime: 50.70399
+    beatIndex: 101
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.330001, z: 609.0473}
+    songTime: 50.746643
+    beatIndex: 101
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 609.67096}
+    songTime: 50.810658
+    beatIndex: 101
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 610.4099}
+    songTime: 50.85331
+    beatIndex: 101
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 611.02875}
+    songTime: 50.917324
+    beatIndex: 101
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 611.72284}
+    songTime: 50.981316
+    beatIndex: 101
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 612.40594}
+    songTime: 51.02399
+    beatIndex: 102
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 613.08026}
+    songTime: 51.087982
+    beatIndex: 102
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 613.74146}
+    songTime: 51.130657
+    beatIndex: 102
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 614.4018}
+    songTime: 51.19465
+    beatIndex: 102
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 615.1007}
+    songTime: 51.258663
+    beatIndex: 102
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 615.8193}
+    songTime: 51.322655
+    beatIndex: 102
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 616.4551}
+    songTime: 51.36533
+    beatIndex: 102
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 617.1486}
+    songTime: 51.42932
+    beatIndex: 102
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 617.83203}
+    songTime: 51.49331
+    beatIndex: 102
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 618.42163}
+    songTime: 51.535988
+    beatIndex: 103
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 619.123}
+    songTime: 51.599976
+    beatIndex: 103
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 619.83984}
+    songTime: 51.66399
+    beatIndex: 103
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 620.54474}
+    songTime: 51.706642
+    beatIndex: 103
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 621.2533}
+    songTime: 51.770657
+    beatIndex: 103
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 621.90784}
+    songTime: 51.83465
+    beatIndex: 103
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 622.66046}
+    songTime: 51.898663
+    beatIndex: 103
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 623.3715}
+    songTime: 51.941315
+    beatIndex: 103
+    isGrounded: 1
+  - position: {x: -0.00000038504754, y: 11.33, z: 624.059}
+    songTime: 52.00533
+    beatIndex: 104
+    isGrounded: 1
+  - position: {x: 0.03744393, y: 15.375791, z: 624.7242}
+    songTime: 52.06932
+    beatIndex: 104
+    isGrounded: 1
+  - position: {x: 0.040562563, y: 15.398538, z: 624.999}
+    songTime: 52.111996
+    beatIndex: 104
+    isGrounded: 1
+  - position: {x: 0.040605325, y: 15.359382, z: 625.7005}
+    songTime: 52.154648
+    beatIndex: 104
+    isGrounded: 1
+  - position: {x: 0.040605772, y: 15.286627, z: 626.4028}
+    songTime: 52.218662
+    beatIndex: 104
+    isGrounded: 1
+  - position: {x: 0.040606655, y: 15.213434, z: 626.90784}
+    songTime: 52.282654
+    beatIndex: 104
+    isGrounded: 1
+  - position: {x: 0.04060683, y: 15.088595, z: 627.58325}
+    songTime: 52.346645
+    beatIndex: 104
+    isGrounded: 1
+  - position: {x: 0.040607244, y: 14.924868, z: 628.2891}
+    songTime: 52.38932
+    beatIndex: 104
+    isGrounded: 1
+  - position: {x: 0.040607303, y: 14.797341, z: 628.75806}
+    songTime: 52.453312
+    beatIndex: 104
+    isGrounded: 1
+  - position: {x: 0.0406074, y: 14.556282, z: 629.52466}
+    songTime: 52.495987
+    beatIndex: 104
+    isGrounded: 1
+  - position: {x: 0.040607482, y: 14.31718, z: 630.18463}
+    songTime: 52.538662
+    beatIndex: 105
+    isGrounded: 1
+  - position: {x: 0.04060754, y: 14.126781, z: 630.65906}
+    songTime: 52.602654
+    beatIndex: 105
+    isGrounded: 1
+  - position: {x: 0.040607635, y: 13.7863245, z: 631.42566}
+    songTime: 52.666645
+    beatIndex: 105
+    isGrounded: 1
+  - position: {x: 0.040607728, y: 13.417028, z: 632.17126}
+    songTime: 52.73066
+    beatIndex: 105
+    isGrounded: 1
+  - position: {x: 0.04060781, y: 13.067446, z: 632.8163}
+    songTime: 52.77331
+    beatIndex: 105
+    isGrounded: 1
+  - position: {x: 0.040607907, y: 12.601689, z: 633.6033}
+    songTime: 52.815987
+    beatIndex: 105
+    isGrounded: 1
+  - position: {x: 0.040607966, y: 12.2946825, z: 634.087}
+    songTime: 52.87998
+    beatIndex: 105
+    isGrounded: 1
+  - position: {x: 0.04060805, y: 11.839717, z: 634.76215}
+    songTime: 52.943993
+    beatIndex: 105
+    isGrounded: 1
+  - position: {x: 0.040608134, y: 11.343039, z: 635.4517}
+    songTime: 52.986645
+    beatIndex: 105
+    isGrounded: 1
+  - position: {x: 0.04060823, y: 10.761596, z: 636.2068}
+    songTime: 53.02932
+    beatIndex: 106
+    isGrounded: 1
+  - position: {x: 0.040608294, y: 10.336385, z: 636.72925}
+    songTime: 53.09331
+    beatIndex: 106
+    isGrounded: 1
+  - position: {x: 0.040608376, y: 9.746996, z: 637.419}
+    songTime: 53.135986
+    beatIndex: 106
+    isGrounded: 1
+  - position: {x: 0.040608443, y: 9.267677, z: 637.9536}
+    songTime: 53.199978
+    beatIndex: 106
+    isGrounded: 1
+  - position: {x: 0.040608544, y: 8.531822, z: 638.73553}
+    songTime: 53.263992
+    beatIndex: 106
+    isGrounded: 1
+  - position: {x: 0.040608622, y: 7.8927507, z: 639.3811}
+    songTime: 53.306644
+    beatIndex: 106
+    isGrounded: 1
+  - position: {x: 0.0406087, y: 7.236495, z: 640.01654}
+    songTime: 53.37066
+    beatIndex: 106
+    isGrounded: 1
+  - position: {x: 0.04060879, y: 6.483711, z: 640.7142}
+    songTime: 53.41331
+    beatIndex: 106
+    isGrounded: 1
+  - position: {x: 0.04060886, y: 5.8243375, z: 641.3012}
+    songTime: 53.477325
+    beatIndex: 106
+    isGrounded: 1
+  - position: {x: 0.040608946, y: 5.024723, z: 641.98706}
+    songTime: 53.541317
+    beatIndex: 107
+    isGrounded: 1
+  - position: {x: 0.04060903, y: 4.23965, z: 642.6354}
+    songTime: 53.583992
+    beatIndex: 107
+    isGrounded: 1
+  - position: {x: 0.04060911, y: 3.3813486, z: 643.3181}
+    songTime: 53.626644
+    beatIndex: 107
+    isGrounded: 1
+  - position: {x: 0.0406092, y: 2.6681108, z: 644.02673}
+    songTime: 53.69066
+    beatIndex: 107
+    isGrounded: 1
+  - position: {x: 0.040609274, y: 2.5983238, z: 644.66547}
+    songTime: 53.75465
+    beatIndex: 107
+    isGrounded: 1
+  - position: {x: 0.040609375, y: 2.5499392, z: 645.4828}
+    songTime: 53.81866
+    beatIndex: 107
+    isGrounded: 1
+  - position: {x: 0.04060945, y: 2.536314, z: 646.1458}
+    songTime: 53.882652
+    beatIndex: 107
+    isGrounded: 1
+  - position: {x: 0.040609527, y: 2.5382605, z: 646.6799}
+    songTime: 53.90399
+    beatIndex: 107
+    isGrounded: 1
+  - position: {x: 0.040609583, y: 2.5534315, z: 647.3844}
+    songTime: 53.967983
+    beatIndex: 107
+    isGrounded: 1
+  - position: {x: 0.17388855, y: 2.5702114, z: 647.8865}
+    songTime: 54.031994
+    beatIndex: 108
+    isGrounded: 1
+  - position: {x: 0.78464407, y: 2.6019955, z: 648.65643}
+    songTime: 54.07465
+    beatIndex: 108
+    isGrounded: 1
+  - position: {x: 1.3786377, y: 2.6321716, z: 649.33795}
+    songTime: 54.117325
+    beatIndex: 108
+    isGrounded: 1
+  - position: {x: 2.0898638, y: 2.6667118, z: 650.13696}
+    songTime: 54.181316
+    beatIndex: 108
+    isGrounded: 1
+  - position: {x: 2.4465578, y: 2.6832829, z: 650.5537}
+    songTime: 54.245327
+    beatIndex: 108
+    isGrounded: 1
+  - position: {x: 3.0194736, y: 2.7104816, z: 651.3448}
+    songTime: 54.287983
+    beatIndex: 108
+    isGrounded: 1
+  - position: {x: 3.4738111, y: 2.7314034, z: 652.11145}
+    songTime: 54.351994
+    beatIndex: 108
+    isGrounded: 1
+  - position: {x: 3.8195713, y: 2.7459087, z: 652.8115}
+    songTime: 54.39465
+    beatIndex: 108
+    isGrounded: 1
+  - position: {x: 4.0016828, y: 2.7526817, z: 653.2267}
+    songTime: 54.458664
+    beatIndex: 108
+    isGrounded: 1
+  - position: {x: 4.27837, y: 2.7611732, z: 653.9671}
+    songTime: 54.52265
+    beatIndex: 109
+    isGrounded: 1
+  - position: {x: 4.8067746, y: 2.7658806, z: 654.69403}
+    songTime: 54.56533
+    beatIndex: 109
+    isGrounded: 1
+  - position: {x: 5.542644, y: 2.7677937, z: 655.38043}
+    songTime: 54.62932
+    beatIndex: 109
+    isGrounded: 1
+  - position: {x: 6.1165667, y: 2.7679605, z: 655.9056}
+    songTime: 54.69331
+    beatIndex: 109
+    isGrounded: 1
+  - position: {x: 6.8967633, y: 2.7669525, z: 656.6173}
+    songTime: 54.71465
+    beatIndex: 109
+    isGrounded: 1
+  - position: {x: 7.4731903, y: 2.7654886, z: 657.15594}
+    songTime: 54.778664
+    beatIndex: 109
+    isGrounded: 1
+  - position: {x: 8.104606, y: 2.7631292, z: 657.85345}
+    songTime: 54.84265
+    beatIndex: 109
+    isGrounded: 1
+  - position: {x: 8.676281, y: 2.760293, z: 658.6171}
+    songTime: 54.88533
+    beatIndex: 109
+    isGrounded: 1
+  - position: {x: 8.991902, y: 2.7584686, z: 659.11426}
+    songTime: 54.949318
+    beatIndex: 109
+    isGrounded: 1
+  - position: {x: 9.372705, y: 2.756074, z: 659.811}
+    songTime: 54.991997
+    beatIndex: 109
+    isGrounded: 1
+  - position: {x: 9.722505, y: 2.7537699, z: 660.5567}
+    songTime: 55.055984
+    beatIndex: 110
+    isGrounded: 1
+  - position: {x: 9.983115, y: 2.7520752, z: 661.2474}
+    songTime: 55.098663
+    beatIndex: 110
+    isGrounded: 1
+  - position: {x: 10.129947, y: 2.7511683, z: 661.69086}
+    songTime: 55.162655
+    beatIndex: 110
+    isGrounded: 1
+  - position: {x: 10.344685, y: 2.7499723, z: 662.45776}
+    songTime: 55.20533
+    beatIndex: 110
+    isGrounded: 1
+  - position: {x: 10.522723, y: 2.7491693, z: 663.20325}
+    songTime: 55.26932
+    beatIndex: 110
+    isGrounded: 1
+  - position: {x: 10.653671, y: 2.748743, z: 663.878}
+    songTime: 55.311996
+    beatIndex: 110
+    isGrounded: 1
+  - position: {x: 10.729687, y: 2.74858, z: 664.3267}
+    songTime: 55.375988
+    beatIndex: 110
+    isGrounded: 1
+  - position: {x: 10.843668, y: 2.7484875, z: 665.1359}
+    songTime: 55.439976
+    beatIndex: 110
+    isGrounded: 1
+  - position: {x: 10.928212, y: 2.7485533, z: 665.86346}
+    songTime: 55.50399
+    beatIndex: 111
+    isGrounded: 1
+  - position: {x: 11.168041, y: 2.7487183, z: 666.6102}
+    songTime: 55.546642
+    beatIndex: 111
+    isGrounded: 1
+  - position: {x: 11.685787, y: 2.7489014, z: 667.2382}
+    songTime: 55.610657
+    beatIndex: 111
+    isGrounded: 1
+  - position: {x: 12.173774, y: 2.749076, z: 667.7937}
+    songTime: 55.65331
+    beatIndex: 111
+    isGrounded: 1
+  - position: {x: 12.797111, y: 2.7492962, z: 668.4972}
+    songTime: 55.717323
+    beatIndex: 111
+    isGrounded: 1
+  - position: {x: 13.215659, y: 2.7494364, z: 668.97516}
+    songTime: 55.781315
+    beatIndex: 111
+    isGrounded: 1
+  - position: {x: 13.811463, y: 2.7496405, z: 669.7526}
+    songTime: 55.82399
+    beatIndex: 111
+    isGrounded: 1
+  - position: {x: 14.240434, y: 2.7497883, z: 670.4206}
+    songTime: 55.866646
+    beatIndex: 111
+    isGrounded: 1
+  - position: {x: 14.632892, y: 2.749916, z: 671.1412}
+    songTime: 55.930656
+    beatIndex: 111
+    isGrounded: 1
+  - position: {x: 14.843736, y: 2.749978, z: 671.59503}
+    songTime: 55.973312
+    beatIndex: 111
+    isGrounded: 1
+  - position: {x: 15.14544, y: 2.7500544, z: 672.3516}
+    songTime: 56.015987
+    beatIndex: 112
+    isGrounded: 1
+  - position: {x: 15.368191, y: 2.7500973, z: 673.0124}
+    songTime: 56.07998
+    beatIndex: 112
+    isGrounded: 1
+  - position: {x: 15.583334, y: 2.750122, z: 673.79236}
+    songTime: 56.14399
+    beatIndex: 112
+    isGrounded: 1
+  - position: {x: 15.699708, y: 2.7501278, z: 674.292}
+    songTime: 56.20798
+    beatIndex: 112
+    isGrounded: 1
+  - position: {x: 15.839365, y: 2.750124, z: 674.9925}
+    songTime: 56.271996
+    beatIndex: 112
+    isGrounded: 1
+  - position: {x: 15.948429, y: 2.7501135, z: 675.64905}
+    songTime: 56.293312
+    beatIndex: 112
+    isGrounded: 1
+  - position: {x: 16.052904, y: 2.7500963, z: 676.3954}
+    songTime: 56.357323
+    beatIndex: 112
+    isGrounded: 1
+  - position: {x: 16.106993, y: 2.750084, z: 676.8433}
+    songTime: 56.421314
+    beatIndex: 112
+    isGrounded: 1
+  - position: {x: 16.18607, y: 2.750063, z: 677.6178}
+    songTime: 56.48533
+    beatIndex: 112
+    isGrounded: 1
+  - position: {x: 16.0897, y: 2.7500467, z: 678.2784}
+    songTime: 56.54932
+    beatIndex: 113
+    isGrounded: 1
+  - position: {x: 15.455015, y: 2.7500286, z: 679.07056}
+    songTime: 56.591995
+    beatIndex: 113
+    isGrounded: 1
+  - position: {x: 14.867618, y: 2.7500172, z: 679.73694}
+    songTime: 56.634647
+    beatIndex: 113
+    isGrounded: 1
+  - position: {x: 14.398361, y: 2.7500095, z: 680.2573}
+    songTime: 56.69866
+    beatIndex: 113
+    isGrounded: 1
+  - position: {x: 13.7893505, y: 2.750001, z: 680.96704}
+    songTime: 56.762653
+    beatIndex: 113
+    isGrounded: 1
+  - position: {x: 13.277217, y: 2.7499952, z: 681.6742}
+    songTime: 56.80533
+    beatIndex: 113
+    isGrounded: 1
+  - position: {x: 12.814491, y: 2.7499914, z: 682.4298}
+    songTime: 56.86932
+    beatIndex: 113
+    isGrounded: 1
+  - position: {x: 12.475471, y: 2.7499905, z: 683.1004}
+    songTime: 56.911995
+    beatIndex: 113
+    isGrounded: 1
+  - position: {x: 12.282657, y: 2.7499895, z: 683.5312}
+    songTime: 56.975986
+    beatIndex: 113
+    isGrounded: 1
+  - position: {x: 11.86724, y: 2.7499895, z: 684.2956}
+    songTime: 57.039978
+    beatIndex: 114
+    isGrounded: 1
+  - position: {x: 11.146622, y: 2.7499905, z: 684.98425}
+    songTime: 57.103992
+    beatIndex: 114
+    isGrounded: 1
+  - position: {x: 10.265788, y: 2.7499924, z: 685.78046}
+    songTime: 57.146645
+    beatIndex: 114
+    isGrounded: 1
+  - position: {x: 9.504797, y: 2.7499943, z: 686.4608}
+    songTime: 57.21066
+    beatIndex: 114
+    isGrounded: 1
+  - position: {x: 8.950251, y: 2.7499952, z: 686.9862}
+    songTime: 57.25331
+    beatIndex: 114
+    isGrounded: 1
+  - position: {x: 8.348831, y: 2.7499962, z: 687.6492}
+    songTime: 57.317326
+    beatIndex: 114
+    isGrounded: 1
+  - position: {x: 7.772151, y: 2.749998, z: 688.4171}
+    songTime: 57.381313
+    beatIndex: 114
+    isGrounded: 1
+  - position: {x: 7.487625, y: 2.749998, z: 688.85803}
+    songTime: 57.423992
+    beatIndex: 114
+    isGrounded: 1
+  - position: {x: 7.0507097, y: 2.749999, z: 689.64026}
+    songTime: 57.466644
+    beatIndex: 114
+    isGrounded: 1
+  - position: {x: 6.965403, y: 2.75, z: 690.3511}
+    songTime: 57.53066
+    beatIndex: 115
+    isGrounded: 1
+  - position: {x: 7.5794115, y: 2.75, z: 691.14056}
+    songTime: 57.59465
+    beatIndex: 115
+    isGrounded: 1
+  - position: {x: 8.122703, y: 2.750001, z: 691.7608}
+    songTime: 57.65866
+    beatIndex: 115
+    isGrounded: 1
+  - position: {x: 8.601217, y: 2.750001, z: 692.3061}
+    songTime: 57.701317
+    beatIndex: 115
+    isGrounded: 1
+  - position: {x: 9.165435, y: 2.750001, z: 692.9642}
+    songTime: 57.74399
+    beatIndex: 115
+    isGrounded: 1
+  - position: {x: 9.755892, y: 2.750001, z: 693.7694}
+    songTime: 57.807983
+    beatIndex: 115
+    isGrounded: 1
+  - position: {x: 10.167804, y: 2.750001, z: 694.444}
+    songTime: 57.871994
+    beatIndex: 115
+    isGrounded: 1
+  - position: {x: 10.514866, y: 2.750001, z: 695.12866}
+    songTime: 57.935986
+    beatIndex: 115
+    isGrounded: 1
+  - position: {x: 10.655121, y: 2.75, z: 695.808}
+    songTime: 57.97866
+    beatIndex: 115
+    isGrounded: 1
+  - position: {x: 10.293455, y: 2.75, z: 696.3309}
+    songTime: 58.021317
+    beatIndex: 116
+    isGrounded: 1
+  - position: {x: 9.651694, y: 2.75, z: 697.0582}
+    songTime: 58.085327
+    beatIndex: 116
+    isGrounded: 1
+  - position: {x: 9.029522, y: 2.75, z: 697.7529}
+    songTime: 58.14932
+    beatIndex: 116
+    isGrounded: 1
+  - position: {x: 8.597857, y: 2.75, z: 698.23755}
+    songTime: 58.21331
+    beatIndex: 116
+    isGrounded: 1
+  - position: {x: 7.993531, y: 2.75, z: 699.0111}
+    songTime: 58.255985
+    beatIndex: 116
+    isGrounded: 1
+  - position: {x: 7.5128136, y: 2.750001, z: 699.7409}
+    songTime: 58.29866
+    beatIndex: 116
+    isGrounded: 1
+  - position: {x: 7.1548624, y: 2.750001, z: 700.39685}
+    songTime: 58.36265
+    beatIndex: 116
+    isGrounded: 1
+  - position: {x: 6.8423996, y: 2.75, z: 701.08575}
+    songTime: 58.426643
+    beatIndex: 116
+    isGrounded: 1
+  - position: {x: 6.624159, y: 2.750001, z: 701.6554}
+    songTime: 58.490658
+    beatIndex: 116
+    isGrounded: 1
+  - position: {x: 6.145412, y: 2.75, z: 702.28357}
+    songTime: 58.53331
+    beatIndex: 117
+    isGrounded: 1
+  - position: {x: 5.3071985, y: 2.75, z: 703.0567}
+    songTime: 58.575985
+    beatIndex: 117
+    isGrounded: 1
+  - position: {x: 4.5278435, y: 2.75, z: 703.7425}
+    songTime: 58.639977
+    beatIndex: 117
+    isGrounded: 1
+  - position: {x: 3.9545066, y: 2.75, z: 704.2577}
+    songTime: 58.70399
+    beatIndex: 117
+    isGrounded: 1
+  - position: {x: 3.268794, y: 2.75, z: 704.9098}
+    songTime: 58.767982
+    beatIndex: 117
+    isGrounded: 1
+  - position: {x: 2.627793, y: 2.75, z: 705.6567}
+    songTime: 58.810658
+    beatIndex: 117
+    isGrounded: 1
+  - position: {x: 2.2212918, y: 2.75, z: 706.2179}
+    songTime: 58.85331
+    beatIndex: 117
+    isGrounded: 1
+  - position: {x: 1.8280561, y: 2.75, z: 706.8466}
+    songTime: 58.917324
+    beatIndex: 117
+    isGrounded: 1
+  - position: {x: 1.4077277, y: 2.75, z: 707.6497}
+    songTime: 58.981316
+    beatIndex: 117
+    isGrounded: 1
+  - position: {x: 0.98286134, y: 2.75, z: 708.33704}
+    songTime: 59.02399
+    beatIndex: 118
+    isGrounded: 1
+  - position: {x: 0.2743933, y: 2.75, z: 709.00757}
+    songTime: 59.066643
+    beatIndex: 118
+    isGrounded: 1
+  - position: {x: -0.32239085, y: 2.75, z: 709.53723}
+    songTime: 59.130657
+    beatIndex: 118
+    isGrounded: 1
+  - position: {x: -1.085781, y: 2.75, z: 710.2091}
+    songTime: 59.19465
+    beatIndex: 118
+    isGrounded: 1
+  - position: {x: -1.9111214, y: 2.75, z: 710.9645}
+    songTime: 59.258663
+    beatIndex: 118
+    isGrounded: 1
+  - position: {x: -2.3383245, y: 2.75, z: 711.42474}
+    songTime: 59.301315
+    beatIndex: 118
+    isGrounded: 1
+  - position: {x: -2.9559917, y: 2.75, z: 712.20374}
+    songTime: 59.34399
+    beatIndex: 118
+    isGrounded: 1
+  - position: {x: -3.4032454, y: 2.75, z: 712.859}
+    songTime: 59.40798
+    beatIndex: 118
+    isGrounded: 1
+  - position: {x: -3.8519962, y: 2.75, z: 713.6636}
+    songTime: 59.471996
+    beatIndex: 118
+    isGrounded: 1
+  - position: {x: -3.829002, y: 2.7518969, z: 714.0295}
+    songTime: 59.535988
+    beatIndex: 119
+    isGrounded: 1
+  - position: {x: -3.829002, y: 2.7518969, z: 714.0295}
+    songTime: 59.599976
+    beatIndex: 119
+    isGrounded: 1
+  - position: {x: -3.829002, y: 2.7518969, z: 714.0295}
+    songTime: 59.66399
+    beatIndex: 119
+    isGrounded: 1
+  actions:
+  - type: 7
+    position: {x: -0.00000038504754, y: 1.5383334, z: 480}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 0
+    beatIndex: 0
+  - type: 7
+    position: {x: -0.00000038504754, y: 1.6884379, z: 481.76584}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 40.14399
+    beatIndex: 80
+  - type: 7
+    position: {x: -0.00000038504754, y: 1.8405924, z: 483.6817}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 40.293312
+    beatIndex: 80
+  - type: 7
+    position: {x: -0.00000038504754, y: 2.101121, z: 485.75848}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 40.48533
+    beatIndex: 80
+  - type: 7
+    position: {x: -0.00000038504754, y: 2.239952, z: 487.66183}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 40.634647
+    beatIndex: 81
+  - type: 7
+    position: {x: -0.00000038504754, y: 2.478097, z: 489.6975}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 40.80533
+    beatIndex: 81
+  - type: 7
+    position: {x: -0.00000038504754, y: 2.6096818, z: 491.6169}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 40.954647
+    beatIndex: 81
+  - type: 7
+    position: {x: -0.00000038504754, y: 2.8422291, z: 493.63864}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 41.146645
+    beatIndex: 82
+  - type: 7
+    position: {x: -0.00000038504754, y: 3.1007123, z: 495.69437}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 41.295986
+    beatIndex: 82
+  - type: 7
+    position: {x: -0.00000038504754, y: 3.315793, z: 497.7033}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 41.466644
+    beatIndex: 82
+  - type: 7
+    position: {x: -0.00000038504754, y: 3.4566855, z: 499.62885}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 41.637325
+    beatIndex: 83
+  - type: 7
+    position: {x: -0.00000038504754, y: 3.6800222, z: 501.64297}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 41.786644
+    beatIndex: 83
+  - type: 7
+    position: {x: -0.00000038504754, y: 3.8765206, z: 503.6317}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 41.97866
+    beatIndex: 83
+  - type: 7
+    position: {x: -0.00000038504754, y: 4.0383334, z: 505.58078}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 42.127983
+    beatIndex: 84
+  - type: 7
+    position: {x: -0.00000038504754, y: 4.247719, z: 507.59464}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 42.319977
+    beatIndex: 84
+  - type: 7
+    position: {x: -0.00000038504754, y: 4.527525, z: 509.6574}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 42.46932
+    beatIndex: 84
+  - type: 7
+    position: {x: -0.00000038504754, y: 4.6633334, z: 511.5399}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 42.618664
+    beatIndex: 85
+  - type: 7
+    position: {x: -0.00000038504754, y: 4.798162, z: 511.73904}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 42.639977
+    beatIndex: 85
+  - type: 7
+    position: {x: -0.00000038504754, y: 4.8716664, z: 513.59094}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 42.810658
+    beatIndex: 85
+  - type: 7
+    position: {x: -0.00000038504754, y: 5.08, z: 515.5473}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 42.959976
+    beatIndex: 85
+  - type: 7
+    position: {x: -0.00000038504754, y: 5.2883334, z: 517.51544}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 43.130657
+    beatIndex: 86
+  - type: 7
+    position: {x: -0.00000038504754, y: 5.4186196, z: 517.73175}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 43.151997
+    beatIndex: 86
+  - type: 7
+    position: {x: -0.00000038504754, y: 5.4966664, z: 519.5922}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 43.301315
+    beatIndex: 86
+  - type: 7
+    position: {x: -0.00000038504754, y: 5.7305713, z: 521.6135}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 43.471996
+    beatIndex: 86
+  - type: 7
+    position: {x: -0.00000038504754, y: 5.9133334, z: 523.5241}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 43.621315
+    beatIndex: 87
+  - type: 7
+    position: {x: -0.00000038504754, y: 6.1412535, z: 525.6087}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 43.813313
+    beatIndex: 87
+  - type: 7
+    position: {x: -0.00000038504754, y: 6.33, z: 527.52765}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 43.962654
+    beatIndex: 87
+  - type: 7
+    position: {x: -0.00000038504754, y: 6.538333, z: 529.5785}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 44.133312
+    beatIndex: 88
+  - type: 7
+    position: {x: -0.00000038504754, y: 6.746667, z: 531.57666}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 44.30399
+    beatIndex: 88
+  - type: 7
+    position: {x: -0.00000038504754, y: 6.955, z: 533.5472}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 44.474648
+    beatIndex: 88
+  - type: 7
+    position: {x: -0.00000038504754, y: 7.1633334, z: 535.5399}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 44.62399
+    beatIndex: 89
+  - type: 7
+    position: {x: -0.00000038504754, y: 7.686366, z: 539.69745}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 44.96533
+    beatIndex: 89
+  - type: 7
+    position: {x: -0.00000038504754, y: 8.118665, z: 543.7191}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 45.306644
+    beatIndex: 90
+  - type: 7
+    position: {x: -0.00000038504754, y: 8.423198, z: 547.60114}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 45.647984
+    beatIndex: 91
+  - type: 7
+    position: {x: -0.00000038504754, y: 8.83167, z: 551.5951}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 45.967983
+    beatIndex: 91
+  - type: 7
+    position: {x: -0.00000038504754, y: 9.038333, z: 553.56964}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 46.13866
+    beatIndex: 92
+  - type: 7
+    position: {x: -0.00000038504754, y: 9.455, z: 557.55853}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 46.458664
+    beatIndex: 92
+  - type: 7
+    position: {x: -0.00000038504754, y: 10.189067, z: 563.701}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 46.970657
+    beatIndex: 93
+  - type: 7
+    position: {x: -0.00000038504754, y: 10.299963, z: 565.6025}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 47.141315
+    beatIndex: 94
+  - type: 7
+    position: {x: -0.00000038504754, y: 10.506564, z: 567.6012}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 47.311996
+    beatIndex: 94
+  - type: 7
+    position: {x: -0.00000038504754, y: 10.751923, z: 569.6321}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 47.461315
+    beatIndex: 94
+  - type: 7
+    position: {x: -0.00000038504754, y: 10.913333, z: 571.50464}
+    direction: {x: 0, y: -1, z: 0}
+    songTime: 47.631996
+    beatIndex: 95
