@@ -171,8 +171,5 @@ Proyecto de TFG **en desarrollo**. Este README recoge las mecánicas **ya implem
 
 ## Créditos y licencia
 
-- **Autor**: _[tu nombre]_ — Trabajo de Fin de Grado, _[Universidad / Grado]_.
+- **Autor**: _[Fernando Lanzarot Facio]_ — Trabajo de Fin de Grado, _[Universidad de Granada / Grado en Ingeniería Informática]_.
 - **Assets de terceros**: *Simple Water Shader* (IgniteCoders).
-- **Licencia**: _[por definir]_.
-
-> Rellena el autor, la universidad y la licencia según corresponda antes de publicar.
