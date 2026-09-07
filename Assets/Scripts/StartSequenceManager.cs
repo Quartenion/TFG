@@ -123,6 +123,16 @@ public class StartSequenceManager : MonoBehaviour
              "Ejemplo: 800 m a walkSpeed=6 y 180 BPM → beat ≈ 200 (4 m/beat).")]
     [SerializeField] private float _testStartZ = 800f;
 
+    [Tooltip("Si está activado, el test también fija la posición X e Y del jugador (no solo Z).\n" +
+             "Útil cuando el jugador aparece a una altura o carril incorrectos en ese punto del nivel.")]
+    [SerializeField] private bool  _testOverrideXY = false;
+
+    [Tooltip("Posición X (carril) del test. Solo se aplica si 'Test Override XY' está activo.")]
+    [SerializeField] private float _testStartX = 0f;
+
+    [Tooltip("Posición Y (altura) del test. Solo se aplica si 'Test Override XY' está activo.")]
+    [SerializeField] private float _testStartY = 1f;
+
     // ── Estado (static: sobrevive al reload de escena) ────────────────────
 
     /// <summary>Escenas en las que la intro ya se ha reproducido al menos una vez.</summary>
@@ -283,16 +293,31 @@ public class StartSequenceManager : MonoBehaviour
                 yield break;
             }
 
-            // Teleportar solo en Z
+            // Teleportar. Z siempre; X e Y solo si se ha activado el override.
             Vector3 pos = _playerMovement.transform.position;
             pos.z = _testStartZ;
+            if (_testOverrideXY)
+            {
+                pos.x = _testStartX;
+                pos.y = _testStartY;
+            }
+
+            // El CharacterController puede resistir el cambio de posicion; se desactiva
+            // un instante para que el teleport (sobre todo la altura Y) se aplique limpio.
+            CharacterController cc = _playerMovement.GetComponent<CharacterController>();
+            bool ccWasEnabled = cc != null && cc.enabled;
+            if (ccWasEnabled) cc.enabled = false;
             _playerMovement.transform.position = pos;
+            if (ccWasEnabled) cc.enabled = true;
 
             // Guardar el offset de canción; se usará en LaunchGame()
             _testSongOffset = _testStartZ / _playerMovement.walkSpeed;
 
             float beatApprox = _testSongOffset / _beatManager.BeatDuration;
-            Debug.Log($"[StartSequenceManager] TEST  Z={_testStartZ:F0} m  |  beat ≈{beatApprox:F0}  |  offset={_testSongOffset:F2} s");
+            string posInfo = _testOverrideXY
+                ? $"pos=({pos.x:F1}, {pos.y:F1}, {_testStartZ:F0})"
+                : $"Z={_testStartZ:F0} m";
+            Debug.Log($"[StartSequenceManager] TEST  {posInfo}  |  beat ≈{beatApprox:F0}  |  offset={_testSongOffset:F2} s");
 
             // Saltar intro siempre en test mode, luego la secuencia 3-2-1-YA! normal
             BeginChallenge();

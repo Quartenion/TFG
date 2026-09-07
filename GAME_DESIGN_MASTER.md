@@ -1,12 +1,12 @@
-# HEARTBEAT — Documento Maestro de Diseño y Arquitectura
+# INF-HARTO — Documento Maestro de Diseño y Arquitectura
 ### TFG: Juego Rítmico 3D en Primera Persona
-*Última actualización: Mayo 2026*
+*Última actualización: Septiembre 2026*
 
 ---
 
 ## ÍNDICE
 
-1. [Evaluación Crítica del Scope](#1-evaluación-crítica-del-scope)
+1. [Estado de Implementación — Sistemas Construidos](#1-estado-de-implementación--sistemas-construidos)
 2. [Roadmap y Milestones para TFG](#2-roadmap-y-milestones-para-tfg)
 3. [Arquitectura General del Proyecto](#3-arquitectura-general-del-proyecto)
 4. [BeatManager — Rediseño Completo](#4-beatmanager--rediseño-completo)
@@ -25,44 +25,51 @@
 
 ---
 
-## 1. EVALUACIÓN CRÍTICA DEL SCOPE
+## 1. ESTADO DE IMPLEMENTACIÓN — SISTEMAS CONSTRUIDOS
 
-### ⚠️ Diagnóstico honesto: el proyecto tiene demasiadas piezas para un TFG solo
+Esta sección resume lo que **ya está construido y funcionando** en el proyecto. El resto del documento describe el diseño completo (incluyendo sistemas planificados y trabajo futuro); aquí se listan solo las piezas implementadas.
 
-Lo que describes es, en el mejor de los casos, un juego indie de tamaño mediano con 12-18 meses de desarrollo en equipo. Para un TFG individual tienes que tomar decisiones quirúrgicas sobre qué entra y qué se queda fuera, o lo entregarás incompleto.
+### Motor rítmico
+- **BeatManager** — reloj maestro sincronizado por DSP (`PlayScheduled`), BPM configurable, ventanas de timing **Perfect (±70 ms) / Good (±140 ms) / Miss**, compensación de latencia de audio, eventos `OnBeat` / `OnHalfBeat`, e inicio de la canción desde cualquier posición (`StartMusicFrom`) para el modo test.
+- **RhythmInput** — evalúa cada clic contra el beat con `EvaluateTiming()`, cuenta **un solo acierto válido por beat** (anti-spam) y dispara el feedback de timing y los cambios de vida.
+- **LatencyCalibrator** — calibración de latencia de audio guardada en `PlayerPrefs`.
+- **TimingResult** — enum Perfect/Good/Miss compartido por todos los sistemas.
 
-**Lo que ya tienes funcionando (y es bueno):**
-- BeatManager con sistema de intervalos — sólido
-- EnergyManager con mecánica de jeringuilla — muy original, bien pensado
-- RhythmInput con modo rojo/azul — creativo
-- PlayerMovement con dash y doble salto — funcional
+### Vida / energía — la jeringuilla (EnergyManager)
+Modelo de sangre en la jeringuilla: **energía = capacidad − sangre acumulada**. Incluye llenado pasivo, coste de acciones, acierto rítmico que devuelve vida (**Perfect 1.5×, Good 1×**), penalización por fallo con **multiplicador anti-spam** (ventana deslizante de los últimos N inputs), **modo azul (bonus)** de riesgo-recompensa con inyección masiva al fallar, y **God Mode** para diseño de niveles. Acompañado de `EnergyBarUI` y `LowHealthEffects`.
 
-**Lo que DEBE estar en el TFG sí o sí (núcleo irrenunciable):**
-- 1 nivel jugable completo y pulido (no 5 en borrador)
-- BeatManager rediseñado con ventanas de timing (Perfect/Good/Miss)
-- Auto-run con control de dirección
-- Slide + Wallrun + Walljump (son el corazón del movimiento)
-- Sistema de energía (ya tienes base sólida)
-- Sistema de puntuación básico
-- Game Over + Respawn funcional
-- Música sincronizada con el gameplay
+### Movimiento a pie (PlayerMovement)
+Auto-runner de *parkour* con: **doble salto, dash, slide, slam, wallrun, walljump, tirolina (zipline)** y manejo específico de escaleras. Incluye **beat gating** (las acciones se validan/premian al ritmo), coste de energía por acción, *head-bob* de cámara al ritmo y efectos de cámara (dash, shake).
+> ⚠️ El **gancho (grappling hook) se descartó** y se eliminó del juego (`GrapplingHook.cs` queda como *stub* vacío).
 
-**Lo que puede entrar como "prototipo/demostración":**
-- 2-3 niveles con variación temática
-- Sistema de tienda con 4-6 upgrades
-- 1 tipo de enemigo básico
-- 1 contrato demoníaco funcional
+### Secciones de kayak (KayakController)
+Tramos sobre el río con **flotación spring-damper**, **remo al ritmo** (clic izq./der. a cada lado), **combo de remo** (remar repetido al mismo lado sube progresivamente la velocidad lateral), **saltar dentro/fuera** del kayak para esquivar obstáculos (el kayak es una plataforma sólida con reembarque suave) y **colisiones con caras letales** (embestida frontal letal, laterales solo bloquean). Con corrientes de agua (`WaterCurrentZone`) y oleaje del líquido (`LiquidWobble`).
 
-**Lo que debes cortar del TFG (déjalo como "trabajo futuro"):**
-- Bossfight complejo (demasiado trabajo de diseño + arte + programación)
-- Sistema de NPCs con diálogos elaborados
-- Free roam entre niveles (sustituye por una sala de menú temática simple)
-- Tirolinas (alta complejidad técnica, bajo impacto en la investigación)
-- Más de 2 tipos de enemigos
-- Build diversity profunda (basta con 3-4 upgrades funcionales)
+### Obstáculos
+- **ObstacleInfo** — datos de caras letales (Front/Bottom/Top/Left/Right/Back) con *gizmos* de editor.
+- **ObstacleCollision** — detección a pie leyendo `ObstacleInfo`.
+- **FallingObstacle** — caída desde el techo sincronizada por DSP para aterrizar a la llegada del jugador.
+- **StairFallingObstacle** — baja escaleras a saltos, **un escalón por beat**; aparece unos escalones antes y termina en su posición colocada.
+- **BeatObstacleSpawner** + **BeatApproachIndicator** — generación de obstáculos alineada a la rejilla de beats.
+- **BlockAbility** + **BreakableBlock** — bloqueo (tecla **Q**) que rompe los bloques cercanos.
 
-### La regla de oro para el TFG
-Un nivel PERFECTO demuestra más que cinco niveles mediocres. La investigación académica se nutre de la profundidad, no de la cantidad de features.
+### HUD (estética clínica)
+- **RhythmHeartMonitor** — línea de ECG que pulsa con cada acierto (verde = Perfect, blanco = Good, rojo = Miss).
+- **Jeringuillas 3D** de sangre roja/azul renderizadas al canvas (`LiquidLevel` con modos de sangre, `SyringeSpinner`).
+- **CrosshairController** — mira con pinchos que reaccionan al clic.
+- **RhythmHUDController** + **RhythmRingVisual** — notas rítmicas (anillos con pinchos) que convergen sincronizadas con la mira y se colorean de verde al acertar.
+- **TimingFeedbackUI** (PERFECT/GOOD/MISS), **HeartBeat**, **PlayerSyncDisplay**.
+
+### Flujo de juego
+**MainMenuManager**, **StartSequenceManager** (cuenta atrás 3-2-1 + **modo test** para arrancar en cualquier posición/beat, con X/Y/Z editables), **GameStarter**, **StartWall**, **PauseMenuManager**, **GameOverManager**, **LevelEndManager**, **DoorInteraction**.
+
+### Herramientas de diseño de niveles (editor)
+- **BeatGridVisualizer** — rejilla de beats en la escena (`cellSize = walkSpeed × duración de beat`).
+- **BeatSnapHelper**, **BeatOscillator**, **PivotOscillator**, **ConstantRotator**, **PulseToTheBeat** — objetos que se mueven / pulsan / rotan al ritmo.
+- Inspectores personalizados en `Assets/Scripts/Editor/`.
+
+### Audio y *game feel*
+**FootstepAudio** (pasos al ritmo), **CameraShaker**, **CameraDashEffect**, **ViewmodelPhysics** (*sway* de manos/arma), **HandAnimationController**.
 
 ---
 
@@ -239,7 +246,9 @@ El `GameManager` es el único que cambia el estado. El `BeatManager` solo activa
 
 ## 4. BEATMANAGER — REDISEÑO COMPLETO
 
-### Problemas del BeatManager actual
+> ✅ **Estado: implementado.** Este rediseño ya está en el juego y va más allá de lo descrito aquí: el `BeatManager` real usa **sincronización por DSP** (`PlayScheduled` / `StartMusicAt`) para precisión sub-frame, permite **arrancar la canción desde un offset** (`StartMusicFrom`, base del modo test) y expone `ScheduledStartDSP`, que usan `FallingObstacle` y `StairFallingObstacle` para caer al ritmo. El código de abajo es la versión de referencia; la implementación final incluye esas extensiones.
+
+### Problemas del BeatManager de partida
 
 1. **No tiene ventanas de timing diferenciadas** — solo sabe si estás "cerca" del beat, no cuán cerca.
 2. **No tiene offset de latencia de audio** — en casi todos los dispositivos el audio llega con 20-80ms de delay. Si no compensas esto, los clicks siempre parecerán incorrectos.
@@ -487,6 +496,8 @@ public class LatencyCalibrator : MonoBehaviour
 
 ## 5. SISTEMA DE MOVIMIENTO DEL JUGADOR
 
+> ✅ **Estado: implementado** (dentro de `PlayerMovement.cs`). Funcionan **doble salto, dash, slide, slam, wallrun, walljump, tirolina** y escaleras, con *beat gating* y coste de energía por acción. La implementación real concentra la lógica en `PlayerMovement` en lugar de repartirla en scripts por estado como se propone abajo. El **gancho (grapple) se descartó y se eliminó**. El resto de la sección se conserva como referencia de diseño.
+
 ### Arquitectura: PlayerStateManager
 
 El movimiento se controla con una **State Machine** explícita. Esto elimina los bugs de estados solapados (como el wallrun que interrumpe el dash, o el slide que interactúa mal con el salto):
@@ -697,6 +708,8 @@ public class CameraEffects : MonoBehaviour
 ---
 
 ## 6. SISTEMA DE ENERGÍA / JERINGUILLA
+
+> ✅ **Estado: implementado.** El `EnergyManager` real ya incluye los **multiplicadores de timing** (Perfect 1.5× / Good 1×) descritos abajo, además de **modo azul (bonus)** de riesgo-recompensa, **penalización anti-spam** por ventana deslizante y **God Mode** para diseño. La muerte ocurre cuando la jeringuilla se llena por completo en modo rojo.
 
 ### El sistema actual es bueno — ajustes recomendados
 
