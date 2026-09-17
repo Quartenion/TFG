@@ -44,6 +44,18 @@ public class KayakController : MonoBehaviour
     [Tooltip("Velocidad de avance constante (m/s). Se sobreescribe con PlayerMovement.walkSpeed al activar.")]
     public float forwardSpeed = 6f;
 
+    [Header("Sincronía con la música")]
+    [Tooltip("Fuerza con la que el kayak corrige su velocidad para volver a la posición que le\n" +
+             "toca según la música. Más alto = recupera antes un desfase (al entrar, tras un choque…).")]
+    [Min(0f)]
+    public float kayakSyncStrength = 2f;
+
+    [Tooltip("Corrección máxima de velocidad como fracción de forwardSpeed. 0.5 = puede ir hasta un\n" +
+             "50% más rápido/lento para recuperar el desfase. Más alto que a pie para que el kayak\n" +
+             "no se quede desincronizado.")]
+    [Range(0f, 1.5f)]
+    public float kayakMaxSyncCorrection = 0.5f;
+
     [Header("Dirección lateral (ritmo)")]
     [Tooltip("Velocidad lateral máxima objetivo al remar (m/s).")]
     public float steerLateralSpeed = 5f;
@@ -73,6 +85,16 @@ public class KayakController : MonoBehaviour
     [Tooltip("Segundos sin remar (o al cambiar de lado / fallar) tras los que el combo se reinicia.")]
     [Range(0.3f, 4f)]
     public float steerComboResetTime = 1.2f;
+
+    [Tooltip("Si está activo, HACE FALTA acertar el beat para remar (como jumpRequiresBeat/dashRequiresBeat\n" +
+             "a pie): un fallo NO mueve el kayak, solo penaliza energía. Si está desactivado (por defecto),\n" +
+             "se rema aunque falles el beat y el fallo cuesta más energía (kayakMissPenaltyScale).")]
+    public bool paddleRequiresBeat = false;
+
+    [Tooltip("Al FALLAR el beat remando: cuánta MÁS energía quita respecto a un fallo a pie.\n" +
+             "Multiplicador sobre la penalización normal. 1 = igual que a pie; 2 = el doble.")]
+    [Min(1f)]
+    public float kayakMissPenaltyScale = 2f;
 
     [Header("Bank visual (inclinación lateral)")]
     [Tooltip("Grados de inclinación por m/s de velocidad lateral.")]
@@ -143,6 +165,12 @@ public class KayakController : MonoBehaviour
     [Range(15f, 100f)]
     public float maxBuoyancyAccel = 40f;
 
+    [Tooltip("Bloquea la altura (eje Y) mientras el kayak flota: lo fija a la superficie del agua\n" +
+             "y anula la velocidad vertical cada paso de física. Evita que un choque lateral fuerte\n" +
+             "lo eleve o lo hunda de golpe. El balanceo visual (roll/pitch) no se ve afectado por ser\n" +
+             "rotación y no posición.")]
+    public bool lockYInWater = true;
+
     [Tooltip("Coeficiente de arrastre lateral del agua.\n" +
              "Controla con qué rapidez la velocidad lateral decae a 0 al dejar de remar.\n" +
              "Velocidad decae como v(t) = v0·e^(-waterDrag·t). " +
@@ -159,6 +187,13 @@ public class KayakController : MonoBehaviour
 
     [Tooltip("Ángulo total en grados. 90 = queda perfectamente horizontal.")]
     public float tiltAngle = 90f;
+
+    [Tooltip("Si el kayak ya está colocado TUMBADO (horizontal) en la escena, actívalo para\n" +
+             "saltarte la animación de caída 90°→0° y el chapoteo de impacto. Al activarse\n" +
+             "(el jugador salta/entra encima) empieza a flotar y a moverse directamente con la\n" +
+             "orientación en la que lo colocaste.\n" +
+             "Colócalo tumbado con su eje de avance (Z azul) apuntando hacia donde debe avanzar.")]
+    public bool startHorizontal = false;
 
     [Header("Endpoint")]
     [Tooltip("Transform que marca el final del tramo de kayak.")]
@@ -252,6 +287,8 @@ public class KayakController : MonoBehaviour
     // Rotación
     private float _initialYRot;
     private float _tiltProgress;
+    // Orientación tumbada colocada por diseño (solo en modo startHorizontal).
+    private Quaternion _baseFlatRotation = Quaternion.identity;
 
     // Caída (solo para la animación de bamboleo; el Rigidbody gestiona la física)
     private float _fallTimer;
@@ -403,14 +440,20 @@ public class KayakController : MonoBehaviour
                 break;
 
             case KayakState.Floating:
-                float targetFwd = forwardSpeed
-                    + (_cachedPlayer != null ? _cachedPlayer.SyncSpeedCorrection : 0f);
+                // Corrección de sincronía PROPIA del kayak (más fuerte que la de a pie, que está
+                // capada al 15%): recupera de verdad un desfase de posición respecto a la música.
+                float desfase  = _cachedPlayer != null ? _cachedPlayer.SyncDesfase : 0f;
+                float capFwd   = kayakMaxSyncCorrection * forwardSpeed;
+                float syncCorr = Mathf.Clamp(-desfase * kayakSyncStrength, -capFwd, capFwd);
+                float targetFwd = forwardSpeed + syncCorr;
                 SetForwardSpeed(targetFwd);
                 ApplyPaddleForce();
-                ApplyBuoyancy();
+                bool pinY = lockYInWater && _waterFound;
+                if (!pinY) ApplyBuoyancy();
                 ApplyWaterDrag();
                 ApplyCurrent();
                 ApplyWaterBounds();
+                if (pinY) PinToWaterSurface();   // fija la Y a la superficie (anti-pop lateral)
                 break;
 
             case KayakState.PlayerJumped:
@@ -437,8 +480,16 @@ public class KayakController : MonoBehaviour
         // Rotación objetivo (orientación de diseño, tumbado). Se alcanza con un Slerp
         // suave desde la orientación actual para no dar un "snap" al saltar (el ataúd
         // venía con sway/bank de Floating y no debe alinearse de golpe).
-        Quaternion tiltQ  = Quaternion.AngleAxis(tiltAngle, tiltAxis.normalized);
-        Quaternion target = Quaternion.Euler(0f, _initialYRot, 0f) * tiltQ;
+        Quaternion target;
+        if (startHorizontal)
+        {
+            target = _baseFlatRotation;
+        }
+        else
+        {
+            Quaternion tiltQ = Quaternion.AngleAxis(tiltAngle, tiltAxis.normalized);
+            target = Quaternion.Euler(0f, _initialYRot, 0f) * tiltQ;
+        }
         float rotK = 1f - Mathf.Exp(-jumpAlignSpeed * Time.fixedDeltaTime);
         _rb.MoveRotation(Quaternion.Slerp(_rb.rotation, target, rotK));
 
@@ -488,6 +539,22 @@ public class KayakController : MonoBehaviour
         // no dispare el ataúd al cielo por sobre-corrección del muelle.
         force = Mathf.Min(force, maxBuoyancyAccel);
         _rb.AddForce(new Vector3(0f, force, 0f), ForceMode.Acceleration);
+    }
+
+    /// <summary>
+    /// Fija la altura del kayak a la superficie del agua y anula la velocidad vertical.
+    /// Sustituye a la boyancia por muelle cuando <see cref="lockYInWater"/> está activo:
+    /// un choque lateral fuerte no puede elevar ni hundir el kayak en Y.
+    /// </summary>
+    private void PinToWaterSurface()
+    {
+        Vector3 p = _rb.position;
+        p.y = _waterSurfaceY + floatHeight;
+        _rb.position = p;
+
+        Vector3 v = _rb.linearVelocity;
+        v.y = 0f;
+        _rb.linearVelocity = v;
     }
 
     /// <summary>Arrastre lateral del agua: decae la velocidad lateral exponencialmente.</summary>
@@ -601,9 +668,16 @@ public class KayakController : MonoBehaviour
         forwardSpeed = player.walkSpeed;
 
         Vector3 coffinFwd = transform.forward;
-        _forwardDir = new Vector3(coffinFwd.x, 0f, coffinFwd.z).normalized;
-        if (_forwardDir.sqrMagnitude < 0.001f) _forwardDir = Vector3.forward;
-        _rightDir = Vector3.Cross(Vector3.up, _forwardDir).normalized;
+        Vector3 flatFwd   = new Vector3(coffinFwd.x, 0f, coffinFwd.z);
+        // Si el forward apunta casi vertical (típico de un modelo tumbado cuyo eje Z mira
+        // arriba/abajo), usa el eje "up" del objeto proyectado como dirección de avance.
+        if (flatFwd.sqrMagnitude < 0.001f)
+        {
+            Vector3 up = transform.up;
+            flatFwd = new Vector3(up.x, 0f, up.z);
+        }
+        _forwardDir = flatFwd.sqrMagnitude > 0.001f ? flatFwd.normalized : Vector3.forward;
+        _rightDir   = Vector3.Cross(Vector3.up, _forwardDir).normalized;
 
         _initialYRot = transform.eulerAngles.y;
 
@@ -624,7 +698,30 @@ public class KayakController : MonoBehaviour
         _rb.linearVelocity  = Vector3.zero;
         _rb.angularVelocity = Vector3.zero;
 
-        _state = KayakState.Tilting;
+        if (startHorizontal)
+        {
+            // Ya está tumbado por diseño: sin animación de caída ni bamboleo de impacto.
+            // Conserva la orientación colocada y arranca flotando de inmediato.
+            _baseFlatRotation = transform.rotation;
+            _tiltProgress     = 1f;
+            _swayTimer        = 10f;   // impactDecay ≈ 0 → sin chapoteo de aterrizaje
+
+            if (FindWaterSurface(out float wy))
+            {
+                _waterSurfaceY = wy;
+                _waterFound    = true;
+                Vector3 p = _rb.position;
+                p.y = wy + floatHeight;
+                _rb.position       = p;
+                transform.position = p;
+            }
+
+            _state = KayakState.Floating;
+        }
+        else
+        {
+            _state = KayakState.Tilting;
+        }
     }
 
     // ── Estados ───────────────────────────────────────────────────────────────
@@ -733,12 +830,24 @@ public class KayakController : MonoBehaviour
                 _lastHitBeatIdx = beatIdx;
         }
 
-        if (timing != TimingResult.Miss)
-        {
-            float newDir = leftClick ? +1f : -1f;
+        // El lado hacia el que rema lo decide el BOTÓN. Por defecto se rema aunque se falle el beat
+        // (dirigir libre); si paddleRequiresBeat está activo, SOLO se rema al acertar (como las
+        // acciones a pie con requiresBeat).
+        float newDir   = leftClick ? +1f : -1f;
+        bool  isHit    = timing != TimingResult.Miss;
+        bool  doPaddle = isHit || !paddleRequiresBeat;
 
-            // Combo: remadas consecutivas en la MISMA dirección suben el tope de velocidad.
-            // Se reinicia al cambiar de lado o si pasó demasiado tiempo desde la última.
+        if (doPaddle)
+        {
+            _paddleDir   = newDir;
+            _paddleTimer = paddleDuration;
+            PlayPaddleSound();
+        }
+
+        if (isHit)
+        {
+            // ACIERTO: combo (sube el tope de velocidad) + energía normal.
+            // El combo se reinicia al cambiar de lado o si pasó demasiado tiempo desde la última.
             bool sameDir  = Mathf.Approximately(newDir, _comboDir);
             bool timedOut = Time.time - _lastComboHitTime > steerComboResetTime;
             if (!sameDir || timedOut) _comboCount = 0;
@@ -753,20 +862,16 @@ public class KayakController : MonoBehaviour
             _steerCap = Mathf.Min(steerLateralSpeed + steps * steerComboSpeedStep,
                                   steerMaxLateralSpeed);
 
-            // Iniciar remo: ApplyPaddleForce() aplicará la aceleración gradualmente
-            // durante paddleDuration segundos → sensación orgánica de palada.
-            _paddleDir   = newDir;
-            _paddleTimer = paddleDuration;
-
-            PlayPaddleSound();
             EnergyManager.Instance?.HitRed(timing);
         }
         else
         {
-            // Un fallo rompe el combo.
+            // FALLO: rompe el combo (velocidad base, sin boost) y quita MÁS energía que un fallo
+            // a pie (kayakMissPenaltyScale). El remo ya se ha aplicado arriba solo si procedía
+            // (modo libre); en modo paddleRequiresBeat el kayak no se mueve con el fallo.
             _comboCount = 0;
             _steerCap   = steerLateralSpeed;
-            EnergyManager.Instance?.MissRed();
+            EnergyManager.Instance?.MissRed(kayakMissPenaltyScale);
         }
     }
 
@@ -900,6 +1005,26 @@ public class KayakController : MonoBehaviour
 
     private void ApplyRotation()
     {
+        if (startHorizontal)
+        {
+            // Kayak tumbado por diseño: partimos de la orientación colocada y solo
+            // añadimos el yaw de giro y el sway de flotación (sin el tilt de 90°).
+            float yawH = (_state == KayakState.Floating || _state == KayakState.PlayerJumped)
+                ? Mathf.Clamp(_lateralVelocity * yawDegreesPerMPS, -maxYawDegrees, maxYawDegrees)
+                : 0f;
+
+            float rollH  = Mathf.Sin(_swayTimer * swayFrequency * Mathf.PI * 2f) * swayAmplitude;
+            float pitchH = Mathf.Sin(_swayTimer * swayFrequency * Mathf.PI * 2f * 0.6f + 1.1f) * pitchAmplitude;
+            float bankH  = Mathf.Clamp(-_lateralVelocity * bankDegreesPerMPS, -maxBankDegrees, maxBankDegrees);
+
+            Quaternion rollQh  = Quaternion.AngleAxis(rollH + bankH, _forwardDir);
+            Quaternion pitchQh = Quaternion.AngleAxis(pitchH, _rightDir);
+            transform.rotation = (rollQh * pitchQh)
+                               * Quaternion.AngleAxis(yawH, Vector3.up)
+                               * _baseFlatRotation;
+            return;
+        }
+
         float yawOffset = (_state == KayakState.Floating || _state == KayakState.PlayerJumped)
             ? Mathf.Clamp(_lateralVelocity * yawDegreesPerMPS, -maxYawDegrees, maxYawDegrees)
             : 0f;
@@ -1022,8 +1147,14 @@ public class KayakController : MonoBehaviour
         _crashed = true;
         PlaySound(breakSound);
 
-        _rb.linearVelocity  = Vector3.zero;
-        _rb.angularVelocity = Vector3.zero;
+        // Solo se puede tocar la velocidad en cuerpos NO cinemáticos. Durante PlayerJumped el
+        // ataúd va como plataforma kinematic (el jugador ya saltó, _player == null): ahí no hay
+        // velocidad física que anular y hacerlo lanza "Setting velocity of a kinematic body...".
+        if (!_rb.isKinematic)
+        {
+            _rb.linearVelocity  = Vector3.zero;
+            _rb.angularVelocity = Vector3.zero;
+        }
 
         if (_player != null)
         {
@@ -1135,7 +1266,12 @@ public class KayakController : MonoBehaviour
         surfaceY = 0f;
         if (waterLayerMask == 0) return false;
         Vector3 origin = transform.position + Vector3.up * 3f;
-        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 50f, waterLayerMask))
+        // IGNORAR TRIGGERS: el kayak flota sobre el agua SÓLIDA (WaterBlock). El volumen de
+        // buceo es un trigger que también está en el layer Water; sin este Ignore, el raycast
+        // podría arrancar dentro de ese trigger y fallar o devolver una superficie errónea
+        // (el kayak dejaría de "caer" al agua). Ver WaterDiveController.
+        if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 50f, waterLayerMask,
+                            QueryTriggerInteraction.Ignore))
         {
             surfaceY = hit.point.y;
             return true;
@@ -1146,7 +1282,9 @@ public class KayakController : MonoBehaviour
     private bool HasWaterBelow(Vector3 worldPos)
     {
         if (waterLayerMask == 0) return true;
-        return Physics.Raycast(worldPos + Vector3.up * 3f, Vector3.down, 50f, waterLayerMask);
+        // Ignorar triggers (mismo motivo que FindWaterSurface): solo cuenta el agua sólida.
+        return Physics.Raycast(worldPos + Vector3.up * 3f, Vector3.down, 50f, waterLayerMask,
+                               QueryTriggerInteraction.Ignore);
     }
 
     // ── Sincronización jugador ────────────────────────────────────────────────
@@ -1154,7 +1292,6 @@ public class KayakController : MonoBehaviour
     private void SyncPlayerToSeat()
     {
         Vector3 seatPos = transform.position + Vector3.up * seatHeightOffset;
-        Quaternion playerRot = Quaternion.LookRotation(_forwardDir, Vector3.up);
 
         // Reembarque suave: el desfase inicial (jugador→asiento) decae a 0 durante
         // reboardSmoothTime, así el jugador se asienta sin teletransportarse. El
@@ -1169,7 +1306,10 @@ public class KayakController : MonoBehaviour
             seatPos += _reboardOffset * frac;
         }
 
-        _player.transform.SetPositionAndRotation(seatPos, playerRot);
+        // Solo fijamos la POSICIÓN del asiento. La ROTACIÓN (hacia dónde mira el jugador) la
+        // controla siempre PlayerMovement.HandleLook: así el jugador mira libremente mientras
+        // va en el kayak y, al saltar, la cámara conserva su orientación sin pegar un giro brusco.
+        _player.transform.position = seatPos;
     }
 
     // ── Endpoint ──────────────────────────────────────────────────────────────

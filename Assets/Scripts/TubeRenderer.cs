@@ -43,6 +43,13 @@ public class TubeRenderer : MonoBehaviour
     private int[]       _triangles;
     private bool        _initialized;
 
+    // Modo "externo": el tubo se dibuja entre dos puntos arbitrarios que fija otro script
+    // (p. ej. WaterDiveController para la cuerda del corazón). Tiene prioridad sobre la zipline.
+    private bool    _extDriven;
+    private Vector3 _extStart;
+    private Vector3 _extEnd;
+    private float   _extSag;    // comba (cuánto cae la cuerda por el centro, m). 0 = recta.
+
     private void Awake()
     {
         _filter      = GetComponent<MeshFilter>();
@@ -55,6 +62,13 @@ public class TubeRenderer : MonoBehaviour
     {
         if (!_initialized) return;
 
+        // Prioridad: si otro script fija los extremos (modo externo), dibujar entre ellos.
+        if (_extDriven)
+        {
+            BuildTube(_extStart, _extEnd, _extSag);
+            return;
+        }
+
         if (_zipline != null)
         {
             if (_zipline.startPoint == null || _zipline.endPoint == null)
@@ -62,12 +76,36 @@ public class TubeRenderer : MonoBehaviour
                 _mesh.Clear();
                 return;
             }
-            BuildTube(_zipline.StartPos, _zipline.EndPos);
+            BuildTube(_zipline.StartPos, _zipline.EndPos, 0f);
         }
         else
         {
             _mesh.Clear();
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // API externa: renderizar el tubo entre dos puntos arbitrarios en world space
+    // (p. ej. la cuerda del corazón del buceo: mano -> corazón).
+    // -------------------------------------------------------------------------
+
+    /// <summary>Fija los dos extremos del tubo (world space) y lo hace visible. Prioritario sobre la zipline.</summary>
+    public void SetEndpoints(Vector3 startWorld, Vector3 endWorld) => SetEndpoints(startWorld, endWorld, 0f);
+
+    /// <summary>Como SetEndpoints pero con COMBA (cuerda floja): 'sag' = cuánto cae por el centro (m).</summary>
+    public void SetEndpoints(Vector3 startWorld, Vector3 endWorld, float sag)
+    {
+        _extStart  = startWorld;
+        _extEnd    = endWorld;
+        _extSag    = sag;
+        _extDriven = true;   // el LateUpdate reconstruye el mesh con estos puntos
+    }
+
+    /// <summary>Oculta el tubo (limpia el mesh) hasta el próximo SetEndpoints.</summary>
+    public void Hide()
+    {
+        _extDriven = false;
+        if (_mesh != null) _mesh.Clear();
     }
 
     private void OnDisable()
@@ -79,7 +117,7 @@ public class TubeRenderer : MonoBehaviour
     // Generacion del tubo
     // -------------------------------------------------------------------------
 
-    private void BuildTube(Vector3 start, Vector3 end)
+    private void BuildTube(Vector3 start, Vector3 end, float sag)
     {
         Vector3 dir    = end - start;
         float   length = dir.magnitude;
@@ -94,7 +132,10 @@ public class TubeRenderer : MonoBehaviour
         Vector3 right = Vector3.Cross(axis, worldUp).normalized;
         Vector3 up    = Vector3.Cross(right, axis).normalized;
 
-        int rings    = _lengthSegments + 1;           // anillos de vertices (extremos + intermedios)
+        // Con comba hacen falta más divisiones para que la curva se vea suave.
+        int lenSegs = sag > 0.01f ? Mathf.Max(_lengthSegments, 12) : Mathf.Max(_lengthSegments, 1);
+
+        int rings    = lenSegs + 1;                   // anillos de vertices (extremos + intermedios)
         int vertsPerRing = _radialSegments + 1;       // +1 para cerrar la costura UV sin artefactos
         int totalVerts   = rings * vertsPerRing;
 
@@ -103,7 +144,7 @@ public class TubeRenderer : MonoBehaviour
             _vertices  = new Vector3[totalVerts];
             _normals   = new Vector3[totalVerts];
             _uvs       = new Vector2[totalVerts];
-            _triangles = new int[_radialSegments * _lengthSegments * 6];
+            _triangles = new int[_radialSegments * lenSegs * 6];
         }
 
         float uvLength = length * _uvTilingPerMeter;
@@ -113,8 +154,9 @@ public class TubeRenderer : MonoBehaviour
         // de la cuerda vienen en world space. InverseTransformPoint/Direction convierte.
         for (int ring = 0; ring < rings; ring++)
         {
-            float t  = (float)ring / _lengthSegments;
-            Vector3 centerWorld = start + axis * (length * t);
+            float t  = (float)ring / lenSegs;
+            // Centro sobre la recta start->end, con caída parabólica (comba) hacia abajo por el medio.
+            Vector3 centerWorld = Vector3.Lerp(start, end, t) - Vector3.up * (sag * 4f * t * (1f - t));
 
             for (int seg = 0; seg < vertsPerRing; seg++)
             {
@@ -132,7 +174,7 @@ public class TubeRenderer : MonoBehaviour
 
         // Generar triangulos
         int triIdx = 0;
-        for (int ring = 0; ring < _lengthSegments; ring++)
+        for (int ring = 0; ring < lenSegs; ring++)
         {
             for (int seg = 0; seg < _radialSegments; seg++)
             {

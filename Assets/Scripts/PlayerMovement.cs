@@ -235,10 +235,25 @@ public class PlayerMovement : MonoBehaviour
     /// Expuesto para que KayakController y la tirolina también lo apliquen.
     /// </summary>
     public float SyncSpeedCorrection { get; private set; }
+
+    /// <summary>
+    /// Desfase de posición respecto a donde debería estar el jugador según la música, en METROS
+    /// (>0 = adelantado, &lt;0 = atrasado). SIN capar. El kayak lo usa para su propia corrección
+    /// (más fuerte que la de a pie).
+    /// </summary>
+    public float SyncDesfase { get; private set; }
     private GameOverManager _gameOverManager;
 
     /// <summary>True mientras el jugador está montado en el KayakController.</summary>
     public bool IsOnKayak => _isOnKayak;
+
+    /// <summary>
+    /// Dirección horizontal de AVANCE del auto-runner, INDEPENDIENTE de hacia dónde mire el
+    /// jugador (el cuerpo gira al mirar, pero el avance sigue siempre el eje de la pista).
+    /// La usa ObstacleCollision para clasificar la cara golpeada respecto al movimiento real,
+    /// no respecto a la mirada.
+    /// </summary>
+    public Vector3 RunForward => Quaternion.Euler(0f, _initialYRotation, 0f) * Vector3.forward;
 
     // Altura suave
     private float _targetHeight;
@@ -523,6 +538,11 @@ public class PlayerMovement : MonoBehaviour
         _isSlamming    = false;
         _moveDirection = Vector3.zero;
         _cc.enabled    = false;
+
+        // Limpiar el muelle del head-bob al montar. Así no queda energía residual que, tras
+        // el trayecto (donde el bob no se integra), se suelte de golpe al saltar y sacuda la cámara.
+        _bobPitch = _bobRoll = _bobPitchVel = _bobRollVel = 0f;
+        _bobOffset = Vector3.zero;
     }
 
     /// <summary>Restaura el movimiento normal al salir del kayak.</summary>
@@ -571,15 +591,9 @@ public class PlayerMovement : MonoBehaviour
         // mismo frame, el CC se activa pero ya pasó el _cc.Move de ese frame → el impulso
         // dispara con CC activo pero el primer frame lo absorbe la física del CC.
 
-        // ── Sincronizar _rotationY con la dirección real del body ──────────────────────
-        // KayakController.SyncPlayerToSeat fuerza transform.rotation cada frame mientras
-        // el jugador está montado. HandleLook acumula _rotationY independientemente.
-        // Si no sincronizamos, al salir HandleLook aplica el _rotationY acumulado
-        // (diferente al heading del kayak) → snap instantáneo de la cámara.
-        // Leemos transform.eulerAngles.y AHORA (forzado por KC el frame anterior) y
-        // hacemos que _rotationY represente ese ángulo → continuidad perfecta.
-        float currentBodyYaw = transform.eulerAngles.y;
-        _rotationY = Mathf.DeltaAngle(_initialYRotation, currentBodyYaw);
+        // El cuerpo lo orienta HandleLook durante todo el trayecto (KayakController solo fija la
+        // POSICIÓN del asiento), así que _rotationY ya representa la vista actual del jugador:
+        // no hay que resincronizar nada y la cámara conserva su orientación al salir → sin snap.
 
         _pendingKayakImpulse    = new Vector3(horizontalImpulse.x, jumpVelocity, horizontalImpulse.z);
         _hasPendingKayakImpulse = true;
@@ -596,10 +610,9 @@ public class PlayerMovement : MonoBehaviour
         if (!_isOnKayak) return;
         _isOnKayak = false;
 
-        // Sincronizar _rotationY con la orientación real del body (forzada por
-        // KayakController.SyncPlayerToSeat) para evitar snap de cámara al salir.
-        float currentBodyYaw = transform.eulerAngles.y;
-        _rotationY = Mathf.DeltaAngle(_initialYRotation, currentBodyYaw);
+        // El cuerpo lo orienta HandleLook durante todo el trayecto (KayakController solo fija la
+        // POSICIÓN del asiento), así que _rotationY ya representa la vista actual del jugador:
+        // no hay que resincronizar nada y la cámara conserva su orientación al salir → sin snap.
 
         _pendingKayakImpulse    = new Vector3(horizontalImpulse.x, JumpPower, horizontalImpulse.z);
         _hasPendingKayakImpulse = true;
@@ -1106,7 +1119,11 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
 
-            _cc.Move(_moveDirection * Time.deltaTime);
+            // Solo mover si el CC está activo. En frames de transición (entrar/salir del kayak o
+            // la tirolina) puede estar desactivado un instante: entonces la posición la lleva ese
+            // sistema y llamar a Move daría "Move called on inactive controller".
+            if (_cc.enabled)
+                _cc.Move(_moveDirection * Time.deltaTime);
         }
 
         // =================================================================
@@ -1185,6 +1202,7 @@ public class PlayerMovement : MonoBehaviour
     private void UpdateSyncCorrection()
     {
         SyncSpeedCorrection = 0f;
+        SyncDesfase         = 0f;
 
         if (_beatGrid == null)
         {
@@ -1204,6 +1222,7 @@ public class PlayerMovement : MonoBehaviour
         float  expected    = (float)((now - BeatManager.Instance.ScheduledStartDSP) * _beatGrid.walkSpeed);
         float  actual      = Vector3.Dot(transform.position - _beatGrid.Origin, _beatGrid.Forward);
         float  deltaDist   = actual - expected; // > 0 = adelantado, < 0 = atrasado
+        SyncDesfase        = deltaDist;
 
         // Corrección: si atrasado (deltaDist < 0) → añadir velocidad (resultado > 0)
         SyncSpeedCorrection = Mathf.Clamp(
@@ -1348,10 +1367,14 @@ public class PlayerMovement : MonoBehaviour
     {
         if (headBobIntensity < 0.01f) return;
 
-        // Solo ejecutar si el jugador esta corriendo en el suelo
+        // Solo ejecutar si el jugador esta corriendo en el suelo.
+        // !_isOnKayak es CLAVE: con el CC desactivado en el kayak, isGrounded conserva su
+        // último valor (true) y UpdateHeadBob no corre, así que los kicks se ACUMULARÍAN sin
+        // integrarse y al saltar del kayak se soltarían de golpe → cámara pegando un salto.
         bool active = _cc.isGrounded && _canMove
                    && !_isSliding && !_isDashing
-                   && !_isWallrunning && !_isOnZipline;
+                   && !_isWallrunning && !_isOnZipline
+                   && !_isOnKayak;
         if (!active) return;
 
         // Velocidad de kick calculada para alcanzar ~headBobAmplitudeY grados de pico.

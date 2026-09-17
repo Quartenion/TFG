@@ -56,6 +56,7 @@ MonoBehaviour:
   _antispamWindow: 10
   _antispamThreshold: 0.5
   _antispamMaxMult: 3
+  godMode: 1
   OnSyringeChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -109,6 +110,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RhythmInput
   _beatManager: {fileID: 4544748994858963328}
   _crosshair: {fileID: 0}
+  _player: {fileID: 0}
   _hitWindow: 0.15
   _trackCombo: 1
   OnBeatHit:
@@ -551,7 +553,10 @@ MonoBehaviour:
   _energyBarRoot: {fileID: 0}
   _skipIntro: 0
   _testMode: 0
-  _testStartZ: 1777
+  _testStartZ: 600
+  _testOverrideXY: 0
+  _testStartX: 0
+  _testStartY: 10
 --- !u!82 &3961493049957668360
 AudioSource:
   m_ObjectHideFlags: 0

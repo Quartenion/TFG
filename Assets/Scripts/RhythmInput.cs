@@ -72,6 +72,9 @@ public class RhythmInput : MonoBehaviour
     private InputAction _leftClickAction;
     private InputAction _rightClickAction;
 
+    // God Mode: último beat auto-clicado (para auto-clicar una vez por beat).
+    private int _lastAutoBeatIdx = -1;
+
     private void OnEnable()
     {
         _leftClickAction = new InputAction("RhythmLeftClick", binding: "<Mouse>/leftButton");
@@ -115,6 +118,21 @@ public class RhythmInput : MonoBehaviour
             IsBonusActive = false;
             OnBonusDeactivated?.Invoke();
         }
+
+        // God Mode: auto-clic PERFECTO en cada beat (juega el ritmo solo), EXCEPTO en el kayak.
+        if (EnergyManager.Instance.godMode
+            && _beatManager != null && _beatManager.IsPlaying
+            && (_player == null || !_player.IsOnKayak))
+        {
+            int beat = _beatManager.CurrentBeatIndex;
+            if (_lastAutoBeatIdx < 0) _lastAutoBeatIdx = beat;   // no auto-clicar en el primer frame
+            else if (beat != _lastAutoBeatIdx)
+            {
+                _lastAutoBeatIdx = beat;
+                ProcessClick(affectSyringe: false);   // feedback + (vía WaterDiveController) reelar
+            }
+        }
+        else _lastAutoBeatIdx = -1;   // reset al salir de God Mode o entrar al kayak
     }
 
     private void HandleClick(InputAction.CallbackContext ctx)
@@ -127,6 +145,15 @@ public class RhythmInput : MonoBehaviour
         // a EnergyManager directamente. RhythmInput se salta para evitar doble-conteo.
         if (_player != null && _player.IsOnKayak) return;
 
+        ProcessClick(affectSyringe: true);
+    }
+
+    /// <summary>
+    /// Procesa un "clic" (real o auto). Con <paramref name="affectSyringe"/> = false (auto-clic de
+    /// God Mode) solo muestra el feedback del beat, sin tocar la jeringuilla.
+    /// </summary>
+    private void ProcessClick(bool affectSyringe)
+    {
         // Animar crosshair independientemente del resultado de timing.
         if (_crosshair != null) _crosshair.TriggerClick();
 
@@ -156,8 +183,12 @@ public class RhythmInput : MonoBehaviour
 
         LastTimingResult = result;
 
-        // Notificar a la UI de feedback.
+        // Notificar a la UI de feedback. Esto ocurre SIEMPRE (también con el corazón lanzado), para
+        // que los indicadores del beat sigan apareciendo y puedas cronometrar los tirones de cuerda.
         OnTimingResult?.Invoke(result);
+
+        // God Mode auto-clic: solo feedback visual, no toca la jeringuilla (ni late ni rellena).
+        if (!affectSyringe) return;
 
         if (result != TimingResult.Miss)
             RegisterHit(result);

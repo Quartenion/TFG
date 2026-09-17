@@ -62,6 +62,10 @@ public class BeatOscillator : MonoBehaviour
              "FALSE → se mueve de A a B una sola vez cuando el jugador se acerca y se queda en B.")]
     [SerializeField] private bool _oscillate = true;
 
+    [Tooltip("Solo en modo disparo: NO se mueve por cercanía del jugador; espera a que algo llame\n" +
+             "a Trigger() (p. ej. un GazeSwitch/interruptor). Útil para puertas activadas a mano.")]
+    [SerializeField] private bool _waitForExternalTrigger = false;
+
     [Header("Timing")]
     [Tooltip("Oscilación: beats para un ciclo completo A→B→A.\n" +
              "Disparo:    beats que tarda el movimiento de A a B.")]
@@ -95,6 +99,11 @@ public class BeatOscillator : MonoBehaviour
     private enum Phase { Idle, Moving, Done }
     private Phase  _phase      = Phase.Idle;
     private double _triggerDSP = double.MaxValue;
+    private bool   _triggerRequested;   // Trigger() externo pendiente de aplicar
+
+    // Modo "conducido por la mirada": SetOpen(t) fija directamente la posición (0..1 → A..B).
+    private bool  _driven;
+    private float _drivenT;
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -122,6 +131,14 @@ public class BeatOscillator : MonoBehaviour
 
     private void Update()
     {
+        // Modo CONDUCIDO POR LA MIRADA (SetOpen): la posición la fija directamente el progreso
+        // externo (0..1 → A..B). Tiene prioridad y no necesita BeatManager.
+        if (_driven)
+        {
+            Move(Vector3.Lerp(WorldA, WorldB, Ease(_drivenT)));
+            return;
+        }
+
         if (_beatManager == null) return;
 
         // Esperar a que la música esté programada
@@ -129,8 +146,9 @@ public class BeatOscillator : MonoBehaviour
         {
             if (_beatManager.ScheduledStartDSP <= 0.0) return;
 
-            // En modo disparo, calcular el momento de disparo una sola vez
-            if (!_oscillate)
+            // En modo disparo por cercanía, calcular el momento de disparo una sola vez.
+            // En modo trigger externo se deja _triggerDSP = MaxValue: solo Trigger() lo dispara.
+            if (!_oscillate && !_waitForExternalTrigger)
                 ComputeTriggerDSP();
 
             _ready = true;
@@ -195,6 +213,13 @@ public class BeatOscillator : MonoBehaviour
     {
         // Done es un estado final: no hay nada más que hacer
         if (_phase == Phase.Done) return;
+
+        // Aplicar un Trigger() externo pendiente: empieza a moverse ahora.
+        if (_triggerRequested && _phase == Phase.Idle)
+        {
+            _triggerDSP = AudioSettings.dspTime;
+            _triggerRequested = false;
+        }
 
         double now = AudioSettings.dspTime;
 
@@ -270,6 +295,40 @@ public class BeatOscillator : MonoBehaviour
     public void CaptureCurrentAsB()
     {
         pointB = _localSpace ? transform.position - _originPos : transform.position;
+    }
+
+    /// <summary>
+    /// Dispara el movimiento A→B AHORA (modo disparo). Pensado para activarlo desde fuera —
+    /// p. ej. un GazeSwitch conecta su OnActivated a este método para "abrir la puerta".
+    /// Solo tiene efecto si aún está en A (no se ha movido); no hace nada en modo oscilación.
+    /// </summary>
+    public void Trigger()
+    {
+        if (_oscillate) return;
+        _triggerRequested = true;
+    }
+
+    /// <summary>Reinicia el disparo: vuelve a A y queda a la espera de otro Trigger().</summary>
+    public void ResetTrigger()
+    {
+        if (_oscillate) return;
+        _phase            = Phase.Idle;
+        _triggerDSP       = double.MaxValue;
+        _triggerRequested = false;
+        _driven           = false;
+        Move(WorldA);
+    }
+
+    /// <summary>
+    /// Modo CONDUCIDO POR LA MIRADA: fija la posición directamente con un progreso 0..1 (A→B)
+    /// — conecta aquí GazeSwitch → On Progress. Se mueve mientras el progreso sube; como el
+    /// GazeSwitch lo descarga al dejar de mirar, vuelve solo a A. Si llega a 1 con el switch en
+    /// One Shot, el switch congela el progreso en 1 y se queda en B.
+    /// </summary>
+    public void SetOpen(float t01)
+    {
+        _driven  = true;
+        _drivenT = Mathf.Clamp01(t01);
     }
 
     // ── Gizmos ────────────────────────────────────────────────────────────────

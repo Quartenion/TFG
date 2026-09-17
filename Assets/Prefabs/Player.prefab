@@ -554,6 +554,13 @@ MonoBehaviour:
   wallLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  stairsLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  maxStepHeight: 0.8
+  stepCheckDistance: 0.4
+  positionCorrectionStrength: 1.5
+  maxPositionCorrection: 0.15
   ziplinePendulumGravity: 9.81
   ziplineArmLength: 2
   ziplineMaxAngle: 55
@@ -909,8 +916,9 @@ MonoBehaviour:
   obstacleLayerName: Obstacle
   gameOverManager: {fileID: 0}
   playerMovement: {fileID: 0}
-  verbose: 1
+  defaultLethalFaces: 6
   ziplineDetectRadius: 0.6
+  verbose: 1
 --- !u!114 &158623039089475014
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1611,6 +1619,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 878140e1eb1a055498091d2f9ea853b4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 576773056919805285}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 878140e1eb1a055498091d2f9ea853b4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8475397807288503488}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 878140e1eb1a055498091d2f9ea853b4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4283963931382668114}
   m_SourcePrefab: {fileID: 100100000, guid: 878140e1eb1a055498091d2f9ea853b4, type: 3}
 --- !u!1 &3719462840353000608 stripped
 GameObject:
@@ -1639,6 +1653,54 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!54 &8475397807288503488
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3719462840353000608}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 1
+  m_Constraints: 0
+  m_CollisionDetection: 1
+--- !u!135 &4283963931382668114
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3719462840353000608}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.020584818
+  m_Center: {x: 0.0006435536, y: 0.0012471919, z: 0.00058840064}
 --- !u!4 &4095459896188851738 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 878140e1eb1a055498091d2f9ea853b4, type: 3}

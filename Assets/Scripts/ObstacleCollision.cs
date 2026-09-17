@@ -154,14 +154,17 @@ public class ObstacleCollision : MonoBehaviour
     ///
     /// Lógica: se encuentra el eje dominante de <paramref name="worldNormal"/>.
     /// Para el eje Y se usan direcciones absolutas (Top/Bottom).
-    /// Para los ejes horizontales se usa el forward del jugador en ese instante,
-    /// de forma que "Front" es siempre la cara que el jugador golpea de frente.
+    /// Para los ejes horizontales se usa la dirección de AVANCE del jugador (no la mirada),
+    /// de forma que "Front" es siempre la cara que el jugador golpea de frente al correr,
+    /// aunque esté mirando de lado.
     /// </summary>
     private LethalFaces ClassifyNormal(Vector3 worldNormal)
     {
-        // Dirección de avance del jugador (sin componente vertical)
+        // Dirección de AVANCE del auto-runner (independiente de hacia dónde mire el jugador).
+        // Antes se usaba transform.forward (que gira con la mirada): al mirar de lado, un choque
+        // frontal se clasificaba como lateral y no disparaba el Game Over. Ese era el bug.
         Vector3 rawFwd = playerMovement != null
-            ? playerMovement.transform.forward
+            ? playerMovement.RunForward
             : Vector3.forward;
         Vector3 fwd   = new Vector3(rawFwd.x, 0f, rawFwd.z);
         if (fwd.sqrMagnitude < 0.001f) fwd = Vector3.forward;

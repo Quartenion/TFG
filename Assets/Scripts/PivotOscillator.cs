@@ -46,6 +46,10 @@ public class PivotOscillator : MonoBehaviour
              "        está a triggerBeats de distancia, y se queda ahí.")]
     [SerializeField] private bool _oscillate = true;
 
+    [Tooltip("Solo en modo disparo: NO gira por cercanía del jugador; espera a que algo llame a\n" +
+             "Trigger() (p. ej. un GazeSwitch). Úsalo para puertas que se abren a mano.")]
+    [SerializeField] private bool _waitForExternalTrigger = false;
+
     [Tooltip("Ángulo total de la oscilación (modo oscilación): repartido simétricamente ±mitad.\n" +
              "Ángulo objetivo (modo disparo): rota desde 0° hasta este valor y se queda.")]
     [SerializeField] private float _oscillationAngle = 120f;
@@ -92,6 +96,11 @@ public class PivotOscillator : MonoBehaviour
     private enum Phase { Idle, Moving, Done }
     private Phase  _phase      = Phase.Idle;
     private double _triggerDSP = double.MaxValue;
+    private bool   _triggerRequested;   // Trigger() externo pendiente de aplicar
+
+    // Modo "conducido por la mirada": SetOpen(t) fija directamente el grado de apertura (0..1).
+    private bool  _driven;
+    private float _drivenT;
 
     // Modo apertura manual (tiempo real, sin beat manager)
     private bool  _manualOpen;
@@ -126,10 +135,56 @@ public class PivotOscillator : MonoBehaviour
         _manualDuration = Mathf.Max(0.01f, durationSeconds);
     }
 
+    /// <summary>
+    /// Dispara el giro (modo disparo) AHORA, sincronizado con el beat (dura beatsPerCycle beats).
+    /// Pensado para activarlo desde fuera — p. ej. un GazeSwitch conecta su OnActivated aquí para
+    /// abrir la puerta. Sin argumentos, así se conecta limpio en el evento del Inspector.
+    /// Solo tiene efecto si aún no ha girado; no hace nada en modo oscilación.
+    /// </summary>
+    public void Trigger()
+    {
+        if (_oscillate) return;
+        _triggerRequested = true;
+    }
+
+    /// <summary>Reinicia el disparo: vuelve a 0° y queda esperando otro Trigger().</summary>
+    public void ResetTrigger()
+    {
+        if (_oscillate) return;
+        _phase             = Phase.Idle;
+        _triggerDSP        = double.MaxValue;
+        _triggerRequested  = false;
+        _manualOpen        = false;
+        _driven            = false;
+        transform.rotation = _initialRotation;
+    }
+
+    /// <summary>
+    /// Modo CONDUCIDO POR LA MIRADA: fija el grado de apertura directamente con un progreso 0..1
+    /// (conecta aquí GazeSwitch → On Progress). El objeto gira proporcionalmente mientras el
+    /// progreso sube; como el GazeSwitch descarga el progreso al dejar de mirar, el objeto vuelve
+    /// solo a su sitio. Si el progreso llega a 1 con el switch en One Shot, el switch congela el
+    /// progreso en 1 y el objeto se queda abierto.
+    /// </summary>
+    public void SetOpen(float t01)
+    {
+        _driven  = true;
+        _drivenT = Mathf.Clamp01(t01);
+    }
+
     // ── Update ────────────────────────────────────────────────────────────────
 
     private void Update()
     {
+        // Modo CONDUCIDO POR LA MIRADA (SetOpen): el ángulo lo fija directamente el progreso
+        // externo (0..1). Tiene prioridad sobre todo lo demás.
+        if (_driven)
+        {
+            transform.rotation = _initialRotation
+                * Quaternion.AngleAxis(_oscillationAngle * Ease(_drivenT), _rotationAxis.normalized);
+            return;
+        }
+
         // Apertura manual (tiempo real) — tiene prioridad sobre el resto
         if (_manualOpen)
         {
@@ -153,7 +208,8 @@ public class PivotOscillator : MonoBehaviour
         {
             if (_beatManager.ScheduledStartDSP <= 0.0) return;
 
-            if (!_oscillate)
+            // En modo trigger externo se deja _triggerDSP = MaxValue: solo Trigger() lo dispara.
+            if (!_oscillate && !_waitForExternalTrigger)
                 ComputeTriggerDSP();
 
             _ready = true;
@@ -215,6 +271,13 @@ public class PivotOscillator : MonoBehaviour
     private float UpdateOneShot()
     {
         if (_phase == Phase.Done) return _oscillationAngle;
+
+        // Aplicar un Trigger() externo pendiente: empieza a girar ahora.
+        if (_triggerRequested && _phase == Phase.Idle)
+        {
+            _triggerDSP = AudioSettings.dspTime;
+            _triggerRequested = false;
+        }
 
         double now = AudioSettings.dspTime;
 

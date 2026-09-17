@@ -77,6 +77,7 @@ public class EnergyManager : MonoBehaviour
 
     private float _syringe;
     private bool  _isBlueMode;
+    private bool  _paused;   // congela el llenado pasivo (p. ej. mientras el jugador bucea)
 
     // Anti-spam — ventana deslizante de los ultimos N inputs
     private readonly Queue<bool> _inputWindow = new Queue<bool>(); // true = hit, false = miss
@@ -141,6 +142,9 @@ public class EnergyManager : MonoBehaviour
     {
         // God Mode: congelar toda la lógica de energía (sin llenado pasivo, sin muerte por jeringuilla).
         if (godMode) return;
+
+        // Pausada (p. ej. buceando): la amenaza es el oxígeno, no la jeringuilla.
+        if (_paused) return;
 
         // No aplicar cambios pasivos antes de que empiece el juego.
         // Cuando BeatManager no está reproduciendo (juego no iniciado), congelamos todo.
@@ -223,14 +227,16 @@ public class EnergyManager : MonoBehaviour
     /// Fallo en modo rojo: anade sangre extra (penalizacion).
     /// La cantidad se multiplica por el factor anti-spam si el jugador
     /// lleva mas fallos que aciertos en los ultimos _antispamWindow inputs.
+    /// <paramref name="penaltyScale"/> escala la penalizacion (1 = normal). Lo usa el kayak
+    /// para que fallar remando cueste mas energia que un fallo a pie.
     /// </summary>
-    public float MissRed()
+    public float MissRed(float penaltyScale = 1f)
     {
         if (_isBlueMode) return 0f;
         RecordInput(isHit: false);  // registrar fallo en la ventana anti-spam
         float multiplier = GetMissMultiplier();
         float before = _syringe;
-        ChangeSyringe(_missAbsorbAmount * multiplier);
+        ChangeSyringe(_missAbsorbAmount * multiplier * Mathf.Max(0f, penaltyScale));
         float absorbed = _syringe - before;
         if (absorbed > 0f) OnRedMiss?.Invoke(absorbed);
         return absorbed;
@@ -312,6 +318,12 @@ public class EnergyManager : MonoBehaviour
     {
         if (amount > 0f) ChangeSyringe(-amount);
     }
+
+    /// <summary>
+    /// Pausa/reanuda la lógica pasiva de la jeringuilla (llenado y decay del azul). Se usa mientras
+    /// el jugador bucea: bajo el agua la amenaza es el oxígeno, no la jeringuilla.
+    /// </summary>
+    public void SetPaused(bool paused) => _paused = paused;
 
     // =========================================================================
     // Anti-spam internals
