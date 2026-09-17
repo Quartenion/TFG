@@ -10,6 +10,10 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("Altura máxima del salto en metros. La gravedad y el impulso se calculan automáticamente\n" +
              "para que el jugador llegue exactamente a esta altura en exactamente 1 beat.")]
     public float jumpHeight = 3f;
+    [Tooltip("Duración TOTAL del salto en beats (despegue + aterrizaje). 2 = por defecto (1 subiendo, 1 " +
+             "bajando). Ponlo a 1 en el Player de ESTE nivel para saltos de un beat exacto. Es por-instancia, " +
+             "así que los otros niveles no se ven afectados (siguen en 2).")]
+    public float jumpAirTimeBeats = 2f;
     public float lookSpeed = 2f;
     // ── Física del salto derivada de jumpHeight + BPM ─────────────────────
     // Duración total del salto = 2 beats.
@@ -18,12 +22,13 @@ public class PlayerMovement : MonoBehaviour
 
     private float BeatDuration => 60f / (beatManager != null ? beatManager.Bpm : 180f);
 
-    /// <summary>Gravedad calculada para que el salto dure exactamente 2 beats.</summary>
+    /// <summary>Gravedad calculada para que el salto dure exactamente jumpAirTimeBeats beats.</summary>
     private float Gravity
     {
         get
         {
-            float halfT = BeatDuration; // 1 beat subiendo, 1 beat bajando
+            // tiempo hasta el pico = mitad del vuelo total. 2 beats -> halfT = 1 beat (por defecto).
+            float halfT = BeatDuration * Mathf.Max(0.05f, jumpAirTimeBeats * 0.5f);
             return 2f * jumpHeight / (halfT * halfT);
         }
     }
