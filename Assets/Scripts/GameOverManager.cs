@@ -82,6 +82,20 @@ public class GameOverManager : MonoBehaviour
     [SerializeField] private float _panelFadeInTime  = 0.4f;
     [SerializeField] private bool  _showCursorOnDeath = true;
 
+    [Header("Muerte por agua (caer al río)")]
+    [Tooltip("Layer del agua (el mismo agua sólida del kayak). Al caer en ella = game over.")]
+    [SerializeField] private string _waterLayerName = "Water";
+    [Tooltip("Distancia máxima a la que se busca la superficie del agua por debajo del jugador.")]
+    [SerializeField] private float _waterCheckDistance = 200f;
+    [Tooltip("Margen sobre la superficie: muere cuando los pies quedan a esta distancia (o menos) del agua.")]
+    [SerializeField] private float _waterSurfaceThreshold = 0.2f;
+    [Tooltip("(Opcional) AudioSource y sonido de splash al caer al agua.")]
+    [SerializeField] private AudioSource _splashAudio;
+    [SerializeField] private AudioClip   _splashSound;
+    [Tooltip("(Opcional) Prefab de partículas de splash en la superficie.")]
+    [SerializeField] private GameObject  _splashPrefab;
+    [SerializeField] private float       _splashLifetime = 3f;
+
     [Header("Debug")]
     [SerializeField] private bool _verbose = true;
 
@@ -95,6 +109,10 @@ public class GameOverManager : MonoBehaviour
     private Material _visionMatInst;   // instancia del material del vineteo
     private Material _irisMatInst;     // instancia del material del cierre de iris
     private float    _visionProgress;  // valor actual del progress del vineteo
+
+    private int                 _waterMask = 0;    // mask del layer del agua
+    private Transform           _playerTransform;  // transform del jugador (para el raycast)
+    private CharacterController _playerCC;          // CC del jugador (para saber dónde están los pies)
 
     public bool IsDead => _isDead;
 
@@ -134,6 +152,19 @@ public class GameOverManager : MonoBehaviour
         _baseAudioVolume = AudioListener.volume;
         if (_musicSourceToRestart != null)
             _musicSourceOriginalVolume = _musicSourceToRestart.volume;
+
+        // Muerte por agua: cachear el layer del agua y las referencias del jugador.
+        int w = LayerMask.NameToLayer(_waterLayerName);
+        _waterMask = w == -1 ? 0 : (1 << w);
+        if (w == -1)
+            Debug.LogError($"[GameOver] El layer \"{_waterLayerName}\" no existe. Créalo en Project Settings > Tags and Layers.", this);
+
+        if (_playerMovement == null) _playerMovement = FindAnyObjectByType<PlayerMovement>();
+        if (_playerMovement != null)
+        {
+            _playerTransform = _playerMovement.transform;
+            _playerCC        = _playerMovement.GetComponent<CharacterController>();
+        }
     }
 
     // =========================================================================
@@ -142,7 +173,16 @@ public class GameOverManager : MonoBehaviour
 
     private void Update()
     {
-        if (_isDead || EnergyManager.Instance == null) return;
+        if (_isDead) return;
+
+        // Muerte por caer al agua (río de sangre): se comprueba siempre, viva o no la energía.
+        if (CheckWaterDeath())
+        {
+            HandleDeath(isObstacle: true);
+            return;
+        }
+
+        if (EnergyManager.Instance == null) return;
 
         bool  isBlue = EnergyManager.Instance.IsBlueMode;
         float energy = EnergyManager.Instance.EnergyPercent;
@@ -175,6 +215,40 @@ public class GameOverManager : MonoBehaviour
     // =========================================================================
     // LOGICA DE MUERTE
     // =========================================================================
+
+    /// <summary>
+    /// True si el jugador ha caído al agua. Busca la superficie del agua HACIA ABAJO (su cara superior,
+    /// la misma sobre la que flota el kayak) y comprueba si los PIES del jugador han llegado a esa altura.
+    /// Funciona tanto si el jugador se queda encima del agua como si la atraviesa. No aplica en kayak/tirolina.
+    /// </summary>
+    private bool CheckWaterDeath()
+    {
+        if (_waterMask == 0 || _playerTransform == null) return false;
+        if (_playerMovement != null && (_playerMovement.IsOnKayak || _playerMovement.IsOnZipline)) return false;
+
+        Vector3 origin  = _playerTransform.position + Vector3.up * _waterCheckDistance;
+        float   maxDist = _waterCheckDistance * 2f;
+
+        if (!Physics.Raycast(origin, Vector3.down, out RaycastHit hit,
+                             maxDist, _waterMask, QueryTriggerInteraction.Ignore))
+            return false;
+
+        float waterY = hit.point.y;
+        float feetY  = _playerCC != null ? _playerCC.bounds.min.y : _playerTransform.position.y;
+        if (feetY > waterY + _waterSurfaceThreshold) return false;
+
+        // Splash opcional en la superficie.
+        Vector3 splashPos = new Vector3(_playerTransform.position.x, waterY, _playerTransform.position.z);
+        if (_splashAudio != null && _splashSound != null) _splashAudio.PlayOneShot(_splashSound);
+        if (_splashPrefab != null)
+        {
+            GameObject fx = Instantiate(_splashPrefab, splashPos, Quaternion.identity);
+            if (_splashLifetime > 0f) Destroy(fx, _splashLifetime);
+        }
+
+        if (_verbose) Debug.Log($"[GameOver] Muerte por agua. feetY={feetY:F2} waterY={waterY:F2}");
+        return true;
+    }
 
     private void HandleDeath(bool isObstacle)
     {

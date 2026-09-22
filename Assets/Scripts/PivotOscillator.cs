@@ -25,7 +25,7 @@ public class PivotOscillator : MonoBehaviour
 {
     // ── Enums ──────────────────────────────────────────────────────────────────
 
-    public enum EasingMode { Linear, SmoothStep, EaseIn, EaseOut, Bounce }
+    public enum EasingMode { Linear, SmoothStep, EaseIn, EaseOut, EaseInOut, Bounce }
 
     // ── Inspector ──────────────────────────────────────────────────────────────
 
@@ -85,7 +85,10 @@ public class PivotOscillator : MonoBehaviour
     [SerializeField] private float _spinSpeed = 90f;
 
     [Header("Movimiento")]
-    [SerializeField] private EasingMode _easing = EasingMode.SmoothStep;
+    [Tooltip("Curva del movimiento. Para un péndulo NATURAL usa EaseInOut: frena en AMBOS extremos y\n" +
+             "acelera al pasar por el centro (como un péndulo real). SmoothStep da un efecto parecido.\n" +
+             "EaseIn / EaseOut solo frenan en un extremo (asimétrico).")]
+    [SerializeField] private EasingMode _easing = EasingMode.EaseInOut;
 
     // ── Estado interno ─────────────────────────────────────────────────────────
 
@@ -307,6 +310,8 @@ public class PivotOscillator : MonoBehaviour
             case EasingMode.SmoothStep: return t * t * (3f - 2f * t);
             case EasingMode.EaseIn:     return t * t;
             case EasingMode.EaseOut:    return 1f - (1f - t) * (1f - t);
+            // Sinusoidal: frena en ambos extremos y va rápido por el centro → péndulo natural.
+            case EasingMode.EaseInOut:  return -(Mathf.Cos(Mathf.PI * t) - 1f) * 0.5f;
             case EasingMode.Bounce:     return BounceOut(t);
             default:                    return t;
         }

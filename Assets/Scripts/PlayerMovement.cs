@@ -210,6 +210,7 @@ public class PlayerMovement : MonoBehaviour
 
     // --- Estado privado ---
     private Vector3 _moveDirection    = Vector3.zero;
+    private bool    _isOnStairs       = false;   // true mientras sube/baja escaleras (para el viewmodel)
     private float   _rotationX        = 0f;
     private float   _rotationY        = 0f;
     private float   _initialYRotation = 0f;
@@ -260,6 +261,9 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     public Vector3 RunForward => Quaternion.Euler(0f, _initialYRotation, 0f) * Vector3.forward;
 
+    /// <summary>True mientras el jugador sube/baja escaleras. Lo usa el viewmodel para no rebotar la mano.</summary>
+    public bool IsOnStairs => _isOnStairs;
+
     // Altura suave
     private float _targetHeight;
     private float _defaultCameraLocalY;
@@ -306,8 +310,10 @@ public class PlayerMovement : MonoBehaviour
     // -------------------------------------------------------------------
     private float _jumpBufferTimer      = 0f;
     private float _walljumpCoyoteTimer  = 0f;
+    private float _stairCoyoteTimer     = 0f;
     private const float JumpBufferDuration      = 0.12f;
     private const float WalljumpCoyoteDuration  = 0.12f;
+    private const float StairCoyoteDuration     = 0.25f;   // mantiene "en escaleras" entre escalones
 
     // Slam
     private bool _isSlamming;
@@ -853,6 +859,9 @@ public class PlayerMovement : MonoBehaviour
         // Velocidad de avance efectiva = walkSpeed ± corrección de sincronía (calculada en UpdateSyncCorrection)
         float effectiveForwardSpeed = walkSpeed + SyncSpeedCorrection;
 
+        // Se re-evalúa cada frame en la rama de movimiento normal; false por defecto en dash/slide/wallrun.
+        _isOnStairs = false;
+
         // =================================================================
         // MOVIMIENTO SEGUN ESTADO
         // =================================================================
@@ -1090,13 +1099,23 @@ public class PlayerMovement : MonoBehaviour
 
             // Escaleras: subir escalones + evitar atasco en saltos laterales
             Vector3 hStairDir = new Vector3(_moveDirection.x, 0f, _moveDirection.z);
-            bool onStairs = stairsLayerMask != 0 &&
+            // Ray un poco más largo para detectar también los escalones al BAJAR, cuando el jugador
+            // va cayendo de un escalón al siguiente y no está tocando el tread.
+            bool stairHit = stairsLayerMask != 0 &&
                             Physics.Raycast(transform.position, Vector3.down,
-                                            _cc.height * 0.6f + 0.1f, stairsLayerMask);
+                                            _cc.height * 0.6f + 0.6f, stairsLayerMask);
+            // Coyote: mantener "en escaleras" un instante tras el último impacto, para que los huecos
+            // entre escalón y escalón (sobre todo bajando) no desactiven el flag y la mano no bote.
+            if (stairHit) _stairCoyoteTimer = StairCoyoteDuration;
+            else if (_stairCoyoteTimer > 0f) _stairCoyoteTimer -= Time.deltaTime;
+            bool onStairs = _stairCoyoteTimer > 0f;
             // slopeLimit alto: evita que el CC quede bloqueado por las caras diagonales
             // de ProBuilder al aterrizar de lado o con A/D presionado
             _cc.slopeLimit = onStairs ? 89f : _defaultSlopeLimit;
-            HandleStairClimb(hStairDir);
+            _isOnStairs = onStairs;
+            // Pasamos 'forward' (dirección de AVANCE, fija en el auto-runner) para que el
+            // raycast de escalones apunte al frente aunque el jugador mire de lado.
+            HandleStairClimb(hStairDir, forward);
 
             // Impulso one-shot de salida del kayak.
             // Se aplica AQUÍ — después de que controlVel sobreescribió x/z — para que
@@ -1250,7 +1269,7 @@ public class PlayerMovement : MonoBehaviour
     /// (y dentro de maxStepHeight), lo sube gradualmente con otro CC.Move para no
     /// luchar contra la física interna del CharacterController.
     /// </summary>
-    private void HandleStairClimb(Vector3 hDir)
+    private void HandleStairClimb(Vector3 hDir, Vector3 travelForward)
     {
         if (stairsLayerMask == 0)       return;
         if (!_cc.isGrounded)            return;
@@ -1259,10 +1278,11 @@ public class PlayerMovement : MonoBehaviour
         // El centro del CC está a height/2 sobre el suelo
         float feetY = transform.position.y - _cc.height * 0.5f;
 
-        // Dirección frontal del jugador (horizontal), independiente de A/D.
-        // Si usáramos hDir (diagonal al presionar A/D), el ray horizontal apuntaría
-        // en diagonal y dejaría de detectar el riser, atascando al jugador.
-        Vector3 facing = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+        // Dirección de AVANCE (horizontal), independiente de A/D y de la MIRADA.
+        // Antes se usaba transform.forward, pero el cuerpo gira con la mirada (HandleLook),
+        // así que al mirar de lado el ray apuntaba de lado, no detectaba el riser y el
+        // jugador se atascaba. travelForward es la dirección del auto-runner (fija).
+        Vector3 facing = Vector3.ProjectOnPlane(travelForward, Vector3.up).normalized;
         if (facing.sqrMagnitude < 0.001f) return;
 
         // ── RAY 1: horizontal a nivel de pies, en dirección FRONTAL ──────────

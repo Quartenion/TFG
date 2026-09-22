@@ -63,12 +63,19 @@ public class BeatSnapHelper : MonoBehaviour
     // SNAP  (click derecho → "Snap to nearest beat")
     // =========================================================================
 
-    /// <summary>
-    /// Mueve el obstáculo exactamente al beat más cercano,
-    /// conservando su posición lateral y vertical.
-    /// </summary>
+    /// <summary>Mueve el obstáculo al beat ENTERO más cercano, conservando su lateral y su altura.</summary>
     [ContextMenu("Snap to nearest beat")]
-    public void SnapToNearestBeat()
+    public void SnapToNearestBeat() => SnapToIncrement(1f, "Snap to beat");
+
+    /// <summary>Mueve el obstáculo al MEDIO beat más cercano (0, 0.5, 1, 1.5…), conservando lateral y altura.</summary>
+    [ContextMenu("Snap to nearest half beat")]
+    public void SnapToNearestHalfBeat() => SnapToIncrement(0.5f, "Snap to half beat");
+
+    /// <summary>
+    /// Encaja el obstáculo al múltiplo de beat más cercano según <paramref name="beatFraction"/>
+    /// (1 = beat entero, 0.5 = medio beat), conservando su posición lateral y vertical.
+    /// </summary>
+    private void SnapToIncrement(float beatFraction, string undoLabel)
     {
         if (_visualizer == null)
         {
@@ -79,13 +86,16 @@ public class BeatSnapHelper : MonoBehaviour
         float cell = _visualizer.CellSize;
         if (cell < 0.001f) return;
 
+        float increment = cell * beatFraction;
+        if (increment < 0.001f) return;
+
         Vector3 origin  = _visualizer.Origin;
         Vector3 forward = _visualizer.Forward;
 
         // Proyección del obstáculo sobre el eje del nivel
         float proj        = ProjectedDistance();
-        int   beat        = Mathf.RoundToInt(proj / cell);
-        float snappedDist = beat * cell;
+        int   steps       = Mathf.RoundToInt(proj / increment);
+        float snappedDist = steps * increment;
 
         // Componente lateral (perpendicular al eje, incluye Y) — se conserva
         Vector3 lateral = transform.position - origin - forward * proj;
@@ -94,11 +104,12 @@ public class BeatSnapHelper : MonoBehaviour
         Vector3 newPos  = origin + forward * snappedDist + lateral;
 
 #if UNITY_EDITOR
-        Undo.RecordObject(transform, "Snap to beat");
+        Undo.RecordObject(transform, undoLabel);
 #endif
         transform.position = newPos;
 
-        Debug.Log($"[BeatSnapHelper] '{name}' encajado en Beat {beat} " +
+        float beat = snappedDist / cell;
+        Debug.Log($"[BeatSnapHelper] '{name}' encajado en Beat {beat:0.##} " +
                   $"({snappedDist:F2} m desde el origen)", this);
     }
 
@@ -220,6 +231,16 @@ public class BeatSnapHelperEditor : UnityEditor.Editor
         if (GUILayout.Button("♪  Snap to nearest beat", btnStyle))
         {
             helper.SnapToNearestBeat();
+        }
+
+        UnityEditor.EditorGUILayout.Space(4);
+
+        // Botón de medio beat (color neutro: la posición alineada a medio beat se vería
+        // "roja" contra los beats enteros, así que no reutilizamos el color de error).
+        GUI.backgroundColor = new Color(0.55f, 0.75f, 0.95f);
+        if (GUILayout.Button("♫  Snap to nearest half beat", btnStyle))
+        {
+            helper.SnapToNearestHalfBeat();
         }
 
         GUI.backgroundColor = Color.white;

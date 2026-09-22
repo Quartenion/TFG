@@ -124,6 +124,12 @@ public class StairFallingObstacle : MonoBehaviour
     [Tooltip("Trauma extra en el aterrizaje final [0-1].")]
     [SerializeField] [Range(0f, 1f)] private float _shakeFinal = 0.35f;
 
+    [Header("Randomizar X (botón en el Inspector)")]
+    [Tooltip("X mínima al pulsar 'Mover X aleatorio'.")]
+    [SerializeField] private float _randomXMin = -10.643f;
+    [Tooltip("X máxima al pulsar 'Mover X aleatorio'.")]
+    [SerializeField] private float _randomXMax = 7.643f;
+
     public enum EndBehaviour { Stop, Loop, Destroy }
 
     public enum DescentAxis { MinusZ, PlusZ, ObjectForward }
@@ -399,6 +405,23 @@ public class StairFallingObstacle : MonoBehaviour
                 _phase = Phase.Ended;
                 break;
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Randomizar X
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Mueve el objeto a una X (mundo) aleatoria dentro de [_randomXMin, _randomXMax].
+    /// Lo llama el botón "Mover X aleatorio" del Inspector.
+    /// </summary>
+    public void RandomizeXPosition()
+    {
+        float lo = Mathf.Min(_randomXMin, _randomXMax);
+        float hi = Mathf.Max(_randomXMin, _randomXMax);
+        Vector3 p = transform.position;
+        p.x = Random.Range(lo, hi);
+        transform.position = p;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

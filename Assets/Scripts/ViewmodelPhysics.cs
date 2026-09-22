@@ -20,6 +20,8 @@ public class ViewmodelPhysics : MonoBehaviour
     [Header("Referencias")]
     [Tooltip("CharacterController del jugador (en el raiz Player).")]
     [SerializeField] private CharacterController _cc;
+    [Tooltip("PlayerMovement del jugador: sirve para no rebotar la mano al subir escaleras. Auto si se deja vacío.")]
+    [SerializeField] private PlayerMovement _playerMovement;
 
     // ── Sway de raton ─────────────────────────────────────────────────────────
 
@@ -59,6 +61,12 @@ public class ViewmodelPhysics : MonoBehaviour
     [SerializeField] private float _springStiffness   = 120f;
     [Tooltip("Amortiguacion del muelle (evita oscilaciones infinitas).")]
     [SerializeField] private float _springDamping     = 14f;
+    [Tooltip("Velocidad vertical mínima para contar como SALTO real (filtra micro-saltos de escalones/bordes).")]
+    [SerializeField] private float _jumpDetectMinVelY = 2f;
+    [Tooltip("Velocidad de caída mínima para contar como ATERRIZAJE (filtra rebotes de escalones/bordes).")]
+    [SerializeField] private float _landDetectMinVelY = 2f;
+    [Tooltip("Tope del desplazamiento del muelle (m). La mano nunca puede derivar más de esto del reposo.")]
+    [SerializeField] private float _maxSpringOffset = 0.1f;
 
     // ── Estado interno ────────────────────────────────────────────────────────
 
@@ -92,6 +100,11 @@ public class ViewmodelPhysics : MonoBehaviour
         _restPos     = transform.localPosition;
         _restRot     = transform.localRotation;
         _wasGrounded = _cc != null && _cc.isGrounded;
+
+        if (_playerMovement == null)
+            _playerMovement = _cc != null ? _cc.GetComponent<PlayerMovement>() : null;
+        if (_playerMovement == null)
+            _playerMovement = FindAnyObjectByType<PlayerMovement>();
     }
 
     private void Update()
@@ -171,8 +184,12 @@ public class ViewmodelPhysics : MonoBehaviour
         bool  grounded = _cc.isGrounded;
         float velY     = _cc.velocity.y;
 
-        // Detectar salto (despegar del suelo con velocidad ascendente)
-        if (_wasGrounded && !grounded && velY > 0.5f)
+        // En escaleras NO reaccionamos: al subir escalones isGrounded parpadea y el step-up
+        // vertical da picos de velocidad que, sin este filtro, harían botar la mano en cada escalón.
+        bool onStairs = _playerMovement != null && _playerMovement.IsOnStairs;
+
+        // Detectar salto REAL (despegar del suelo con velocidad ascendente por encima del umbral)
+        if (!onStairs && _wasGrounded && !grounded && velY > _jumpDetectMinVelY)
         {
             // Impulso inicial: aproximar la velocidad necesaria para alcanzar _jumpKickY
             float omega = Mathf.Sqrt(_springStiffness);
@@ -180,8 +197,8 @@ public class ViewmodelPhysics : MonoBehaviour
             _springVelPitch += _jumpKickPitch * omega * 0.4f;
         }
 
-        // Detectar aterrizaje (estaba en aire, ahora en suelo)
-        if (!_wasGrounded && grounded)
+        // Detectar aterrizaje (estaba en aire, ahora en suelo) con impacto significativo
+        if (!onStairs && !_wasGrounded && grounded && Mathf.Abs(_prevVelY) > _landDetectMinVelY)
         {
             float impact    = Mathf.Abs(_prevVelY) * _landKickMultiplier;
             float omega     = Mathf.Sqrt(_springStiffness);
@@ -195,6 +212,11 @@ public class ViewmodelPhysics : MonoBehaviour
         _springVelPitch += (-_springStiffness * _springPitch - _springDamping * _springVelPitch) * dt;
         _springY        += _springVelY     * dt;
         _springPitch    += _springVelPitch * dt;
+
+        // Seguridad anti-deriva: acotar el muelle para que la mano nunca se aleje del reposo.
+        if (_springY > _maxSpringOffset)  { _springY =  _maxSpringOffset; if (_springVelY > 0f) _springVelY = 0f; }
+        if (_springY < -_maxSpringOffset) { _springY = -_maxSpringOffset; if (_springVelY < 0f) _springVelY = 0f; }
+        _springPitch = Mathf.Clamp(_springPitch, -12f, 12f);
 
         _wasGrounded = grounded;
         _prevVelY    = velY;
