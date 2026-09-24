@@ -108,6 +108,9 @@ public class BeatManager : MonoBehaviour
     /// <summary>True si la musica esta sonando.</summary>
     public bool IsPlaying => _audioSource != null && _audioSource.isPlaying;
 
+    /// <summary>AudioSource que el BeatManager usa ahora mismo como reloj (para relevos de pista).</summary>
+    public AudioSource CurrentSource => _audioSource;
+
     // --- Estado interno ---
     private int _lastBeatIndex   = -1;
     private int _lastHalfBeatIdx = -1;
@@ -278,6 +281,17 @@ public class BeatManager : MonoBehaviour
     {
         if (_audioSource != null && _audioSource.clip != null)
             _audioSource.clip.LoadAudioData();
+    }
+
+    /// <summary>
+    /// Cambia la AudioSource que el BeatManager usa como reloj, SIN resetear ScheduledStartDSP.
+    /// Para relevos de pista (nivel → loop del jefe → final): la nueva fuente debe estar ya sonando
+    /// y ALINEADA al beat (arrancada con PlayScheduled en un downbeat y con longitud múltiplo de beat),
+    /// para que la fase (time % beatDuration) siga cuadrando con la rejilla global.
+    /// </summary>
+    public void SwapSource(AudioSource newSource)
+    {
+        if (newSource != null) _audioSource = newSource;
     }
 
     public void StartMusicAt(double dspTime)

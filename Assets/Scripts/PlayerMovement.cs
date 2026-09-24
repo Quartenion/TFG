@@ -417,6 +417,17 @@ public class PlayerMovement : MonoBehaviour
     /// <summary>True mientras el slide está activo (invulnerable a obstáculos).</summary>
     public bool IsSliding => _isSliding;
 
+    /// <summary>True mientras el jugador está haciendo Slam (caída con S). Lo usa la cabeza del jefe (Fase 2).</summary>
+    public bool IsSlamming => _isSlamming;
+
+    /// <summary>Lanza al jugador hacia arriba (rebote). Lo usa la cabeza del jefe cuando la pisas con el Slam.</summary>
+    public void Bounce(float upSpeed)
+    {
+        _isSlamming      = false;
+        _moveDirection.y = upSpeed;
+        _jumpsUsed       = Mathf.Min(_jumpsUsed, 1);   // deja un salto aéreo tras el rebote
+    }
+
     /// <summary>
     /// Programa el inicio del movimiento para que coincida exactamente con
     /// el DSP timestamp en el que arranca la musica (BeatManager.ScheduledStartDSP).

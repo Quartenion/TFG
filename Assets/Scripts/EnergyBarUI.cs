@@ -25,6 +25,12 @@ public class EnergyBarUI : MonoBehaviour
     [SerializeField] private Color _blueColor = new Color(0.15f, 0.55f, 1f, 1f);
     [SerializeField] private float _colorLerpSpeed = 6f;
 
+    [Header("Parpadeo al drenar (BloodSucker)")]
+    [Tooltip("Color de destello al que parpadea la barra mientras un BloodSucker chupa sangre.")]
+    [SerializeField] private Color _drainFlashColor = new Color(1f, 0.85f, 0.25f, 1f);
+    [Tooltip("Velocidad del parpadeo mientras te drenan.")]
+    [SerializeField] private float _drainBlinkSpeed = 18f;
+
     [Header("Texto de combo")]
     [SerializeField] private string _bonusFormat = "BONUS x{0}";
     [SerializeField] private string _comboFormat = "Combo {0}";
@@ -62,7 +68,15 @@ public class EnergyBarUI : MonoBehaviour
         bool blueMode = EnergyManager.Instance != null && EnergyManager.Instance.IsBlueMode;
         Color targetColor = blueMode ? _blueColor : _redColor;
         _currentColor = Color.Lerp(_currentColor, targetColor, Time.deltaTime * _colorLerpSpeed);
-        if (_fillImage != null) _fillImage.color = _currentColor;
+
+        // Parpadeo mientras un BloodSucker te chupa la sangre.
+        Color shown = _currentColor;
+        if (EnergyManager.Instance != null && EnergyManager.Instance.IsBeingDrained)
+        {
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * _drainBlinkSpeed);
+            shown = Color.Lerp(_currentColor, _drainFlashColor, pulse);
+        }
+        if (_fillImage != null) _fillImage.color = shown;
 
         // % en texto (de la sangre)
         if (_percentText != null && EnergyManager.Instance != null)

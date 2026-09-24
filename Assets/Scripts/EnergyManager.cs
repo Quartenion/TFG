@@ -78,6 +78,7 @@ public class EnergyManager : MonoBehaviour
     private float _syringe;
     private bool  _isBlueMode;
     private bool  _paused;   // congela el llenado pasivo (p. ej. mientras el jugador bucea)
+    private float _lastDrainTime = -999f;   // último instante en que un BloodSucker drenó sangre
 
     // Anti-spam — ventana deslizante de los ultimos N inputs
     private readonly Queue<bool> _inputWindow = new Queue<bool>(); // true = hit, false = miss
@@ -111,6 +112,9 @@ public class EnergyManager : MonoBehaviour
 
     public bool IsBlueMode => _isBlueMode;
     public bool IsDead => !godMode && !_isBlueMode && _syringe >= _maxSyringe;
+
+    /// <summary>True si un BloodSucker ha drenado sangre en los últimos 0.15 s. Lo usa la barra para parpadear.</summary>
+    public bool IsBeingDrained => Time.time - _lastDrainTime < 0.15f;
 
     /// <summary>
     /// Tasa de fallos en la ventana deslizante [0..1].
@@ -317,6 +321,20 @@ public class EnergyManager : MonoBehaviour
     public void Restore(float amount)
     {
         if (amount > 0f) ChangeSyringe(-amount);
+    }
+
+    /// <summary>
+    /// Drena sangre del jugador de forma continua: la añade a la jeringuilla (= pierde energía).
+    /// Lo llama el BloodSucker cada frame. En God Mode o modo azul no tiene efecto. Marca
+    /// IsBeingDrained para que la barra parpadee. Si la jeringuilla se llena, dispara la muerte
+    /// (OnSyringeFull) igual que llenarla por fallos.
+    /// </summary>
+    public void DrainBlood(float amount)
+    {
+        if (amount <= 0f) return;
+        if (godMode || _isBlueMode) return;   // en God Mode / bonus azul no te pueden chupar sangre
+        _lastDrainTime = Time.time;
+        ChangeSyringe(amount);                // positivo = llena la jeringuilla = pierde energía
     }
 
     /// <summary>
