@@ -85,6 +85,69 @@ public class BloodSucker : MonoBehaviour
     /// <summary>True mientras está chupando sangre este frame (útil para animaciones externas).</summary>
     public bool IsSucking { get; private set; }
 
+    /// <summary>Cambia cuánta sangre drena por segundo (0 = solo es una diana, no chupa).</summary>
+    public void SetDrain(float perSecond) => _drainPerSecond = Mathf.Max(0f, perSecond);
+
+    /// <summary>
+    /// Mueve el punto alrededor del que flota. Úsalo cada frame para que el bicho VIAJE con algo
+    /// (p. ej. con el jefe en la Fase 3), en lugar de quedarse fijo donde apareció.
+    /// </summary>
+    public void SetBasePosition(Vector3 worldPos) => _basePos = worldPos;
+
+    // ── Conversión (Fase 3 del jefe) ─────────────────────────────────────────
+    private Transform _convertTarget;
+    private bool      _converted;
+
+    /// <summary>
+    /// Si se asigna, al MIRARLO no se desintegra: se da la vuelta, mira a este objetivo (el jefe) y le chupa
+    /// la sangre a ÉL (la línea de sangre va del objetivo al bicho). Null = comportamiento normal.
+    /// </summary>
+    public void SetConvertTarget(Transform target) => _convertTarget = target;
+
+    /// <summary>¿Ya se ha vuelto contra el jefe?</summary>
+    public bool IsConverted => _converted;
+
+    /// <summary>¿Convertido y ya MIRANDO a su objetivo (ha terminado de girarse)?</summary>
+    public bool IsFacingTarget
+    {
+        get
+        {
+            if (!_converted || _convertTarget == null) return _converted;
+            Vector3 d = ConvertPoint() - transform.position;
+            return d.sqrMagnitude < 0.01f || Vector3.Angle(transform.forward, d) < 12f;
+        }
+    }
+
+    /// <summary>Se vuelve contra el jefe (lo llama la mirada si hay objetivo de conversión).</summary>
+    public void Convert()
+    {
+        if (_dead || _converted) return;
+        _converted = true;
+        IsSucking  = false;
+    }
+
+    private Vector3 ConvertPoint()
+    {
+        if (_convertTarget == null) return transform.position + transform.forward;
+        Renderer r = _convertTarget.GetComponent<Renderer>();
+        return r != null ? r.bounds.center : _convertTarget.position;
+    }
+
+    private bool _forceDisintegrate;
+
+    /// <summary>Se desintegra SÍ o SÍ (aunque tenga objetivo de conversión).</summary>
+    public void DisintegrateNow()
+    {
+        _forceDisintegrate = true;
+        Disintegrate();
+    }
+
+    private void OnGazed()
+    {
+        if (_convertTarget != null) Convert();
+        else Disintegrate();
+    }
+
     private void Awake()
     {
         _basePos    = transform.position;
@@ -103,7 +166,7 @@ public class BloodSucker : MonoBehaviour
         // Matar mirándolo: engancha el GazeSwitch → Disintegrate automáticamente.
         _gaze = GetComponent<GazeSwitch>();
         if (_gaze == null) _gaze = GetComponentInChildren<GazeSwitch>();
-        if (_gaze != null) _gaze.OnActivated.AddListener(Disintegrate);
+        if (_gaze != null) _gaze.OnActivated.AddListener(OnGazed);
         else Debug.LogWarning($"[BloodSucker] '{name}' no tiene GazeSwitch: no se podrá matar mirándolo.", this);
 
         EnsureLine();
@@ -112,7 +175,7 @@ public class BloodSucker : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_gaze != null) _gaze.OnActivated.RemoveListener(Disintegrate);
+        if (_gaze != null) _gaze.OnActivated.RemoveListener(OnGazed);
     }
 
     private void Update()
@@ -122,6 +185,21 @@ public class BloodSucker : MonoBehaviour
         // Hover alrededor de la posición base.
         if (_hover)
             transform.position = _basePos + Vector3.up * (Mathf.Sin(Time.time * _hoverSpeed + _hoverPhase) * _hoverAmplitude);
+
+        // Convertido: mira al JEFE (girándose poco a poco) y le chupa la sangre a él.
+        if (_converted)
+        {
+            Vector3 tgt = ConvertPoint();
+            Vector3 dir = tgt - transform.position;
+            if (dir.sqrMagnitude > 0.0001f)
+            {
+                Quaternion look = Quaternion.LookRotation(dir.normalized, Vector3.up);
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, look, 180f * Time.deltaTime);
+            }
+            IsSucking = IsFacingTarget;
+            UpdateBloodLine(IsSucking, tgt);
+            return;
+        }
 
         if (_player == null) return;
 
@@ -150,7 +228,8 @@ public class BloodSucker : MonoBehaviour
             if (ahead < 0f)
                 _passed = true;                            // lo pasó → nunca más chupa
             else
-                sucking = ahead > _inFrontMargin && toMe.magnitude <= DrainRangeMeters();
+                sucking = _drainPerSecond > 0f &&                 // con drenaje 0 es solo una diana
+                          ahead > _inFrontMargin && toMe.magnitude <= DrainRangeMeters();
         }
 
         IsSucking = sucking;
@@ -188,6 +267,16 @@ public class BloodSucker : MonoBehaviour
 
     private void UpdateBloodLine(bool visible)
     {
+        if (_player == null) { UpdateBloodLine(false, Vector3.zero); return; }
+        Vector3 start = _lineStartOnPlayer != null
+            ? _lineStartOnPlayer.position
+            : _player.position + _lineStartOffset;
+        UpdateBloodLine(visible, start);
+    }
+
+    /// <summary>Línea de sangre desde 'start' (de quien chupa) hasta el bicho.</summary>
+    private void UpdateBloodLine(bool visible, Vector3 start)
+    {
         if (_bloodLine == null) return;
 
         if (!visible)
@@ -197,9 +286,6 @@ public class BloodSucker : MonoBehaviour
         }
         if (!_bloodLine.enabled) _bloodLine.enabled = true;
 
-        Vector3 start = _lineStartOnPlayer != null
-            ? _lineStartOnPlayer.position
-            : _player.position + _lineStartOffset;
         Vector3 end = transform.position;
 
         // Eje perpendicular para el serpenteo (se anula en los extremos con sin(pi·t)).
@@ -225,6 +311,9 @@ public class BloodSucker : MonoBehaviour
     /// </summary>
     public void Disintegrate()
     {
+        // Con objetivo de conversión (Fase 3 del jefe), mirarlo NO lo mata: se vuelve contra el jefe. Así da igual
+        // si el GazeSwitch del prefab tiene "Disintegrate" puesto a mano en su OnActivated.
+        if (_convertTarget != null && !_forceDisintegrate) { Convert(); return; }
         if (_dead) return;
         _dead = true;
         IsSucking = false;

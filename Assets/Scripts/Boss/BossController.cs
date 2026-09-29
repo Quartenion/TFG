@@ -25,7 +25,7 @@ using UnityEngine.Events;
 ///      barra, OnPlatformBeat→tu spawner de plataformas.
 /// </summary>
 [AddComponentMenu("Boss/Boss Controller")]
-public class BossController : MonoBehaviour
+public partial class BossController : MonoBehaviour   // la Fase 3 está en BossControllerPhase3.cs
 {
     public enum BossState { Idle, Intro, Phase1, Phase2, Phase3, Defeated }
 
@@ -366,6 +366,7 @@ public class BossController : MonoBehaviour
     private void Awake()
     {
         _hp = _maxHp;
+        InitPhase3GazeSwitches();   // BossControllerPhase3.cs: apagados hasta que caiga el escudo
     }
 
     private void Start()
@@ -384,6 +385,7 @@ public class BossController : MonoBehaviour
             _headCaptured = true;
         }
         OnHpChanged?.Invoke(1f);
+        if (!_disabled) InitVictory();   // BossControllerPhase3.cs: END escondido y fin de nivel bloqueado
     }
 
     private void Update()
@@ -425,6 +427,16 @@ public class BossController : MonoBehaviour
         FollowPlayer();
         ApplyClimb();
         UpdatePhase2();
+        UpdatePhase3();
+        UpdateVictory();
+
+        // La pelea del jefe se juega SIN modificadores de la tienda.
+        PlayerProgress.Suspended = FightInProgress;
+    }
+
+    private void OnDestroy()
+    {
+        PlayerProgress.Suspended = false;
     }
 
     /// <summary>El jefe avanza con el jugador: se coloca a _leadBeats beats por delante y mantiene ese lead.</summary>
@@ -450,7 +462,7 @@ public class BossController : MonoBehaviour
     {
         if (!_ready) return;
         Vector3 p = transform.position;
-        p.y = _homeY + ClimbOffset();
+        p.y = _homeY + ClimbOffset() - _p3SinkOffset;   // en la Fase 3 se hunde en la lava
         transform.position = p;
     }
 
@@ -521,6 +533,9 @@ public class BossController : MonoBehaviour
 
     private bool _appeared;
 
+    /// <summary>¿Está en marcha la pelea (el jefe ha aparecido y no ha sido derrotado)?</summary>
+    public bool FightInProgress => _appeared && _state != BossState.Defeated;
+
     private void EnterIntro()
     {
         _state = BossState.Intro;
@@ -566,6 +581,7 @@ public class BossController : MonoBehaviour
             case 3:
                 _state = BossState.Phase3;
                 OnPhaseChanged?.Invoke(3);
+                EnterPhase3();   // BossControllerPhase3.cs: derrumbe → kayak → escudo/BloodSuckers/mirada
                 break;
         }
     }
@@ -1386,8 +1402,9 @@ public class BossController : MonoBehaviour
 
         if (_hp <= 0) { Defeat(); return; }
 
-        // ¿Fase superada? Programa el cambio en el siguiente múltiplo de 4.
-        if (_hitsThisPhase >= _hitsPerPhase)
+        // ¿Fase superada? Programa el cambio en el siguiente múltiplo de 4. (La Fase 3 es la última: su final
+        // lo gestiona ella misma al destruir la cabeza.)
+        if (_state != BossState.Phase3 && _hitsThisPhase >= _hitsPerPhase)
         {
             int cur = CurrentBeat();
             _phaseChangeBeat = cur - (cur % 4) + 4;   // siguiente downbeat
@@ -1409,10 +1426,13 @@ public class BossController : MonoBehaviour
 
     private void Defeat()
     {
+        if (_state == BossState.Defeated) return;
         _state = BossState.Defeated;
         _schedule.Clear();
+        CleanupPhase3();   // quita escudo, BloodSuckers y dianas que quedaran
         if (_verbose) Debug.Log("[Boss] Derrotado.");
         OnDefeated?.Invoke();
+        BeginVictory();    // BossControllerPhase3.cs: sale terreno de la lava, se rompe el kayak, END al acabar la canción
     }
 
     // ── Info para el jugador (hit) ─────────────────────────────────────────────
@@ -1427,7 +1447,7 @@ public class BossController : MonoBehaviour
     /// <summary>Ataque LETAL que no se ha esquivado: game over inmediato (funciona aunque haya God Mode).</summary>
     public void KillPlayer()
     {
-        if (_gameOver != null) _gameOver.TriggerGameOver();
+        if (_gameOver != null) _gameOver.TryKillByObstacle(null);   // (el ESCUDO de la tienda lo para)
         else if (EnergyManager.Instance != null) EnergyManager.Instance.DrainBlood(9999f);   // fallback
     }
 }

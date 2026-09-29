@@ -126,6 +126,14 @@ public class DoorInteraction : MonoBehaviour
             Trigger();
     }
 
+    /// <summary>Reaparición en un checkpoint: la puerta ya se "usó" (sin teleport ni secuencia) y se ve el corazón.</summary>
+    public void SkipForCheckpoint()
+    {
+        _triggered = true;
+        _inRange   = false;
+        if (_heartProp != null) _heartProp.SetActive(true);
+    }
+
     private void Trigger()
     {
         _triggered = true;

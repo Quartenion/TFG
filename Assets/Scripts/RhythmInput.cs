@@ -145,6 +145,9 @@ public class RhythmInput : MonoBehaviour
         // a EnergyManager directamente. RhythmInput se salta para evitar doble-conteo.
         if (_player != null && _player.IsOnKayak) return;
 
+        // Auto-latido (tienda): en SU beat el latido lo da él; el clic del jugador se ignora (si no, se pisaban).
+        if (AutoBeater.SuppressPlayerClickNow()) return;
+
         ProcessClick(affectSyringe: true);
     }
 
@@ -160,7 +163,7 @@ public class RhythmInput : MonoBehaviour
         // Evaluar timing. BeatManager usa CorrectedTime (con compensacion de latencia).
         TimingResult result = TimingResult.Miss;
         if (_beatManager != null)
-            result = _beatManager.EvaluateTiming();
+            result = _beatManager.EvaluateClickTiming();   // (con «Doble tempo» también el medio beat)
 
         // Anti-spam: un solo hit valido por beat.
         // Si el jugador ya acerto en este mismo beat (misma ventana), el click extra
@@ -168,9 +171,12 @@ public class RhythmInput : MonoBehaviour
         // Esto impide que spamear dentro del beat window genere energia ilimitada.
         if (result != TimingResult.Miss && _beatManager != null)
         {
-            int beatIdx = _beatManager.CurrentBeatIndex;
+            int beatIdx = _beatManager.ClickIndex;
             if (beatIdx == _lastHitBeatIdx)
             {
+                // «Pulso limpio» (tienda): el clic repetido se ignora (ni acierto ni fallo).
+                if (PlayerProgress.GetLevel(ShopIds.CleanPulse) > 0) return;
+
                 // Click extra en la misma ventana → penalizar como miss
                 result = TimingResult.Miss;
             }
@@ -189,6 +195,8 @@ public class RhythmInput : MonoBehaviour
 
         // God Mode auto-clic: solo feedback visual, no toca la jeringuilla (ni late ni rellena).
         if (!affectSyringe) return;
+
+        RunStats.HeartPress(result);   // (contratos: latidos, fallos, Perfect, rachas)
 
         if (result != TimingResult.Miss)
             RegisterHit(result);
@@ -218,11 +226,22 @@ public class RhythmInput : MonoBehaviour
             em.HitRed(timing);
         }
 
+        // «Racha dorada» (tienda): +5 monedas cada 16 aciertos seguidos.
+        _coinStreak++;
+        if (_coinStreak % 16 == 0 && PlayerProgress.GetLevel(ShopIds.ComboCoins) > 0) LevelCoins.Collect(5);
+
+        // «Latido dorado» (tienda): +1 moneda por cada Perfect.
+        if (timing == TimingResult.Perfect && PlayerProgress.GetLevel(ShopIds.PerfectCoin) > 0)
+            LevelCoins.Collect(1);
+
         OnBeatHit?.Invoke();
     }
 
+    private int _coinStreak;   // aciertos seguidos (para «Racha dorada»)
+
     private void RegisterMiss()
     {
+        _coinStreak = 0;
         var em = EnergyManager.Instance;
         bool wasBonus = IsBonusActive;
 

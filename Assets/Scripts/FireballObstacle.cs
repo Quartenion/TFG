@@ -28,7 +28,7 @@ using UnityEngine;
 /// LETALIDAD: la muerte la gestiona este mismo script con killRadius (fiable para un objeto
 ///   en movimiento). No necesita estar en la layer "Obstacle" ni tener ObstacleInfo.
 /// </summary>
-public class FireballObstacle : MonoBehaviour
+public class FireballObstacle : MonoBehaviour, IRewindable
 {
     [Header("Referencias")]
     [Tooltip("BeatManager de la escena. Se localiza en BeatManager.Instance si se deja vacío.")]
@@ -120,7 +120,7 @@ public class FireballObstacle : MonoBehaviour
             (transform.position - _player.position).sqrMagnitude <= _killRadius * _killRadius)
         {
             _dead = true;
-            if (_gameOverManager != null) _gameOverManager.TriggerGameOver();
+            if (_gameOverManager != null) _gameOverManager.TryKillByObstacle(gameObject);   // (con escudo, se rompe)
             else Debug.LogError("[FireballObstacle] GameOverManager no está asignado.", this);
             return;
         }
@@ -218,6 +218,25 @@ public class FireballObstacle : MonoBehaviour
     }
 
     /// <summary>Progreso [0..1] de 'now' dentro del tramo [a, b].</summary>
+    /// <summary>REBOBINADO: vuelve a ser letal y recalcula el salto con el reloj actual (el Update la coloca).</summary>
+    public void OnTimeRewind()
+    {
+        _dead = false;
+        if (!_initialized || _beatManager == null) return;
+        ComputeTiming();
+        if (_loop && _cycleSpanDSP > 0.0)
+        {
+            double now = AudioSettings.dspTime;
+            while (now >= _landDSP)
+            {
+                _launchDSP    += _cycleSpanDSP;
+                _apexDSP      += _cycleSpanDSP;
+                _fallStartDSP += _cycleSpanDSP;
+                _landDSP      += _cycleSpanDSP;
+            }
+        }
+    }
+
     private static float SpanT(double now, double a, double b)
     {
         return b > a ? Mathf.Clamp01((float)((now - a) / (b - a))) : 1f;

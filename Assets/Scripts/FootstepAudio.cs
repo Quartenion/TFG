@@ -43,6 +43,9 @@ public class FootstepAudio : MonoBehaviour
     [Tooltip("Velocidad minima (unidades/s) para considerar que el jugador se esta moviendo.")]
     [SerializeField] private float _minSpeedThreshold = 0.5f;
 
+    /// <summary>Clips de pasos asignados (los reutiliza LobbyMusic en el freeroam).</summary>
+    public AudioClip[] Clips => _footstepClips;
+
     private CharacterController _cc;
     private int _lastClipIndex = -1;
     private Coroutine _pendingStep;

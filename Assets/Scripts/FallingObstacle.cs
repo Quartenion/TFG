@@ -19,7 +19,7 @@ using UnityEngine;
 ///   3. Ajusta _ceilingY y _fallGravity.
 ///   4. (Opcional) Añade un hijo con la sombra/icono de aviso y asígnalo a _warningIndicator.
 /// </summary>
-public class FallingObstacle : MonoBehaviour
+public class FallingObstacle : MonoBehaviour, IRewindable
 {
     // ─────────────────────────────────────────────────────────────────────────
     // Inspector
@@ -176,6 +176,21 @@ public class FallingObstacle : MonoBehaviour
         // Tiempo que tarda en caer con gravedad real: h = ½gt² → t = √(2h/g)
         _fallDuration = Mathf.Sqrt(2f * fallDistance / g);
 
+        if (double.IsNaN(_arrivalOffset)) _arrivalOffset = ComputeArrivalOffset();
+
+        double arrivalDSP   = _beatManager.ScheduledStartDSP + _arrivalOffset;
+        double beatDuration = _beatManager.BeatDuration;
+
+        _startFallDSP = arrivalDSP - (double)(_beatsBeforeArrival * beatDuration);
+        _sfxDSP       = arrivalDSP - (double)_sfxLeadTime;
+        _warningDSP   = _startFallDSP - (double)(_warningBeats * beatDuration);
+        _sfxPlayed    = false;
+    }
+
+    private double _arrivalOffset = double.NaN;   // segundos de canción hasta que llega el jugador (se calcula una vez)
+
+    private double ComputeArrivalOffset()
+    {
         float distFromOrigin;
         float walkSpeed;
 
@@ -193,14 +208,41 @@ public class FallingObstacle : MonoBehaviour
                 "Usando Z directa y walkSpeed = 6 m/s.", this);
         }
 
-        double arrivalDSP   = _beatManager.ScheduledStartDSP
-                              + (double)(distFromOrigin / walkSpeed);
-        double beatDuration = _beatManager.BeatDuration;
+        return (double)(distFromOrigin / walkSpeed);
+    }
 
-        _startFallDSP = arrivalDSP - (double)(_beatsBeforeArrival * beatDuration);
-        _sfxDSP       = arrivalDSP - (double)_sfxLeadTime;
-        _warningDSP   = _startFallDSP - (double)(_warningBeats * beatDuration);
-        _sfxPlayed    = false;
+    /// <summary>
+    /// REBOBINADO: recalcula los tiempos con el reloj actual y se coloca directamente en la fase que toca
+    /// (arriba esperando, con el aviso, cayendo o ya en el suelo), sin repetir el golpe si ya había caído.
+    /// </summary>
+    public void OnTimeRewind()
+    {
+        if (!_initialized || _beatManager == null) return;
+        CalculateTiming();
+
+        double now = AudioSettings.dspTime;
+        _sfxPlayed = now >= _sfxDSP;
+
+        if (now < _warningDSP)
+        {
+            _phase = Phase.Idle;
+            ApplyY(_ceilingY);
+            if (_warningIndicator != null) _warningIndicator.SetActive(false);
+        }
+        else if (now < _startFallDSP)
+        {
+            _phase = Phase.Warning;
+            ApplyY(_ceilingY);
+            if (_warningIndicator != null) _warningIndicator.SetActive(true);
+        }
+        else
+        {
+            if (_warningIndicator != null) _warningIndicator.SetActive(false);
+            float t = (float)(now - _startFallDSP);
+            float y = _ceilingY - 0.5f * _fallGravity * t * t;
+            if (y <= _landY) { _phase = Phase.Landed;  ApplyY(_landY); }
+            else             { _phase = Phase.Falling; ApplyY(y); }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────

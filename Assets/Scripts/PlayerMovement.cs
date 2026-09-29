@@ -28,10 +28,20 @@ public class PlayerMovement : MonoBehaviour
         get
         {
             // tiempo hasta el pico = mitad del vuelo total. 2 beats -> halfT = 1 beat (por defecto).
+            if (_gravityOverride > 0f) return _gravityOverride;   // p. ej. cayendo con el suelo en la Fase 3
             float halfT = BeatDuration * Mathf.Max(0.05f, jumpAirTimeBeats * 0.5f);
             return 2f * jumpHeight / (halfT * halfT);
         }
     }
+
+    private float _gravityOverride;
+
+    /// <summary>Fuerza una gravedad concreta (m/s²) hasta que se quite con 0. La usa el jefe para que el jugador caiga
+    /// a la MISMA velocidad que los bloques del suelo al derrumbarse.</summary>
+    public void SetGravityOverride(float gravity) => _gravityOverride = Mathf.Max(0f, gravity);
+
+    /// <summary>Gravedad actual del jugador (m/s²). La usa el jefe para predecir dónde cae (Fase 3).</summary>
+    public float CurrentGravity => Gravity;
 
     /// <summary>Impulso vertical inicial: jugador alcanza jumpHeight en 1 beat (subida).</summary>
     private float JumpPower => Mathf.Sqrt(2f * Gravity * jumpHeight);
@@ -58,13 +68,14 @@ public class PlayerMovement : MonoBehaviour
     [Header("Dash (E + A/D)")]
     public float dashSpeed = 28f;
     public float dashDuration = 0.18f;
+    [Tooltip("(Sin uso) Las acciones ya no tienen cooldown.")]
     public float dashCooldown = 0.5f;
     public float dashEnergyCost = 25f;
 
     [Header("Slide (Shift)")]
     [Tooltip("Duracion del slide en segundos")]
     public float slideDuration = 0.55f;
-    [Tooltip("Cooldown entre slides")]
+    [Tooltip("(Sin uso) Las acciones ya no tienen cooldown.")]
     public float slideCooldown = 0.8f;
     [Tooltip("Energia que cuesta el slide")]
     public float slideEnergyCost = 12f;
@@ -253,6 +264,9 @@ public class PlayerMovement : MonoBehaviour
     /// <summary>True mientras el jugador está montado en el KayakController.</summary>
     public bool IsOnKayak => _isOnKayak;
 
+    /// <summary>¿Está en movimiento libre (área de antes de empezar el nivel)?</summary>
+    public bool IsFreeroam => _freeroamMode;
+
     /// <summary>
     /// Dirección horizontal de AVANCE del auto-runner, INDEPENDIENTE de hacia dónde mire el
     /// jugador (el cuerpo gira al mirar, pero el avance sigue siempre el eje de la pista).
@@ -399,13 +413,14 @@ public class PlayerMovement : MonoBehaviour
 
     void OnDestroy()
     {
-        _moveAction.Disable();
-        _lookAction.Disable();
-        _jumpAction.Disable();
-        _slideAction.Disable();
-        _dashAction.Disable();
-        _ziplineAction.Disable();
-        _slamAction.Disable();
+        // (Pueden ser null si el objeto se destruye antes de inicializarse, p. ej. al cambiar de escena.)
+        _moveAction?.Disable();
+        _lookAction?.Disable();
+        _jumpAction?.Disable();
+        _slideAction?.Disable();
+        _dashAction?.Disable();
+        _ziplineAction?.Disable();
+        _slamAction?.Disable();
 
         if (beatManager != null)
             beatManager.OnHalfBeat.RemoveListener(OnBobBeat);
@@ -416,6 +431,47 @@ public class PlayerMovement : MonoBehaviour
 
     /// <summary>True mientras el slide está activo (invulnerable a obstáculos).</summary>
     public bool IsSliding => _isSliding;
+
+    // ── Rebobinado (tienda) ────────────────────────────────────────────────────
+    public bool  IsDashing     => _isDashing;
+    public bool  IsWallrunning => _isWallrunning;
+    public bool  IsGroundedNow => _cc != null && _cc.enabled && _cc.isGrounded;
+    public float LookYaw       => _rotationY;
+    public float LookPitch     => _rotationX;
+
+    /// <summary>Coloca al jugador y su mirada (lo usa el Rebobinado mientras vuelve atrás en el tiempo).</summary>
+    public void ApplyRewindPose(Vector3 pos, float yaw, float pitch)
+    {
+        bool ccOn = _cc != null && _cc.enabled;
+        if (ccOn) _cc.enabled = false;
+        transform.position = pos;
+        if (ccOn) _cc.enabled = true;
+        _rotationY = yaw;
+        _rotationX = pitch;
+        transform.rotation = Quaternion.Euler(0f, _initialYRotation + _rotationY, 0f);
+        if (playerCamera != null) playerCamera.transform.localRotation = Quaternion.Euler(_rotationX, 0f, 0f);
+    }
+
+    /// <summary>Suelta la tirolina al instante (lo usa el Rebobinado al volver a un momento en que ibas a pie).</summary>
+    public void ForceExitZipline()
+    {
+        if (_isOnZipline) DetachFromZipline();
+    }
+
+    /// <summary>Tras rebobinar: sin ninguna acción en curso (ni salto, ni dash, ni slide, ni wallrun, ni slam).</summary>
+    public void ResetMotionAfterRewind()
+    {
+        if (_isOnZipline) DetachFromZipline();
+        if (_isWallrunning) EndWallrun();
+        if (_isSliding)     EndSlide();
+        _isDashing        = false;
+        _isSlamming       = false;
+        _moveDirection    = Vector3.zero;
+        _jumpsUsed        = 0;
+        _jumpBufferTimer  = 0f;
+        _slidePitchOffset = 0f;
+        _wallRollOffset   = 0f;
+    }
 
     /// <summary>True mientras el jugador está haciendo Slam (caída con S). Lo usa la cabeza del jefe (Fase 2).</summary>
     public bool IsSlamming => _isSlamming;
@@ -479,8 +535,12 @@ public class PlayerMovement : MonoBehaviour
         _rotationY        = 0f;
         _rotationX        = 0f;
         _moveDirection    = Vector3.zero;
+        IsMovingToStart   = true;
         StartCoroutine(SmoothMoveCoroutine(targetPos, duration));
     }
+
+    /// <summary>True mientras el jugador camina solo hasta el Starting Point (tras abrir la puerta / la pared).</summary>
+    public bool IsMovingToStart { get; private set; }
 
     private System.Collections.IEnumerator SmoothMoveCoroutine(Vector3 targetPos, float duration)
     {
@@ -517,6 +577,7 @@ public class PlayerMovement : MonoBehaviour
             playerCamera.transform.localRotation = Quaternion.identity;
 
         if (cc != null) cc.enabled = true;
+        IsMovingToStart = false;
     }
 
     /// <summary>
@@ -769,7 +830,7 @@ public class PlayerMovement : MonoBehaviour
                     {
                         _isDashing             = true;
                         _dashTimeRemaining     = dashDuration;
-                        _dashCooldownRemaining = dashCooldown;
+                        _dashCooldownRemaining = 0f;   // (sin cooldown)
                         _dashDirection         = dir;
                         if (_isWallrunning) EndWallrun();
                         PlaySfx(dashSound);
@@ -809,7 +870,7 @@ public class PlayerMovement : MonoBehaviour
                 {
                     _isSliding              = true;
                     _slideTimeRemaining     = slideDuration;
-                    _slideCooldownRemaining = slideCooldown;
+                    _slideCooldownRemaining = 0f;   // (sin cooldown)
                     Vector3 dir = forward * moveInput.y + right * moveInput.x;
                     dir.y = 0f;
                     _slideDirection    = dir.normalized;
@@ -1031,6 +1092,9 @@ public class PlayerMovement : MonoBehaviour
 
                     if (canJump)
                     {
+                        // Saltar CANCELA el slam: mientras _isSlamming no se aplica gravedad, así que si se
+                        // quedaba activo, el salto subía a velocidad constante sin freno (salía disparado).
+                        _isSlamming      = false;
                         _moveDirection.y = power;
                         _jumpsUsed++;
                         PlaySfx(jumpSound);
@@ -1205,6 +1269,7 @@ public class PlayerMovement : MonoBehaviour
         // para no perder un frame de avance.
         _moveDirection.x = _walljumpBoostVelocity.x;
         _moveDirection.y = WalljumpPower;
+        _isSlamming      = false; // el walljump también cancela el slam (si no, subiría sin gravedad)
         _jumpsUsed       = 1; // queda un salto en el aire tras el walljump
 
         EndWallrun();              // pone _walljumpCoyoteTimer = WalljumpCoyoteDuration

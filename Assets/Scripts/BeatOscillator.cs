@@ -20,7 +20,7 @@ using UnityEngine;
 ///   4. Si hay Rigidbody en el objeto, ponlo en Is Kinematic.
 /// </summary>
 [AddComponentMenu("Level/Beat Oscillator")]
-public class BeatOscillator : MonoBehaviour
+public class BeatOscillator : MonoBehaviour, IRewindable
 {
     // ── Enums ─────────────────────────────────────────────────────────────────
 
@@ -187,7 +187,25 @@ public class BeatOscillator : MonoBehaviour
 
     // ── Modo disparo ──────────────────────────────────────────────────────────
 
+    private double _arrivalOffset = double.NaN;   // segundos de canción hasta que llega el jugador (se calcula una vez, en A)
+
     private void ComputeTriggerDSP()
+    {
+        if (double.IsNaN(_arrivalOffset)) _arrivalOffset = ComputeArrivalOffset();
+        _triggerDSP = _beatManager.ScheduledStartDSP + _arrivalOffset
+                      - (double)(_triggerBeats * _beatManager.BeatDuration);
+    }
+
+    /// <summary>REBOBINADO: recalcula el disparo con el reloj actual; el Update lo deja en A, a medio camino o en B.</summary>
+    public void OnTimeRewind()
+    {
+        if (_driven || _oscillate || _waitForExternalTrigger || !_ready || _beatManager == null) return;
+        ComputeTriggerDSP();
+        _phase = Phase.Idle;
+        _triggerRequested = false;
+    }
+
+    private double ComputeArrivalOffset()
     {
         float dist, speed;
 
@@ -205,8 +223,7 @@ public class BeatOscillator : MonoBehaviour
                 $"Usando Z={dist:F1} m y walkSpeed=6 m/s — el trigger puede ser incorrecto.", this);
         }
 
-        double arrivalDSP = _beatManager.ScheduledStartDSP + (double)(dist / speed);
-        _triggerDSP       = arrivalDSP - (double)(_triggerBeats * _beatManager.BeatDuration);
+        return (double)(dist / speed);
     }
 
     private void UpdateOneShot()

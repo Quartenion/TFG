@@ -2880,8 +2880,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RhythmHUDController
   beatManager: {fileID: 0}
   rhythmInput: {fileID: 0}
+  crosshair: {fileID: 2644888116206303255}
   ringContainer: {fileID: 5440275250589829127}
-  ringPrefab: {fileID: 2140507486502354176, guid: 6969dfb919b862a47bb8cf8ddd626f1a, type: 3}
+  ringPrefab: {fileID: 4167728783264308913, guid: 6969dfb919b862a47bb8cf8ddd626f1a, type: 3}
   targetDiameter: 120
   startDiameter: 300
   beatsAhead: 1

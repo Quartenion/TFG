@@ -178,8 +178,20 @@ public class PlayerPathRecorder : MonoBehaviour
             return;
         }
 
-        // Sobreescribir la grabación anterior
-        recordedPath.Clear();
+        if (CheckpointSystem.HasActive)
+        {
+            // Reaparición en un CHECKPOINT (el nivel se recarga, pero es la misma partida): NO se borra lo grabado.
+            // Solo se quita lo que venía DESPUÉS del punto del checkpoint, que se va a volver a jugar y a grabar.
+            float cut = CheckpointSystem.Active.songOffset;
+            recordedPath.frames.RemoveAll(f => f.songTime > cut);
+            recordedPath.actions.RemoveAll(a => a.songTime > cut);
+            Debug.Log($"[PathRecorder] Checkpoint: se conserva la grabación hasta {cut:F2} s ({recordedPath.frames.Count} frames).");
+        }
+        else
+        {
+            // Partida nueva: sobreescribir la grabación anterior
+            recordedPath.Clear();
+        }
         recordedPath.bpm       = beatManager != null ? beatManager.Bpm : 0f;
         recordedPath.walkSpeed = playerMovement != null ? playerMovement.walkSpeed : 0f;
 

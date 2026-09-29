@@ -87,6 +87,11 @@ public class GazeSwitch : MonoBehaviour
 
     private void Update()
     {
+        if (_playerCamera == null || !_playerCamera.isActiveAndEnabled)
+        {
+            Camera main = Camera.main;               // la cámara pudo cambiar (p. ej. al subir al kayak)
+            if (main != null) _playerCamera = main;
+        }
         if (_playerCamera == null) return;
         if (_oneShot && _activated) return;
 
@@ -127,15 +132,50 @@ public class GazeSwitch : MonoBehaviour
     {
         Ray ray = new Ray(_playerCamera.transform.position, _playerCamera.transform.forward);
 
+        // Con raíces ignoradas (p. ej. el jugador y su kayak): el primer collider que NO sea de ellas.
+        if (_ignoredRoots != null && _ignoredRoots.Length > 0)
+        {
+            RaycastHit[] hits = Physics.RaycastAll(ray, _maxDistance, _obstruction, QueryTriggerInteraction.Ignore);
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            foreach (RaycastHit h in hits)
+            {
+                if (IsIgnored(h.collider.transform)) continue;
+                LastHitName = h.collider.name;
+                return h.collider.transform == transform || h.collider.transform.IsChildOf(transform);
+            }
+            LastHitName = "(nada)";
+            return false;
+        }
+
         // El PRIMER collider que encuentra el rayo desde el centro de la cámara. Si es este
         // interruptor (o un hijo suyo), lo estás mirando directamente y sin pared de por medio.
         if (Physics.Raycast(ray, out RaycastHit hit, _maxDistance, _obstruction, QueryTriggerInteraction.Ignore))
         {
             Transform ht = hit.collider.transform;
+            LastHitName = hit.collider.name;
             return ht == transform || ht.IsChildOf(transform);
         }
+        LastHitName = "(nada)";
         return false;
     }
+
+    private Transform[] _ignoredRoots;
+
+    private bool IsIgnored(Transform t)
+    {
+        foreach (Transform r in _ignoredRoots)
+            if (r != null && (t == r || t.IsChildOf(r))) return true;
+        return false;
+    }
+
+    /// <summary>Colliders de estas raíces (y sus hijos) NO tapan la mirada (p. ej. el jugador y su kayak).</summary>
+    public void SetIgnoredRoots(params Transform[] roots) => _ignoredRoots = roots;
+
+    /// <summary>Cámara desde la que se mira (si Camera.main no es la del jugador).</summary>
+    public void SetCamera(Camera cam) { if (cam != null) _playerCamera = cam; }
+
+    /// <summary>Nombre del primer collider que tocó el rayo de mirada en el último frame (para depurar).</summary>
+    public string LastHitName { get; private set; } = "(sin comprobar)";
 
     private void ApplyVisual(float p)
     {
@@ -159,6 +199,25 @@ public class GazeSwitch : MonoBehaviour
         OnProgress?.Invoke(0f);
         ApplyVisual(0f);
     }
+
+    /// <summary>
+    /// Configura el interruptor desde código (p. ej. los que se añaden en runtime al jefe).
+    /// holdSeconds / maxDistance ≤ 0 → se deja el valor actual. glow = renderer que se ilumina al cargar.
+    /// </summary>
+    public void Configure(float holdSeconds, float maxDistance, Renderer glow = null)
+    {
+        if (holdSeconds > 0f) _holdDuration = holdSeconds;
+        if (maxDistance > 0f) _maxDistance  = maxDistance;
+        if (glow != null)
+        {
+            _glowRenderer = glow;
+            if (_mpb == null) _mpb = new MaterialPropertyBlock();
+        }
+        if (_playerCamera == null) _playerCamera = Camera.main;
+    }
+
+    /// <summary>Capas que cuentan para el rayo de mirada (lo primero que toque debe ser este interruptor).</summary>
+    public void SetObstruction(LayerMask mask) => _obstruction = mask;
 
     /// <summary>Progreso de carga actual [0..1].</summary>
     public float Progress => _progress;

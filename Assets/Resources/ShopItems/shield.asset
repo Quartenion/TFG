@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8585dab5842c6d24ca10f39a07178ea2, type: 3}
+  m_Name: shield
+  m_EditorClassIdentifier: Assembly-CSharp::ShopItem
+  id: shield
+  displayName: Rebobinado
+  description: "Si chocas contra un obst\xE1culo, el tiempo vuelve 4 beats atr\xE1s
+    (a un momento seguro) en vez de morir. Contra ataques del jefe o en el kayak,
+    para el golpe."
+  levelDescriptions: []
+  icon: {fileID: 0}
+  color: {r: 0.2, g: 0.5, b: 0.9, a: 1}
+  kind: 1
+  category: 0
+  prices: 78000000
+  maxStack: 3

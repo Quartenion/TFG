@@ -26,6 +26,13 @@ public class CameraDashEffect : MonoBehaviour
     [Tooltip("Tiempo de la vuelta suave a la base (s)")]
     [SerializeField] private float _punchOutTime = 0.35f;
 
+    [Header("FOV punch al pulsar Q (romper bloques): como un dash hacia delante")]
+    [SerializeField] private float _blockPunchFOV = 82f;
+    [Tooltip("Tiempo del 'zoom out' brusco al pulsar Q (s)")]
+    [SerializeField] private float _blockPunchInTime = 0.05f;
+    [Tooltip("Tiempo de la vuelta a la base (s)")]
+    [SerializeField] private float _blockPunchOutTime = 0.3f;
+
     [Header("Shake")]
     [SerializeField] private float _shakeAmount = 0.04f;
     [SerializeField] private float _shakeDuration = 0.12f;
@@ -105,30 +112,44 @@ public class CameraDashEffect : MonoBehaviour
         TriggerShake();
     }
 
+    /// <summary>
+    /// Q (romper bloques): golpe de FOV rápido, como si saliera disparado hacia delante, + un pequeño shake.
+    /// Lo llama BlockAbility al activar la ventana de rotura.
+    /// </summary>
+    public void OnBlockPunch()
+    {
+        if (_camera == null) return;
+        if (_fovRoutine != null) StopCoroutine(_fovRoutine);
+        _fovRoutine = StartCoroutine(FOVPunchRoutine(_blockPunchFOV, _blockPunchInTime, _blockPunchOutTime));
+        TriggerShake();
+    }
+
     // === FOV ===
     private void TriggerFOVPunch()
     {
         if (_camera == null) return;
         if (_fovRoutine != null) StopCoroutine(_fovRoutine);
-        _fovRoutine = StartCoroutine(FOVPunchRoutine());
+        _fovRoutine = StartCoroutine(FOVPunchRoutine(_punchFOV, _punchInTime, _punchOutTime));
     }
 
-    private IEnumerator FOVPunchRoutine()
+    private IEnumerator FOVPunchRoutine(float punchFOV, float inTime, float outTime)
     {
         float t = 0f;
         float startFOV = _camera.fieldOfView;
-        while (t < _punchInTime)
+        while (t < inTime)
         {
             t += Time.deltaTime;
-            _camera.fieldOfView = Mathf.Lerp(startFOV, _punchFOV, t / _punchInTime);
+            _camera.fieldOfView = Mathf.Lerp(startFOV, punchFOV, t / inTime);
             yield return null;
         }
 
         t = 0f;
-        while (t < _punchOutTime)
+        while (t < outTime)
         {
             t += Time.deltaTime;
-            _camera.fieldOfView = Mathf.Lerp(_punchFOV, _baseFOV, t / _punchOutTime);
+            // (ease-out: vuelve rápido al principio y se asienta suave)
+            float u = Mathf.Clamp01(t / outTime);
+            _camera.fieldOfView = Mathf.Lerp(punchFOV, _baseFOV, 1f - (1f - u) * (1f - u));
             yield return null;
         }
         _camera.fieldOfView = _baseFOV;

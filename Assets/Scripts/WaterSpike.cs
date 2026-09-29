@@ -22,7 +22,7 @@ using UnityEngine;
 /// en la layer "Obstacle" y un ObstacleInfo, igual que el resto de obstáculos.
 /// </summary>
 [AddComponentMenu("Level/Water Spike")]
-public class WaterSpike : MonoBehaviour
+public class WaterSpike : MonoBehaviour, IRewindable
 {
     public enum SpikeEasing
     {
@@ -184,6 +184,14 @@ public class WaterSpike : MonoBehaviour
 
             _spikes[i] = s;
         }
+    }
+
+    /// <summary>REBOBINADO: recalcula las subidas con el reloj actual y reactiva el Update (los pinchos bajan).</summary>
+    public void OnTimeRewind()
+    {
+        if (!_initialized || _beatManager == null) return;
+        ComputeTimings();
+        enabled = true;
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────

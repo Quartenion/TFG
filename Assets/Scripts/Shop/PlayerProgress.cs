@@ -1,0 +1,309 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+
+/// <summary>
+/// Datos guardados de la partida (JSON en Application.persistentDataPath/save.json).
+/// </summary>
+[Serializable]
+public class SaveData
+{
+    public int version = 1;
+    public int coins;                                        // monedas en el monedero
+    public int totalCoinsEarned;                             // estadística
+    public List<SaveEntry> upgrades    = new List<SaveEntry>();   // id → nivel comprado
+    public List<SaveEntry> consumables = new List<SaveEntry>();   // id → cantidad
+    public List<string>    activeContracts = new List<string>();  // contratos firmados (sin cumplir)
+    public List<string>    doneContracts   = new List<string>();  // contratos ya cumplidos
+    public List<string>    claimedContracts = new List<string>(); // cumplidos Y ya cobrados en el puesto
+    public int             contractsClaimVersion;                 // (migración: antes se cobraban solos)
+    public List<string>    disabledUpgrades = new List<string>(); // mejoras compradas pero APAGADAS por el jugador
+    public int             gazeCoins;                                  // IRIS: monedas de mirada (solo para cosméticos)
+    public List<string>    collectedGazeCoins = new List<string>();    // iris ya recogidos (cada uno, una vez)
+    public List<string>    ownedCosmetics     = new List<string>();    // cosméticos comprados
+    public List<string>    equippedCosmetics  = new List<string>();    // cosmético puesto en cada hueco
+
+    [Serializable]
+    public class SaveEntry
+    {
+        public string id;
+        public int    value;
+        public SaveEntry(string id, int value) { this.id = id; this.value = value; }
+    }
+}
+
+/// <summary>
+/// PROGRESO DEL JUGADOR (estático, accesible desde cualquier escena):
+///   • Monedas del monedero (AddCoins / TrySpendCoins).
+///   • Mejoras permanentes por niveles (GetLevel / SetLevel).
+///   • Consumibles con cantidad (GetCount / AddCount / TryUseConsumable).
+/// Se guarda solo en disco en cada cambio. Los sistemas del juego lo consultan al arrancar
+/// (p. ej. «¿qué nivel tiene el auto-beater?», «¿quedan vidas extra?»).
+/// </summary>
+public static class PlayerProgress
+{
+    public static event Action<int> OnCoinsChanged;   // nuevas monedas totales
+    public static event Action      OnChanged;        // cualquier cambio (compras, consumibles…)
+
+    private static SaveData _data;
+    private static string   SavePath => Path.Combine(Application.persistentDataPath, "save.json");
+
+    private static SaveData Data
+    {
+        get
+        {
+            if (_data == null) Load();
+            return _data;
+        }
+    }
+
+    // ── Monedas ───────────────────────────────────────────────────────────────
+
+    public static int Coins => Data.coins;
+
+    public static void AddCoins(int amount)
+    {
+        if (amount <= 0) return;
+        Data.coins += amount;
+        Data.totalCoinsEarned += amount;
+        Save();
+        OnCoinsChanged?.Invoke(Data.coins);
+        OnChanged?.Invoke();
+    }
+
+    public static bool TrySpendCoins(int amount)
+    {
+        if (amount < 0 || Data.coins < amount) return false;
+        Data.coins -= amount;
+        Save();
+        OnCoinsChanged?.Invoke(Data.coins);
+        OnChanged?.Invoke();
+        return true;
+    }
+
+    // ── Mejoras (permanentes, por niveles) ────────────────────────────────────
+
+    /// <summary>
+    /// Con Suspended = true TODAS las mejoras y consumibles cuentan como 0 (la pelea del jefe se juega sin
+    /// modificadores). Lo guardado no se toca: al terminar la pelea vuelve todo.
+    /// </summary>
+    public static bool Suspended
+    {
+        get => _suspended;
+        set
+        {
+            if (_suspended == value) return;
+            _suspended = value;
+            OnChanged?.Invoke();   // (que los sistemas se actualicen: jeringuilla, HUD…)
+        }
+    }
+    private static bool _suspended;
+
+    /// <summary>
+    /// Nivel EFECTIVO de una mejora (el que usan los sistemas del juego): 0 si está suspendida (jefe / contrato
+    /// «A pelo») o si el jugador la ha APAGADO en la tienda.
+    /// </summary>
+    public static int GetLevel(string id) =>
+        _suspended || Data.disabledUpgrades.Contains(id) ? 0 : Get(Data.upgrades, id);
+
+    /// <summary>Nivel COMPRADO de una mejora (aunque esté apagada o suspendida). Para la tienda y los desbloqueos.</summary>
+    public static int GetOwnedLevel(string id) => Get(Data.upgrades, id);
+
+    /// <summary>¿La mejora está encendida? (las compradas lo están por defecto; se apagan con la casilla de la tienda)</summary>
+    public static bool IsUpgradeEnabled(string id) => !Data.disabledUpgrades.Contains(id);
+
+    public static void SetUpgradeEnabled(string id, bool enabled)
+    {
+        if (enabled == IsUpgradeEnabled(id)) return;
+        if (enabled) Data.disabledUpgrades.Remove(id); else Data.disabledUpgrades.Add(id);
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    public static void SetLevel(string id, int level)
+    {
+        Set(Data.upgrades, id, Mathf.Max(0, level));
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    // ── Consumibles (se gastan) ───────────────────────────────────────────────
+
+    public static int GetCount(string id) => _suspended ? 0 : Get(Data.consumables, id);
+
+    public static void AddCount(string id, int amount)
+    {
+        Set(Data.consumables, id, Mathf.Max(0, Get(Data.consumables, id) + amount));
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    /// <summary>Gasta 1 unidad del consumible si hay. Devuelve si se ha podido.</summary>
+    public static bool TryUseConsumable(string id)
+    {
+        int n = GetCount(id);
+        if (n <= 0) return false;
+        AddCount(id, -1);
+        return true;
+    }
+
+    // ── Contratos ─────────────────────────────────────────────────────────────
+
+    public static IReadOnlyList<string> ActiveContracts => Data.activeContracts;
+    public static bool IsContractActive(string id) => Data.activeContracts.Contains(id);
+    public static bool IsContractDone(string id)   => Data.doneContracts.Contains(id);
+
+    public static void SetContractActive(string id, bool active)
+    {
+        if (active == IsContractActive(id)) return;
+        if (active) Data.activeContracts.Add(id); else Data.activeContracts.Remove(id);
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    /// <summary>¿Cumplido pero todavía SIN cobrar? (hay que ir al puesto de contratos a por el dinero)</summary>
+    public static bool IsContractClaimable(string id) => Data.doneContracts.Contains(id) && !Data.claimedContracts.Contains(id);
+    public static bool IsContractClaimed(string id)   => Data.claimedContracts.Contains(id);
+
+    /// <summary>Cobra un contrato cumplido: suma 'reward' monedas y lo marca como cobrado. Devuelve si se ha podido.</summary>
+    public static bool ClaimContract(string id, int reward)
+    {
+        if (!IsContractClaimable(id)) return false;
+        Data.claimedContracts.Add(id);
+        Data.coins += Mathf.Max(0, reward);
+        Data.totalCoinsEarned += Mathf.Max(0, reward);
+        Save();
+        OnCoinsChanged?.Invoke(Data.coins);
+        OnChanged?.Invoke();
+        return true;
+    }
+
+    /// <summary>Marca el contrato como cumplido (deja de estar activo). No paga: se cobra en el puesto (ClaimContract).</summary>
+    public static void CompleteContract(string id)
+    {
+        Data.activeContracts.Remove(id);
+        if (!Data.doneContracts.Contains(id)) Data.doneContracts.Add(id);
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    /// <summary>(Debug) Olvida los contratos cumplidos (se podrán volver a firmar).</summary>
+    public static void ClearDoneContracts()
+    {
+        Data.doneContracts.Clear();
+        Data.claimedContracts.Clear();
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    // ── Iris (monedas de mirada) y cosméticos ─────────────────────────────────
+
+    /// <summary>IRIS: moneda especial que se consigue MIRANDO los iris escondidos por los niveles (GazeCoin).
+    /// Solo sirve para comprar cosméticos.</summary>
+    public static int GazeCoins => Data.gazeCoins;
+
+    public static bool IsGazeCoinCollected(string uid) => Data.collectedGazeCoins.Contains(uid);
+
+    /// <summary>Recoge un iris (una sola vez por iris del mundo). Devuelve false si ya estaba recogido.</summary>
+    public static bool CollectGazeCoin(string uid, int value = 1)
+    {
+        if (Data.collectedGazeCoins.Contains(uid)) return false;
+        Data.collectedGazeCoins.Add(uid);
+        Data.gazeCoins += Mathf.Max(0, value);
+        Save();
+        OnChanged?.Invoke();
+        return true;
+    }
+
+    public static bool TrySpendGazeCoins(int amount)
+    {
+        if (amount < 0 || Data.gazeCoins < amount) return false;
+        Data.gazeCoins -= amount;
+        Save();
+        OnChanged?.Invoke();
+        return true;
+    }
+
+    public static bool OwnsCosmetic(string id) => Data.ownedCosmetics.Contains(id);
+
+    public static void AddCosmetic(string id)
+    {
+        if (Data.ownedCosmetics.Contains(id)) return;
+        Data.ownedCosmetics.Add(id);
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    public static IReadOnlyList<string> EquippedCosmetics => Data.equippedCosmetics;
+
+    /// <summary>Pone un cosmético (quitando el que hubiera en su hueco: 'sameSlot' dice cuáles comparten hueco).</summary>
+    public static void EquipCosmetic(string id, Func<string, bool> sameSlot)
+    {
+        Data.equippedCosmetics.RemoveAll(e => sameSlot(e));
+        if (!string.IsNullOrEmpty(id)) Data.equippedCosmetics.Add(id);
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    // ── Guardado ──────────────────────────────────────────────────────────────
+
+    public static void Load()
+    {
+        try
+        {
+            _data = File.Exists(SavePath) ? JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath)) : null;
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[Progreso] No se pudo leer la partida guardada ({e.Message}). Se empieza de cero.");
+            _data = null;
+        }
+        if (_data == null) _data = new SaveData();
+        if (_data.upgrades    == null) _data.upgrades    = new List<SaveData.SaveEntry>();
+        if (_data.consumables == null) _data.consumables = new List<SaveData.SaveEntry>();
+        if (_data.activeContracts == null) _data.activeContracts = new List<string>();
+        if (_data.doneContracts   == null) _data.doneContracts   = new List<string>();
+        if (_data.disabledUpgrades == null) _data.disabledUpgrades = new List<string>();
+        if (_data.claimedContracts == null) _data.claimedContracts = new List<string>();
+        if (_data.contractsClaimVersion < 1)
+        {
+            // Partidas antiguas: los contratos cumplidos ya se habían cobrado solos → cuentan como cobrados.
+            foreach (string id in _data.doneContracts)
+                if (!_data.claimedContracts.Contains(id)) _data.claimedContracts.Add(id);
+            _data.contractsClaimVersion = 1;
+        }
+        if (_data.collectedGazeCoins == null) _data.collectedGazeCoins = new List<string>();
+        if (_data.ownedCosmetics     == null) _data.ownedCosmetics     = new List<string>();
+        if (_data.equippedCosmetics  == null) _data.equippedCosmetics  = new List<string>();
+    }
+
+    public static void Save()
+    {
+        try { File.WriteAllText(SavePath, JsonUtility.ToJson(Data, true)); }
+        catch (Exception e) { Debug.LogWarning($"[Progreso] No se pudo guardar la partida: {e.Message}"); }
+    }
+
+    /// <summary>(Debug) Borra toda la partida guardada.</summary>
+    public static void ResetAll()
+    {
+        _data = new SaveData();
+        Save();
+        OnCoinsChanged?.Invoke(0);
+        OnChanged?.Invoke();
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private static int Get(List<SaveData.SaveEntry> list, string id)
+    {
+        foreach (var e in list) if (e.id == id) return e.value;
+        return 0;
+    }
+
+    private static void Set(List<SaveData.SaveEntry> list, string id, int value)
+    {
+        foreach (var e in list) if (e.id == id) { e.value = value; return; }
+        list.Add(new SaveData.SaveEntry(id, value));
+    }
+}

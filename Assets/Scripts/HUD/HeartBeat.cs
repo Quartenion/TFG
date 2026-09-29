@@ -43,6 +43,13 @@ public class HeartBeat : MonoBehaviour
     [Tooltip("Velocidad a la que el corazón vuelve al color normal (lerp/s).")]
     public float colorReturnSpeed = 2.5f;
 
+    [Header("Corazón firme (mantener clic, mejora de la tienda)")]
+    [Tooltip("Color del corazón mientras lo mantienes apretado.")]
+    public Color holdColor = new Color(1f, 0.3f, 0.35f, 1f);
+    [Tooltip("Escala del corazón mientras lo mantienes apretado (< 1 = se encoge, apretado).")]
+    public float holdScale = 0.85f;
+    private float _hold01;
+
     // ── Privados ───────────────────────────────────────────────────────────────
 
     private Image     _heartImage;
@@ -81,8 +88,15 @@ public class HeartBeat : MonoBehaviour
     private void Update()
     {
         if (_heartImage == null) return;
-        _currentColor     = Color.Lerp(_currentColor, normalColor, Time.deltaTime * colorReturnSpeed);
+
+        // Corazón firme: mientras se mantiene el clic, el corazón se queda apretado y más rojo.
+        bool holding = EnergyManager.Instance != null && EnergyManager.Instance.IsHoldingHeart;
+        _hold01 = Mathf.MoveTowards(_hold01, holding ? 1f : 0f, Time.deltaTime * 8f);
+        Color rest = Color.Lerp(normalColor, holdColor, _hold01);
+
+        _currentColor     = Color.Lerp(_currentColor, rest, Time.deltaTime * colorReturnSpeed);
         _heartImage.color = _currentColor;
+        if (_beatCoroutine == null) transform.localScale = _baseScale * Mathf.Lerp(1f, holdScale, _hold01);
     }
 
     // =========================================================================
@@ -100,6 +114,15 @@ public class HeartBeat : MonoBehaviour
             if (_beatCoroutine != null) StopCoroutine(_beatCoroutine);
             _beatCoroutine = StartCoroutine(DoBeat());
         }
+    }
+
+    /// <summary>Destello + latido con un color concreto (p. ej. el Auto-latido de la tienda).</summary>
+    public void Flash(Color color)
+    {
+        _currentColor = color;
+        if (!isActiveAndEnabled) return;   // (oculto, p. ej. en el kayak: no se pueden lanzar corrutinas)
+        if (_beatCoroutine != null) StopCoroutine(_beatCoroutine);
+        _beatCoroutine = StartCoroutine(DoBeat());
     }
 
     private Color ColorFor(TimingResult r)

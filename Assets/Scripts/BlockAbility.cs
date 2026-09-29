@@ -56,6 +56,7 @@ public class BlockAbility : MonoBehaviour
     private InputAction _blockAction;
     private CharacterController _cc;
     private float _breakWindowTimer;
+    private CameraDashEffect _camFx;
 
     // -------------------------------------------------------------------------
 
@@ -82,7 +83,8 @@ public class BlockAbility : MonoBehaviour
     void Update()
     {
         // Activar ventana con una pulsacion (no mantener)
-        if (_blockAction != null && _blockAction.WasPressedThisFrame() && !IsBlocking)
+        // (Sin cooldown: se puede volver a pulsar aunque la ventana siga abierta → la reinicia.)
+        if (_blockAction != null && _blockAction.WasPressedThisFrame())
             TryStartBreakWindow();
 
         if (!IsBlocking) return;
@@ -124,6 +126,10 @@ public class BlockAbility : MonoBehaviour
 
         if (armPlaceholder != null) armPlaceholder.SetBlocking(true);
         PlaySfx(blockStartSound);
+
+        // Feedback de cámara: golpe de FOV rápido, como un dash hacia delante.
+        if (_camFx == null) _camFx = FindAnyObjectByType<CameraDashEffect>();
+        if (_camFx != null) _camFx.OnBlockPunch();
         OnBlockStarted?.Invoke();
     }
 

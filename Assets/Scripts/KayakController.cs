@@ -339,6 +339,8 @@ public class KayakController : MonoBehaviour
     private void Start()
     {
         _designedYRot = transform.eulerAngles.y;
+        _startPos = transform.position;   // (pose de diseño: el Rebobinado puede devolver el ataúd aquí)
+        _startRot = transform.rotation;
 
         // Rigidbody: kinematic hasta que el jugador active el kayak.
         // En Vertical el ataúd es un prop estático; solo activamos la física al Tilt.
@@ -424,6 +426,7 @@ public class KayakController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (_rewindFrozen) return;   // (rebobinando: lo coloca TimeRewinder)
         if (_crashed || _state == KayakState.Vertical || _forwardDir == Vector3.zero) return;
 
         switch (_state)
@@ -613,6 +616,7 @@ public class KayakController : MonoBehaviour
 
     private void Update()
     {
+        if (_rewindFrozen) return;   // (rebobinando: lo coloca TimeRewinder)
         if (_crashed) return;   // ataúd roto: no reacciona a nada más
 
         if (_state == KayakState.Vertical)
@@ -657,13 +661,35 @@ public class KayakController : MonoBehaviour
         if (Mathf.Abs(local.x) <= half.x &&
             Mathf.Abs(local.y) <= half.y &&
             Mathf.Abs(local.z) <= half.z)
+        {
             Activate(_cachedPlayer);
+            return;
+        }
+
+        // Ataúd TUMBADO desde el principio (startHorizontal): la caja de activación es local y, al estar girado 90°,
+        // su eje Z queda en VERTICAL; con un Z pequeño (p. ej. 0.46) la caja es una lámina finísima que el jugador
+        // atraviesa cayendo en un solo frame → no se montaba y moría en el agua. Respaldo robusto: si el jugador
+        // está sobre la huella del ataúd (XZ) y sus pies han bajado hasta su tapa, se monta.
+        if (startHorizontal && _playerCC != null && _playerCC.enabled)
+        {
+            Bounds kb = KayakBounds();
+            if (kb.size.sqrMagnitude < 0.0001f) return;
+            Vector3 pp = _cachedPlayer.transform.position;
+            const float margin = 0.6f;
+            bool overFootprint = Mathf.Abs(pp.x - kb.center.x) <= kb.extents.x + margin &&
+                                 Mathf.Abs(pp.z - kb.center.z) <= kb.extents.z + margin;
+            float feetY = _playerCC.bounds.min.y;
+            bool atTop  = feetY <= KayakTopY() + 0.5f && feetY >= kb.min.y - 2f;
+            if (overFootprint && atTop) Activate(_cachedPlayer);
+        }
     }
 
     private void Activate(PlayerMovement player)
     {
         _player = player;
         _player.EnterKayak();
+        BeatManager bmA = BeatManager.Instance;
+        ActivatedSongTime = bmA != null && bmA.IsPlaying ? bmA.SongTime : 0f;
 
         forwardSpeed = player.walkSpeed;
 
@@ -843,6 +869,8 @@ public class KayakController : MonoBehaviour
             _paddleTimer = paddleDuration;
             PlayPaddleSound();
         }
+
+        RunStats.HeartPress(timing);   // (contratos: cada remada es un latido)
 
         if (isHit)
         {
@@ -1077,6 +1105,7 @@ public class KayakController : MonoBehaviour
     /// </summary>
     private void OnCollisionStay(Collision collision)
     {
+        if (_rewindFrozen || TimeRewinder.IsRewinding) return;
         if (_crashed) return;
         if (_state == KayakState.Vertical) return;          // aún es prop / ya roto
         if (_obstacleLayer == -1) return;
@@ -1132,7 +1161,12 @@ public class KayakController : MonoBehaviour
         }
 
         if (frontalLethal || otherLethal)
+        {
+            // REBOBINADO (tienda): con el jugador dentro, el tiempo (y el kayak) vuelve 4 beats atrás.
+            if (_player != null && PlayerShield.Count > 0 && TimeRewinder.Instance != null &&
+                TimeRewinder.Instance.TryRewind()) return;
             CrashKayak();
+        }
 
         // Si no es letal (roce lateral / cara no letal): no hacemos nada.
         // La pared sólida bloquea el movimiento hacia ella y el kayak sigue de frente.
@@ -1312,6 +1346,83 @@ public class KayakController : MonoBehaviour
         _player.transform.position = seatPos;
     }
 
+    // ── Rebobinado (tienda) ───────────────────────────────────────────────────
+
+    /// <summary>¿Va el jugador sentado en este kayak, flotando (estado seguro para rebobinar)?</summary>
+    public bool IsSeatedFloating => _player != null && _state == KayakState.Floating && !_crashed;
+
+    private bool _rewindFrozen, _rbWasKinematic;
+
+    /// <summary>Congela el kayak (sin física ni lógica) mientras TimeRewinder lo lleva hacia atrás.</summary>
+    public void BeginRewind()
+    {
+        if (_rewindFrozen) return;
+        _rewindFrozen   = true;
+        _rbWasKinematic = _rb.isKinematic;
+        if (!_rb.isKinematic) { _rb.linearVelocity = Vector3.zero; _rb.angularVelocity = Vector3.zero; }
+        _rb.isKinematic = true;
+    }
+
+    public void ApplyRewindPose(Vector3 pos, Quaternion rot)
+    {
+        _rb.position = pos;
+        _rb.rotation = rot;
+        transform.SetPositionAndRotation(pos, rot);
+    }
+
+    private Vector3    _startPos;
+    private Quaternion _startRot;
+
+    /// <summary>Segundo de la canción en que el jugador se montó por primera vez (-1 = aún no).</summary>
+    public float ActivatedSongTime { get; private set; } = -1f;
+    public bool  HasBeenActivated  => ActivatedSongTime >= 0f;
+    public Vector3    StartPosition => _startPos;
+    public Quaternion StartRotation => _startRot;
+
+    /// <summary>
+    /// REBOBINADO a un momento ANTERIOR a montarse: el ataúd vuelve a su sitio y estado de diseño (sin jugador, sin
+    /// física), listo para volver a activarse cuando el jugador llegue. Si el jugador iba montado, se baja.
+    /// </summary>
+    public void ResetToStart()
+    {
+        if (_player != null) { _player.ExitKayak(); _player = null; }
+        _rewindFrozen = false;
+        _crashed      = false;
+        _exhausted    = false;
+        _state        = KayakState.Vertical;
+        _tiltProgress = 0f;
+        _fallTimer    = 0f;
+        _swayTimer    = 0f;
+        _playerJumpedTimer = 0f;
+        _lateralVelocity   = 0f;
+        _initialYRot  = _designedYRot;
+        ActivatedSongTime = -1f;
+
+        _rb.isKinematic = false;
+        _rb.linearVelocity  = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
+        _rb.isKinematic = true;
+        _rb.position = _startPos;
+        _rb.rotation = _startRot;
+        transform.SetPositionAndRotation(_startPos, _startRot);
+        _prevZ = transform.position.z;
+
+        SetKayakSolidForPlayer(false);
+        IgnorePlayerCollisions(true);
+        foreach (Collider c in _kayakColliders) if (c != null) c.enabled = true;
+        foreach (Renderer r in GetComponentsInChildren<Renderer>(true)) r.enabled = true;
+    }
+
+    /// <summary>Fin del rebobinado: vuelve la física, sin velocidad, y sigue remando desde ahí.</summary>
+    public void EndRewind()
+    {
+        if (!_rewindFrozen) return;
+        _rb.isKinematic = _rbWasKinematic;
+        if (!_rb.isKinematic) { _rb.linearVelocity = Vector3.zero; _rb.angularVelocity = Vector3.zero; }
+        _lateralVelocity = 0f;
+        _rewindFrozen    = false;
+    }
+
     // ── Endpoint ──────────────────────────────────────────────────────────────
 
     private void TriggerEndPoint()
@@ -1335,6 +1446,61 @@ public class KayakController : MonoBehaviour
             _player.ExitKayakWithJump(exitJumpVelocity, horizontalImpulse);
             _player = null;
         }
+    }
+
+    /// <summary>
+    /// El ataúd SE ROMPE (fin del jefe): lanza al jugador hacia arriba con 'jumpVelocity' (sale corriendo hacia
+    /// delante a su velocidad normal), esconde el ataúd, suelta astillas que saltan y lo destruye al rato.
+    /// </summary>
+    public void BreakApart(float jumpVelocity, int shards = 10)
+    {
+        if (_exhausted) return;
+        _exhausted = true;
+        _prevZ     = float.MaxValue;
+
+        if (_rb != null)
+        {
+            if (!_rb.isKinematic) { _rb.linearVelocity = Vector3.zero; _rb.angularVelocity = Vector3.zero; }
+            _rb.isKinematic = true;
+        }
+        _state = KayakState.Vertical;
+        PlaySound(breakSound);
+
+        if (_player != null)
+        {
+            _player.ExitKayakWithJump(jumpVelocity, Vector3.zero);
+            _player = null;
+        }
+
+        // Astillas: trozos del tamaño del ataúd que salen despedidos.
+        Bounds b = new Bounds(transform.position, Vector3.one);
+        bool any = false;
+        Material mat = null;
+        foreach (Renderer r in GetComponentsInChildren<Renderer>())
+        {
+            if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds);
+            if (mat == null) mat = r.sharedMaterial;
+            r.enabled = false;
+        }
+        foreach (Collider c in GetComponentsInChildren<Collider>()) c.enabled = false;
+
+        for (int i = 0; i < shards; i++)
+        {
+            GameObject s = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            s.name = "CoffinShard";
+            Destroy(s.GetComponent<Collider>());   // sin colisión: solo visual
+            if (mat != null) s.GetComponent<Renderer>().sharedMaterial = mat;
+            s.transform.position = b.center + Vector3.Scale(Random.insideUnitSphere, b.extents);
+            s.transform.rotation = Random.rotation;
+            s.transform.localScale = new Vector3(Random.Range(0.15f, 0.35f), Random.Range(0.1f, 0.25f),
+                                                 Random.Range(0.6f, 1.4f)) * Mathf.Max(1f, b.size.magnitude * 0.25f);
+            var rb = s.AddComponent<Rigidbody>();
+            rb.linearVelocity  = (s.transform.position - b.center).normalized * Random.Range(4f, 9f)
+                               + Vector3.up * Random.Range(6f, 12f);
+            rb.angularVelocity = Random.insideUnitSphere * 10f;
+            Destroy(s, 3f);
+        }
+        Destroy(gameObject, 3.5f);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -1373,6 +1539,33 @@ public class KayakController : MonoBehaviour
     }
 
     /// <summary>Bounds (mundo) combinados de todos los colliders del ataúd.</summary>
+    // ── Protección contra la "muerte por agua" al caer encima del kayak ────────
+
+    private static readonly System.Collections.Generic.List<KayakController> s_all =
+        new System.Collections.Generic.List<KayakController>();
+    private void OnEnable()  { if (!s_all.Contains(this)) s_all.Add(this); }
+    private void OnDisable() { s_all.Remove(this); }
+
+    /// <summary>
+    /// ¿Hay un kayak (ya tumbado en el agua y sin agotar) justo debajo de 'pos' que pueda recoger al jugador?
+    /// GameOverManager lo usa para NO matar por agua a quien está cayendo / aterrizando ENCIMA del kayak: como el
+    /// kayak flota a ras del agua, los pies del jugador quedaban "a la altura del agua" y moría antes de que el
+    /// kayak llegara a montarlo.
+    /// </summary>
+    public static bool IsKayakUnder(Vector3 pos, float margin = 0.8f)
+    {
+        foreach (KayakController k in s_all)
+        {
+            if (k == null || k._exhausted) continue;
+            Bounds b = k.KayakBounds();
+            if (b.size.sqrMagnitude < 0.0001f) continue;
+            if (Mathf.Abs(pos.x - b.center.x) <= b.extents.x + margin &&
+                Mathf.Abs(pos.z - b.center.z) <= b.extents.z + margin)
+                return true;
+        }
+        return false;
+    }
+
     private Bounds KayakBounds()
     {
         Bounds b = new Bounds(transform.position, Vector3.zero);

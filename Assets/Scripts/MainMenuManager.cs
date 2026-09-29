@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// Controla el menu principal: Play, Settings y Quit.
+/// Controla el menu principal: Play, Tienda (OpenShop), Settings y Quit.
 ///
 /// SETUP:
 ///   1. Crea una escena nueva llamada exactamente "MainMenu".
@@ -67,6 +67,14 @@ public class MainMenuManager : MonoBehaviour
         AudioListener.pause  = false;
         AudioListener.volume = PlayerPrefs.GetFloat("MasterVolume", 1f);
         SceneManager.LoadScene(_gameSceneName);
+    }
+
+    /// <summary>Boton TIENDA: abre la tienda (se construye sola) y al cerrarla vuelve al menu.</summary>
+    public void OpenShop()
+    {
+        if (_mainPanel    != null) _mainPanel.SetActive(false);
+        if (_settingsPanel != null) _settingsPanel.SetActive(false);
+        ShopUI.Open(ShowMain);
     }
 
     /// <summary>Boton SETTINGS: muestra el panel de ajustes.</summary>

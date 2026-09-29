@@ -21,7 +21,7 @@ using UnityEngine;
 ///   El pivote gira 360° cada beatsPerCycle beats.
 /// </summary>
 [AddComponentMenu("Level/Pivot Oscillator")]
-public class PivotOscillator : MonoBehaviour
+public class PivotOscillator : MonoBehaviour, IRewindable
 {
     // ── Enums ──────────────────────────────────────────────────────────────────
 
@@ -250,7 +250,25 @@ public class PivotOscillator : MonoBehaviour
             : Mathf.Lerp( half, -half, eased);
     }
 
+    private double _arrivalOffset = double.NaN;   // segundos de canción hasta que llega el jugador (se calcula una vez)
+
     private void ComputeTriggerDSP()
+    {
+        if (double.IsNaN(_arrivalOffset)) _arrivalOffset = ComputeArrivalOffset();
+        _triggerDSP = _beatManager.ScheduledStartDSP + _arrivalOffset
+                      - (double)(_triggerBeats * _beatManager.BeatDuration);
+    }
+
+    /// <summary>REBOBINADO: recalcula el disparo con el reloj actual; el Update deja el ángulo que toca.</summary>
+    public void OnTimeRewind()
+    {
+        if (_driven || _manualOpen || _spinConstantly || _oscillate || _waitForExternalTrigger || !_ready || _beatManager == null) return;
+        ComputeTriggerDSP();
+        _phase = Phase.Idle;
+        _triggerRequested = false;
+    }
+
+    private double ComputeArrivalOffset()
     {
         float dist, speed;
 
@@ -267,8 +285,7 @@ public class PivotOscillator : MonoBehaviour
                              "Usando Z y walkSpeed=6.", this);
         }
 
-        double arrivalDSP = _beatManager.ScheduledStartDSP + (double)(dist / speed);
-        _triggerDSP       = arrivalDSP - (double)(_triggerBeats * _beatManager.BeatDuration);
+        return (double)(dist / speed);
     }
 
     private float UpdateOneShot()

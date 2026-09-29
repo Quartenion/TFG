@@ -71,12 +71,14 @@ public class RhythmHUDController : MonoBehaviour
         }
 
         beatManager.OnBeat.AddListener(SpawnRing);
+        beatManager.OnHalfBeat.AddListener(SpawnHalfRing);
         rhythmInput.OnTimingResult.AddListener(HandleTimingResult);
     }
 
     private void OnDestroy()
     {
         if (beatManager != null) beatManager.OnBeat.RemoveListener(SpawnRing);
+        if (beatManager != null) beatManager.OnHalfBeat.RemoveListener(SpawnHalfRing);
         if (rhythmInput  != null) rhythmInput.OnTimingResult.RemoveListener(HandleTimingResult);
     }
 
@@ -87,6 +89,8 @@ public class RhythmHUDController : MonoBehaviour
     private void SpawnRing()
     {
         if (ringPrefab == null || ringContainer == null) return;
+        // Las notas entrantes solo se ven con el «Crosshair rítmico» de la tienda.
+        if (PlayerProgress.GetLevel(ShopIds.RhythmSight) <= 0) return;
 
         float travelDuration = beatsAhead * beatManager.BeatDuration;
 
@@ -95,6 +99,32 @@ public class RhythmHUDController : MonoBehaviour
         _activeRings.Add(ring);
 
         // Limpiar de la lista cuando se destruya
+        ring.OnExpired += () => _activeRings.Remove(ring);
+    }
+
+    [Header("Medios beats (contrato «Al compás»)")]
+    [Tooltip("Tamaño de los spikes de las notas de MEDIO beat respecto a las normales.")]
+    [Range(0.2f, 1f)]
+    public float halfBeatSpikeScale = 0.55f;
+
+    /// <summary>
+    /// Con el contrato «Al compás» (acciones también en los medios beats) y el «Crosshair rítmico», entra una nota
+    /// más pequeña que llega en cada MEDIO beat (a contratiempo).
+    /// </summary>
+    private void SpawnHalfRing()
+    {
+        if (!BeatManager.HalfBeatMoves) return;
+        if (ringPrefab == null || ringContainer == null) return;
+        if (PlayerProgress.GetLevel(ShopIds.RhythmSight) <= 0) return;
+        float halfD = beatManager.HalfBeatDuration;
+        if (halfD <= 0f) return;
+        int halfIdx = Mathf.FloorToInt(beatManager.CorrectedTime / halfD);
+        if (halfIdx % 2 == 0) return;   // (los beats enteros ya tienen su nota normal)
+
+        RhythmRingVisual ring = Instantiate(ringPrefab, ringContainer);
+        ring.Init(startDiameter, targetDiameter, beatsAhead * beatManager.BeatDuration, beatManager, crosshair);
+        ring.MakeHalfBeat(halfBeatSpikeScale);
+        _activeRings.Add(ring);
         ring.OnExpired += () => _activeRings.Remove(ring);
     }
 
@@ -122,7 +152,7 @@ public class RhythmHUDController : MonoBehaviour
 
         foreach (RhythmRingVisual r in _activeRings)
         {
-            if (r == null || r.IsConsumed) continue;   // saltar destruidos y los ya absorbidos
+            if (r == null || r.IsConsumed || r.IsHalfBeat) continue;   // saltar destruidos, absorbidos y los de medio beat
             float err = Mathf.Abs(r.Progress - 1f);
             if (err < bestErr) { bestErr = err; best = r; }
         }

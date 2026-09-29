@@ -175,10 +175,61 @@ public class BossFistSlam : MonoBehaviour
         _active           = true;
         _hasPrev          = false;
         _lethalDone       = false;
+        _manualMode       = ManualMode.None;   // un golpe cancela el control manual
     }
+
+    // ── Control MANUAL (animaciones de guion, p. ej. agarrarse al borde en la Fase 3) ───────────
+    private enum ManualMode { None, Hold, Return }
+    private ManualMode _manualMode = ManualMode.None;
+    private Vector3    _manualTarget;
+    private Vector3    _manualFromLocal;
+    private double     _manualStart, _manualEnd;
+    private float      _manualFollow = 10f;
+
+    /// <summary>Lleva el puño (suave) hasta 'worldPos' y lo mantiene ahí. Llámalo cada frame para moverlo.</summary>
+    public void ManualHold(Vector3 worldPos, float followSpeed = 10f)
+    {
+        if (!_captured) Capture();
+        _active       = false;
+        _manualMode   = ManualMode.Hold;
+        _manualTarget = worldPos;
+        _manualFollow = followSpeed;
+    }
+
+    /// <summary>Suelta el control manual: el puño vuelve a su reposo en 'beats' beats.</summary>
+    public void ManualRelease(float beatDuration, float beats = 1f)
+    {
+        if (_manualMode == ManualMode.None) return;
+        _manualMode      = ManualMode.Return;
+        _manualFromLocal = _parent != null ? _parent.InverseTransformPoint(transform.position) : transform.position;
+        _manualStart     = AudioSettings.dspTime;
+        _manualEnd       = _manualStart + Mathf.Max(0.05f, beats) * beatDuration;
+    }
+
+    /// <summary>Posición de reposo del puño en el mundo (sigue al jefe).</summary>
+    public Vector3 RestWorldPosition { get { if (!_captured) Capture(); return RestWorld; } }
+
+    /// <summary>Media altura del puño (para apoyar su base en una superficie).</summary>
+    public float HalfHeight => _captured ? _halfHeight : (_hitVolume != null ? _hitVolume.bounds.extents.y : 2.5f);
 
     private void Update()
     {
+        if (_manualMode == ManualMode.Hold)
+        {
+            float k = 1f - Mathf.Exp(-_manualFollow * Time.deltaTime);
+            transform.position = Vector3.Lerp(transform.position, _manualTarget, k);
+            return;
+        }
+        if (_manualMode == ManualMode.Return)
+        {
+            double t = AudioSettings.dspTime;
+            float u = _manualEnd > _manualStart ? Mathf.Clamp01((float)((t - _manualStart) / (_manualEnd - _manualStart))) : 1f;
+            Vector3 from = _parent != null ? _parent.TransformPoint(_manualFromLocal) : _manualFromLocal;
+            transform.position = Vector3.Lerp(from, RestWorld, u * u * (3f - 2f * u));
+            if (u >= 1f) { _manualMode = ManualMode.None; transform.localPosition = _restLocalPos; }
+            return;
+        }
+
         if (!_active || _boss == null) return;
         double now = AudioSettings.dspTime;
 

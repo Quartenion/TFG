@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Modelo de la jeringuilla:
@@ -25,7 +26,6 @@ public class EnergyManager : MonoBehaviour
 
     [Header("Capacidad de la jeringuilla")]
     [SerializeField] private float _maxSyringe = 100f;
-    [SerializeField] private float _startingSyringe = 30f;
 
     [Header("Llenado pasivo (modo rojo)")]
     [Tooltip("Sangre roja que entra en la jeringuilla por segundo (energia que se pierde sola)")]
@@ -133,17 +133,127 @@ public class EnergyManager : MonoBehaviour
     /// En modo azul siempre true (energia base = 100%).
     /// En modo rojo, comprueba si hay hueco suficiente.
     /// </summary>
-    public bool HasEnergy(float amount) => _isBlueMode || Energy >= amount;
+    public bool HasEnergy(float amount) => _isBlueMode || Energy >= amount * ActionCostMultiplier;
 
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        _syringe = Mathf.Clamp(_startingSyringe, 0f, _maxSyringe);
+        _baseMaxSyringe = _maxSyringe;
+        ApplyShopUpgrades();
+        // Todos los niveles empiezan con la jeringuilla VACÍA: ni sangre roja ni azul (energía al 100 %).
+        // (Ya no hay "sangre inicial" configurable en el Inspector.)
+        _syringe    = 0f;
+        _isBlueMode = false;
+
+        // EXCEPCIÓN — «Buen desayuno» (tienda): empiezas el nivel ya en MODO AZUL, con la barra azul al
+        // 20 / 40 / 60 % según el nivel de la mejora.
+        int breakfast = PlayerProgress.GetLevel(ShopIds.StartBoost);
+        if (breakfast > 0)
+        {
+            _isBlueMode = true;
+            _syringe    = _maxSyringe * Mathf.Clamp01(0.2f * breakfast);
+        }
+        PlayerProgress.OnChanged += ApplyShopUpgrades;   // (si se compra en la tienda del freeroam, al momento)
+    }
+
+    private void OnDestroy()
+    {
+        PlayerProgress.OnChanged -= ApplyShopUpgrades;
+        if (Instance == this) Instance = null;
+    }
+
+    // ── Mejoras de la tienda ────────────────────────────────────────────────────
+    private float _baseMaxSyringe;
+
+    private int _streak;   // aciertos seguidos (para «Racha»)
+
+    /// <summary>Aciertos seguidos en modo rojo (se reinicia al fallar).</summary>
+    public int Streak => _streak;
+
+    /// <summary>«Sangre azul»: la sangre azul se gasta un 25 % / 50 % más despacio.</summary>
+    public static float BlueDecayMultiplier
+    {
+        get { int l = PlayerProgress.GetLevel(ShopIds.BlueBoost); return l <= 0 ? 1f : l == 1 ? 0.75f : 0.5f; }
+    }
+
+    /// <summary>«Coagulante»: pérdida pasiva −15 % / −30 %.</summary>
+    public static float PassiveMultiplier
+    {
+        get { int l = PlayerProgress.GetLevel(ShopIds.SlowBleed); return l <= 0 ? 1f : l == 1 ? 0.85f : 0.7f; }
+    }
+
+    /// <summary>«Piel gruesa»: los drenajes (BloodSuckers, golpes) quitan −25 % / −50 %.</summary>
+    public static float DrainMultiplier
+    {
+        get { int l = PlayerProgress.GetLevel(ShopIds.DrainGuard); return l <= 0 ? 1f : l == 1 ? 0.75f : 0.5f; }
+    }
+
+    /// <summary>«Metabolismo eficiente»: las acciones cuestan un 5 % menos por nivel.</summary>
+    public static float ActionCostMultiplier => 1f - 0.05f * PlayerProgress.GetLevel(ShopIds.Efficient);
+
+    /// <summary>«Coágulo»: probabilidad de que un fallo NO quite sangre (20 % / 35 %).</summary>
+    public static float MissGuardChance
+    {
+        get
+        {
+            int l = PlayerProgress.GetLevel(ShopIds.MissGuard);
+            return l <= 0 ? 0f : l == 1 ? 0.2f : 0.35f;
+        }
+    }
+
+    /// <summary>Un fallo que «Coágulo» ha perdonado (para feedback).</summary>
+    public UnityEvent OnMissGuarded;
+
+    /// <summary>«Pulso fuerte»: cada acierto devuelve +15 % / +30 % / +50 % de sangre.</summary>
+    public static float PulseMultiplier
+    {
+        get
+        {
+            int l = PlayerProgress.GetLevel(ShopIds.StrongPulse);
+            return l <= 0 ? 1f : l == 1 ? 1.15f : l == 2 ? 1.3f : 1.5f;
+        }
+    }
+
+    /// <summary>«Jeringuilla grande»: +10 % de capacidad por nivel. Conserva la sangre que ya hay.</summary>
+    private void ApplyShopUpgrades()
+    {
+        if (_baseMaxSyringe <= 0f) _baseMaxSyringe = _maxSyringe;
+        float newMax = _baseMaxSyringe * (1f + 0.1f * PlayerProgress.GetLevel(ShopIds.BigSyringe));
+        if (Mathf.Approximately(newMax, _maxSyringe)) return;
+        _maxSyringe = newMax;
+        _syringe = Mathf.Min(_syringe, _maxSyringe);
+        OnSyringeChanged?.Invoke(SyringePercent);
+        OnEnergyChanged?.Invoke(EnergyPercent);
+    }
+
+    [Header("Corazón firme (mejora de la tienda)")]
+    [Tooltip("Segundos manteniendo el clic izquierdo para que cuente como 'mantener el corazón' (un clic normal\n" +
+             "de beat es más corto y no lo activa).")]
+    [SerializeField] private float _steadyHoldDelay = 0.25f;
+    private float _steadyHoldTime;
+
+    /// <summary>
+    /// ¿Está el jugador MANTENIENDO el corazón (clic izquierdo sostenido, con la mejora «Corazón firme»)?
+    /// Mientras tanto no se pierde sangre pasivamente (los fallos, golpes y BloodSuckers siguen contando).
+    /// </summary>
+    public bool IsHoldingHeart { get; private set; }
+
+    private void UpdateSteadyHeart()
+    {
+        bool owned   = PlayerProgress.GetLevel(ShopIds.SteadyHeart) > 0;
+        bool playing = BeatManager.Instance == null || BeatManager.Instance.IsPlaying;
+        bool pressed = owned && playing && Mouse.current != null && Mouse.current.leftButton.isPressed;
+        _steadyHoldTime = pressed ? _steadyHoldTime + Time.deltaTime : 0f;
+        // En cuanto la mano se queda cerrada (ver HandAnimationController) ya cuenta; si no hay mano visible
+        // (p. ej. en el kayak), vale con mantener el clic '_steadyHoldDelay' segundos.
+        IsHoldingHeart  = pressed && (HandAnimationController.IsHandHeld || _steadyHoldTime >= _steadyHoldDelay);
     }
 
     private void Update()
     {
+        UpdateSteadyHeart();
+
         // God Mode: congelar toda la lógica de energía (sin llenado pasivo, sin muerte por jeringuilla).
         if (godMode) return;
 
@@ -157,7 +267,7 @@ public class EnergyManager : MonoBehaviour
         if (_isBlueMode)
         {
             if (_blueDecayPerSecond > 0f && _syringe > 0f)
-                ChangeSyringe(-_blueDecayPerSecond * Time.deltaTime);
+                ChangeSyringe(-_blueDecayPerSecond * BlueDecayMultiplier * Time.deltaTime);   // («Sangre azul»)
 
             if (_syringe <= 0f)
             {
@@ -167,8 +277,9 @@ public class EnergyManager : MonoBehaviour
         }
         else
         {
-            if (_passiveFillPerSecond > 0f && _syringe < _maxSyringe)
-                ChangeSyringe(_passiveFillPerSecond * Time.deltaTime);
+            // Corazón firme: mientras lo mantienes, no se pierde sangre pasivamente.
+            if (_passiveFillPerSecond > 0f && _syringe < _maxSyringe && !IsHoldingHeart)
+                ChangeSyringe(_passiveFillPerSecond * PassiveMultiplier * Time.deltaTime);    // («Coagulante»)
         }
     }
 
@@ -197,11 +308,17 @@ public class EnergyManager : MonoBehaviour
 
         float timingMultiplier;
         if (timing == TimingResult.Perfect)
-            timingMultiplier = 1.5f;
+            timingMultiplier = PlayerProgress.GetLevel(ShopIds.Perfectionist) > 0 ? 2f : 1.5f;   // («Perfeccionista»)
         else
             timingMultiplier = 1.0f;
 
-        float subtract = _hitInjectAmount * timingMultiplier;
+        float subtract = _hitInjectAmount * timingMultiplier * PulseMultiplier;   // (mejora «Pulso fuerte»)
+
+        // «Segundo aliento»: con poca energía, los aciertos valen el doble.
+        if (PlayerProgress.GetLevel(ShopIds.SecondWind) > 0 && EnergyPercent < 0.2f) subtract *= 2f;
+        // «Racha»: desde 8 aciertos seguidos, +25 %.
+        _streak++;
+        if (PlayerProgress.GetLevel(ShopIds.Streak) > 0 && _streak >= 8) subtract *= 1.25f;
         float redAvailable = _syringe;
 
         if (redAvailable >= subtract)
@@ -238,6 +355,15 @@ public class EnergyManager : MonoBehaviour
     {
         if (_isBlueMode) return 0f;
         RecordInput(isHit: false);  // registrar fallo en la ventana anti-spam
+        _streak = 0;                // (se rompe la racha)
+
+        // «Coágulo» (tienda): un % de los fallos no quita sangre.
+        float guard = MissGuardChance;
+        if (guard > 0f && Random.value < guard)
+        {
+            OnMissGuarded?.Invoke();
+            return 0f;
+        }
         float multiplier = GetMissMultiplier();
         float before = _syringe;
         ChangeSyringe(_missAbsorbAmount * multiplier * Mathf.Max(0f, penaltyScale));
@@ -287,6 +413,7 @@ public class EnergyManager : MonoBehaviour
     public bool TrySpend(float amount)
     {
         if (amount <= 0f) return true;
+        amount *= ActionCostMultiplier;   // «Metabolismo eficiente» (tienda)
         if (godMode)      return true;  // God Mode: acción siempre permitida, sin coste
 
         if (_isBlueMode)
@@ -334,6 +461,7 @@ public class EnergyManager : MonoBehaviour
         if (amount <= 0f) return;
         if (godMode || _isBlueMode) return;   // en God Mode / bonus azul no te pueden chupar sangre
         _lastDrainTime = Time.time;
+        amount *= DrainMultiplier;   // («Piel gruesa»)
         ChangeSyringe(amount);                // positivo = llena la jeringuilla = pierde energía
     }
 

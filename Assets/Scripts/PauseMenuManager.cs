@@ -91,6 +91,14 @@ public class PauseMenuManager : MonoBehaviour
             return;
         }
 
+        // --- La tienda abierta (o recién cerrada con Esc) gestiona su propio Esc y el cursor ---
+        if (ShopUI.IsOpen || ShopUI.ClosedRecently || ContractUI.IsOpen || ContractUI.ClosedRecently)
+        {
+            _lastFrameCursorLock = Cursor.lockState;
+            _weJustChangedCursor = false;
+            return;
+        }
+
         // --- Deteccion de tecla ---
         if (Keyboard.current != null)
         {

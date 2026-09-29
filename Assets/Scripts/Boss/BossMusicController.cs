@@ -3,7 +3,8 @@ using UnityEngine;
 /// <summary>
 /// Gestiona los RELEVOS de música del boss fight sin romper el reloj de beats:
 ///   1. Cuando TERMINA la canción del nivel, arranca LDNM-BOSS-LOOP (en bucle) justo en ese instante.
-///   2. Al derrotar al jefe (BossController.OnDefeated) → LDNM-END (una vez).
+///   2. Al derrotar al jefe (BossController.OnDefeated) el loop NO se corta: termina la vuelta que está sonando
+///      y justo al acabar entra LDNM-END (una vez). EndFinishDSP / EndFinished indican cuándo acaba la canción.
 ///
 /// El relevo se programa con PlayScheduled en el instante EXACTO en que acaba la pista del nivel
 /// (ScheduledStartDSP + duración del clip), y el BeatManager cambia su fuente de reloj con SwapSource
@@ -107,19 +108,42 @@ public class BossMusicController : MonoBehaviour
     {
         if (_endSource == null || _beatManager == null) return;
 
-        double now      = AudioSettings.dspTime;
-        double startDSP = _beatManager.ScheduledStartDSP;
-        double beatDur  = BeatDur;
+        double now = AudioSettings.dspTime;
 
-        // Siguiente downbeat (múltiplo de 4) tras la derrota.
-        double beatsNow = (now - startDSP) / beatDur;
-        int    nextDown = (Mathf.FloorToInt((float)beatsNow) / 4 + 1) * 4;
-        _endDSP = startDSP + nextDown * beatDur;
+        if (_loopSwapped && _loopSource != null && _loopSource.clip != null && _handoffDSP > 0.0)
+        {
+            // El LOOP del jefe NO se corta: sigue hasta el FINAL de la vuelta que está sonando y ahí entra LDNM-END.
+            AudioClip lc = _loopSource.clip;
+            double loopLen = lc.frequency > 0 ? lc.samples / (double)lc.frequency : lc.length;
+            double passes  = System.Math.Ceiling((now - _handoffDSP) / loopLen);
+            _endDSP = _handoffDSP + passes * loopLen;
+            if (_endDSP - now < 0.1) _endDSP += loopLen;   // demasiado justo para programarlo: la siguiente vuelta
+            // (ScheduleHandoff le pone SetScheduledEndTime justo ahí: termina la vuelta entera y se para.)
+        }
+        else
+        {
+            // (Sin loop en marcha) siguiente downbeat, como antes.
+            double startDSP = _beatManager.ScheduledStartDSP;
+            double beatsNow = (now - startDSP) / BeatDur;
+            int    nextDown = (Mathf.FloorToInt((float)beatsNow) / 4 + 1) * 4;
+            _endDSP = startDSP + nextDown * BeatDur;
+        }
 
         ScheduleHandoff(_endSource, _endDSP);
         _endScheduled = true;
-        if (_verbose) Debug.Log($"[BossMusic] Final programado para el beat {nextDown}.");
+
+        AudioClip ec = _endSource.clip;
+        double endLen = ec != null ? (ec.frequency > 0 ? ec.samples / (double)ec.frequency : ec.length) : 0.0;
+        EndFinishDSP = _endDSP + endLen;
+        if (_verbose) Debug.Log($"[BossMusic] El loop sigue hasta el final de su vuelta; LDNM-END empieza en " +
+                                $"{_endDSP - now:F1} s y termina en {EndFinishDSP - now:F1} s.");
     }
+
+    /// <summary>DSP en el que TERMINA LDNM-END (−1 si aún no se ha programado).</summary>
+    public double EndFinishDSP { get; private set; } = -1;
+
+    /// <summary>¿Ha terminado ya de sonar LDNM-END (la canción entera)?</summary>
+    public bool EndFinished => EndFinishDSP > 0.0 && AudioSettings.dspTime >= EndFinishDSP;
 
     /// <summary>Arranca 'next' en 'atDSP' (desde el principio) y hace terminar la fuente actual ahí mismo.</summary>
     private void ScheduleHandoff(AudioSource next, double atDSP)

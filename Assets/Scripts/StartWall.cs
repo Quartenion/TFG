@@ -17,8 +17,8 @@ using UnityEngine.InputSystem;
 /// FLUJO:
 ///   · Freeroam: corazón oculto, barra de energía oculta.
 ///   · El jugador mira la pared a ≤ _maxDistance m y pulsa E.
-///   · La pared desaparece.
-///   · El jugador se teletransporta a Starting Point.
+///   · La pared se DESMORONA en bloques (CrumbleFX), como las plataformas del jefe.
+///   · El jugador camina (o se teletransporta) hasta Starting Point.
 ///   · Aparecen el corazón y la barra de energía.
 ///   · Empieza la introducción (círculos de ritmo).
 /// </summary>
@@ -47,6 +47,17 @@ public class StartWall : MonoBehaviour
              "Desactívalo si la pared es solo el trigger pero no debe ocultarse\n" +
              "(p. ej. cuando la interacción son unas puertas).")]
     [SerializeField] private bool _hideWallOnTrigger = true;
+
+    [Tooltip("La pared se DESMORONA (tiembla, se parte en bloques que caen y se desintegran) en vez de desaparecer\n" +
+             "de golpe, como las plataformas del jefe.")]
+    [SerializeField] private bool _crumble = true;
+    [SerializeField] private CrumbleFX.Settings _crumbleSettings = new CrumbleFX.Settings();
+
+    [Tooltip("En vez de teletransportarse, el jugador CAMINA hasta el Starting Point (así ve cómo se viene abajo la\n" +
+             "pared y pasa por el hueco).")]
+    [SerializeField] private bool _walkToStart = true;
+    [Tooltip("Segundos que tarda en llegar caminando al Starting Point.")]
+    [SerializeField] private float _travelDuration = 2.5f;
 
     [Header("Interacción")]
     [Tooltip("Distancia máxima (m) al mirar la pared para que aparezca el prompt.")]
@@ -107,21 +118,35 @@ public class StartWall : MonoBehaviour
             Trigger();
     }
 
+    /// <summary>Reaparición en un checkpoint: la pared ya se "usó" (sin teleport ni secuencia) y se ve el corazón.</summary>
+    public void SkipForCheckpoint()
+    {
+        _triggered = true;
+        _inRange   = false;
+        if (_hideWallOnTrigger && _wallCollider != null) _wallCollider.gameObject.SetActive(false);
+        if (_heartProp != null) _heartProp.SetActive(true);
+    }
+
     private void Trigger()
     {
         _triggered = true;
 
-        // 1. Ocultar la pared (si procede)
+        // 1. La pared se desmorona (o desaparece de golpe)
         if (_hideWallOnTrigger && _wallCollider != null)
-            _wallCollider.gameObject.SetActive(false);
+        {
+            if (_crumble) CrumbleFX.Crumble(_wallCollider.gameObject, _crumbleSettings);
+            else          _wallCollider.gameObject.SetActive(false);
+        }
 
         // 2. Desactivar freeroam SIEMPRE, independientemente del starting point
         if (_playerMovement != null)
         {
             if (_startingPoint != null)
             {
-                // Teletransportar + desactivar freeroam
-                _playerMovement.TeleportToStartPoint(_startingPoint.position, _startingPoint.rotation);
+                if (_walkToStart)
+                    _playerMovement.StartSmoothMoveToStart(_startingPoint.position, _travelDuration);   // (sale del freeroam)
+                else
+                    _playerMovement.TeleportToStartPoint(_startingPoint.position, _startingPoint.rotation);
             }
             else
             {

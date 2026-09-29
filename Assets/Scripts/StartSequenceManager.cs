@@ -110,9 +110,10 @@ public class StartSequenceManager : MonoBehaviour
     [SerializeField] private GameObject _energyBarRoot;
 
     [Header("Debug / Pruebas")]
-    [Tooltip("Si está activo, salta la introducción de audio y va directo a los círculos del ritmo.\n" +
-             "Útil para iterar rápido sin escuchar la intro cada vez.")]
-    [SerializeField] private bool _skipIntro = false;
+    [Tooltip("(Solo para probar) Salta la introducción de audio y va directo a los círculos del ritmo.\n" +
+             "Normalmente déjalo DESACTIVADO: la intro ya suena solo la primera vez que entras en cada nivel\n" +
+             "desde que se abre el juego.")]
+    [SerializeField] private bool _debugSkipIntro = false;
 
     [Tooltip("Modo test: salta toda la secuencia de inicio, teleporta al jugador a _testStartZ\n" +
              "y arranca la canción en el momento que corresponde a esa posición.")]
@@ -136,8 +137,13 @@ public class StartSequenceManager : MonoBehaviour
     // ── Estado (static: sobrevive al reload de escena) ────────────────────
 
     /// <summary>Escenas en las que la intro ya se ha reproducido al menos una vez.</summary>
+    /// La intro suena UNA vez por nivel cada vez que se abre el juego: la lista se vacía al arrancar (también al
+    /// darle a Play en el editor, aunque esté desactivado el "domain reload").
     private static readonly System.Collections.Generic.HashSet<string> s_introPlayedScenes
         = new System.Collections.Generic.HashSet<string>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetIntroMemory() => s_introPlayedScenes.Clear();
 
     // ── Estado de instancia ───────────────────────────────────────────────
 
@@ -190,6 +196,13 @@ public class StartSequenceManager : MonoBehaviour
         PreloadClip(_introSource);
         PreloadClip(_metroSource);
         if (_beatManager != null) _beatManager.PreloadAudio();
+
+        // Reaparición en un CHECKPOINT (tienda): sin freeroam ni puerta; directos al 3-2-1 desde ese punto.
+        if (CheckpointSystem.PendingRespawn)
+        {
+            StartCoroutine(CheckpointSequence());
+            return;
+        }
 
         if (_waitForInteraction)
         {
@@ -326,7 +339,7 @@ public class StartSequenceManager : MonoBehaviour
 
         // ── Flujo normal: intro + secuencia ──────────────────────────────────
         string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        if (!_skipIntro && !s_introPlayedScenes.Contains(scene) && _introSource != null && _introSource.clip != null)
+        if (!_debugSkipIntro && !s_introPlayedScenes.Contains(scene) && _introSource != null && _introSource.clip != null)
         {
             _introSource.Play();
             yield return null;
@@ -334,6 +347,49 @@ public class StartSequenceManager : MonoBehaviour
             s_introPlayedScenes.Add(scene);
         }
 
+        // El 3-2-1-¡YA! no sale hasta que el jugador ha llegado al Starting Point (así no puede salir antes).
+        if (_playerMovement == null) _playerMovement = FindAnyObjectByType<PlayerMovement>();
+        float waited = 0f;
+        while (_playerMovement != null && _playerMovement.IsMovingToStart && waited < 15f)
+        {
+            waited += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        BeginChallenge();
+    }
+
+    private bool _checkpointMode;
+
+    /// <summary>
+    /// Reaparición en el checkpoint: coloca al jugador, recupera las monedas que llevaba y lanza el 3-2-1 normal;
+    /// al completarlo la canción arranca justo en el segundo del checkpoint (como el modo test).
+    /// </summary>
+    private IEnumerator CheckpointSequence()
+    {
+        CheckpointSystem.State st = CheckpointSystem.ConsumePending();
+        yield return null;   // que el resto de Start (puertas, etc.) ya se hayan ejecutado
+
+        foreach (var d in FindObjectsByType<DoorInteraction>()) d.SkipForCheckpoint();
+        foreach (var w in FindObjectsByType<StartWall>())       w.SkipForCheckpoint();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible   = false;
+        if (_energyBarRoot != null) _energyBarRoot.SetActive(true);
+
+        if (_playerMovement != null)
+        {
+            CharacterController cc = _playerMovement.GetComponent<CharacterController>();
+            bool ccWasEnabled = cc != null && cc.enabled;
+            if (ccWasEnabled) cc.enabled = false;
+            _playerMovement.transform.position = st.pos;
+            if (ccWasEnabled) cc.enabled = true;
+        }
+        // (Las monedas de la partida se conservan solas al reaparecer: ver LevelCoins.)
+
+        _checkpointMode = true;
+        _testSongOffset = st.songOffset;
+        Debug.Log($"[StartSequenceManager] CHECKPOINT  pos={st.pos}  |  canción {st.songOffset:F2} s");
         BeginChallenge();
     }
 
@@ -437,7 +493,7 @@ public class StartSequenceManager : MonoBehaviour
         // cuando llega el beat de inicio (0.33 s después), quedando una transición limpia.
         double startDSP = _nextBeatDSP;
 
-        if (_testMode && _testSongOffset > 0f)
+        if ((_testMode || _checkpointMode) && _testSongOffset > 0f)
             _beatManager.StartMusicFromAt(_testSongOffset, startDSP);  // arranca desde el offset de test
         else
             _beatManager.StartMusicAt(startDSP);

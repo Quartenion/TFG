@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8585dab5842c6d24ca10f39a07178ea2, type: 3}
+  m_Name: parachute
+  m_EditorClassIdentifier: Assembly-CSharp::ShopItem
+  id: parachute
+  displayName: "Paraca\xEDdas"
+  description: Una vez por nivel, si caes al agua o a la lava, rebotas hacia arriba
+    en vez de morir.
+  levelDescriptions: []
+  icon: {fileID: 0}
+  color: {r: 0.25, g: 0.7, b: 0.35, a: 1}
+  kind: 0
+  category: 0
+  prices: 58020000
+  maxStack: 5

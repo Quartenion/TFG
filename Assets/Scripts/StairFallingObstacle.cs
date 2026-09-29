@@ -30,7 +30,7 @@ using UnityEngine;
 ///   3. Coloca el objeto en el escalón superior y orienta su forward escaleras abajo.
 ///   4. Asigna BeatManager y BeatGridVisualizer, y ajusta escalones + beatsPerStep.
 /// </summary>
-public class StairFallingObstacle : MonoBehaviour
+public class StairFallingObstacle : MonoBehaviour, IRewindable
 {
     // ─────────────────────────────────────────────────────────────────────────
     // Inspector
@@ -380,12 +380,49 @@ public class StairFallingObstacle : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// REBOBINADO: recalcula los aterrizajes con el reloj actual y vuelve a arriba; el Update lo coloca en el
+    /// escalón que toca. Los golpes de escalones que ya pasaron no se repiten.
+    /// </summary>
+    public void OnTimeRewind()
+    {
+        if (!_initialized || _beatManager == null || _stepPos == null || _stepPos.Length < 2) return;
+        CalculateTiming();
+        double now = AudioSettings.dspTime;
+
+        if (_endBehaviour == EndBehaviour.Loop && _loopSpanDSP > 0.0)
+            while (now >= _endDSP) ShiftCycle(_loopSpanDSP);
+        else if (_endBehaviour == EndBehaviour.Destroy && now >= _endDSP)
+        {
+            _phase = Phase.Ended;                 // (ya había terminado en ese instante: sigue oculto)
+            if (gameObject.activeSelf) gameObject.SetActive(false);
+            return;
+        }
+
+        if (!gameObject.activeSelf) gameObject.SetActive(true);
+        for (int k = 0; k < _sfxFired.Length; k++)
+            _sfxFired[k] = now >= _landingDSP[k] - _sfxLeadTime;
+        _phase = Phase.Idle;
+        if (_warningIndicator != null) _warningIndicator.SetActive(false);
+        transform.position = _stepPos[0];
+        transform.rotation = _baseRotation;
+    }
+
+    private void ShiftCycle(double shift)
+    {
+        for (int k = 0; k < _landingDSP.Length; k++) _landingDSP[k] += shift;
+        _warningDSP += shift;
+        _endDSP      = _landingDSP[_landingDSP.Length - 1];
+    }
+
     private void HandleEnd()
     {
         switch (_endBehaviour)
         {
             case EndBehaviour.Destroy:
-                Destroy(gameObject);
+                // Se oculta en vez de destruirse, para que el Rebobinado pueda traerlo de vuelta.
+                _phase = Phase.Ended;
+                gameObject.SetActive(false);
                 break;
 
             case EndBehaviour.Loop:

@@ -77,6 +77,17 @@ public class RhythmRingVisual : MonoBehaviour
     // ── API pública ──────────────────────────────────────────────────────────
     public float Progress => _travelDuration > 0f ? _elapsed / _travelDuration : 0f;
     public bool  IsConsumed => _consumed;
+    /// <summary>Nota de MEDIO beat (contrato «Al compás»): spikes más pequeños y sin aro; no la absorbe el latido.</summary>
+    public bool  IsHalfBeat { get; private set; }
+
+    /// <summary>La convierte en nota de medio beat: spikes a 'spikeScale' y el aro oculto. Llamar tras Init.</summary>
+    public void MakeHalfBeat(float spikeScale)
+    {
+        IsHalfBeat = true;
+        foreach (Image s in frontSpikeImages) if (s != null) s.rectTransform.localScale *= spikeScale;
+        foreach (Image s in backSpikeImages)  if (s != null) s.rectTransform.localScale *= spikeScale;
+        if (ringImage != null) ringImage.enabled = false;
+    }
     public event Action OnExpired;
 
     // ── Privados ───────────────────────────────────────────────────────────────

@@ -100,10 +100,13 @@ public class BeatManager : MonoBehaviour
     public int CurrentBeatIndex => BeatDuration > 0f ? Mathf.FloorToInt(CorrectedTime / BeatDuration) : 0;
 
     /// <summary>Ventana Perfect en segundos.</summary>
-    public float PerfectWindow => _perfectWindow;
+    public float PerfectWindow => _perfectWindow * WindowMultiplier;
 
     /// <summary>Ventana Good en segundos.</summary>
-    public float GoodWindow => _goodWindow;
+    public float GoodWindow => _goodWindow * WindowMultiplier;
+
+    /// <summary>Mejora «Oído fino» de la tienda: +15 % de ventana por nivel (Perfect y Good).</summary>
+    public static float WindowMultiplier => 1f + 0.15f * PlayerProgress.GetLevel(ShopIds.WideWindow);
 
     /// <summary>True si la musica esta sonando.</summary>
     public bool IsPlaying => _audioSource != null && _audioSource.isPlaying;
@@ -197,11 +200,35 @@ public class BeatManager : MonoBehaviour
     /// Evalua el timing del input actual y devuelve Perfect, Good o Miss.
     /// Usado por RhythmInput para escalar la energia y mostrar feedback visual.
     /// </summary>
+    /// <summary>Mejora «Doble tempo»: los clics también cuentan en los medios beats.</summary>
+    public static bool HalfBeatClicks => PlayerProgress.GetLevel(ShopIds.HalfBeat) > 0;
+
+    /// <summary>Paso de la rejilla de clics: un beat, o medio beat con «Doble tempo».</summary>
+    public float ClickStep => HalfBeatClicks ? BeatDuration * 0.5f : BeatDuration;
+
+    /// <summary>Índice del hueco de clic actual (beat, o medio beat con «Doble tempo») para el anti-spam.</summary>
+    public int ClickIndex => HalfBeatClicks && ClickStep > 0f
+        ? Mathf.RoundToInt(CorrectedTime / ClickStep)
+        : CurrentBeatIndex;
+
+    /// <summary>Timing de un CLIC del jugador (con «Doble tempo» también vale el medio beat más cercano).</summary>
+    public TimingResult EvaluateClickTiming()
+    {
+        if (!HalfBeatClicks) return EvaluateTiming();
+        if (_audioSource == null || _bpm <= 0f) return TimingResult.Miss;
+        float d = ClickStep;
+        float mod = CorrectedTime % d;
+        float dist = Mathf.Min(mod, d - mod);
+        if (dist <= PerfectWindow) return TimingResult.Perfect;
+        if (dist <= GoodWindow)    return TimingResult.Good;
+        return TimingResult.Miss;
+    }
+
     public TimingResult EvaluateTiming()
     {
         float dist = GetSecondsToNearestBeat();
-        if (dist <= _perfectWindow) return TimingResult.Perfect;
-        if (dist <= _goodWindow)    return TimingResult.Good;
+        if (dist <= PerfectWindow) return TimingResult.Perfect;
+        if (dist <= GoodWindow)    return TimingResult.Good;
         return TimingResult.Miss;
     }
 
@@ -209,7 +236,22 @@ public class BeatManager : MonoBehaviour
     /// True si el input actual esta dentro de la ventana Good o mejor.
     /// Usado por PlayerMovement para el beat gating de saltos y dashes.
     /// </summary>
-    public bool IsOnBeat() => GetSecondsToNearestBeat() <= _goodWindow;
+    public bool IsOnBeat() => (HalfBeatMoves ? GetSecondsToNearestHalfBeat() : GetSecondsToNearestBeat()) <= GoodWindow;
+
+    /// <summary>
+    /// Con el contrato «Al compás» (acciones solo a ritmo) también valen los MEDIOS beats para saltar, hacer dash,
+    /// slide o romper bloques. Lo activa ContractRunner mientras dura el contrato.
+    /// </summary>
+    public static bool HalfBeatMoves { get; set; }
+
+    /// <summary>Distancia en segundos al beat O medio beat más cercano.</summary>
+    public float GetSecondsToNearestHalfBeat()
+    {
+        if (_audioSource == null || _bpm <= 0f) return float.MaxValue;
+        float d = HalfBeatDuration;
+        float mod = CorrectedTime % d;
+        return Mathf.Min(mod, d - mod);
+    }
 
     // --- API de control de musica ---
 
@@ -320,12 +362,29 @@ public class BeatManager : MonoBehaviour
             : Mathf.Max(0f, songTimeOffset);
 
         _audioSource.Stop();
+        _audioSource.pitch = 1f;   // (por si venía de un rebobinado con pitch negativo)
         _audioSource.time = safeOffset;
         _audioSource.PlayScheduled(dspTime);
 
         ScheduledStartDSP = dspTime - (double)safeOffset;
         _lastBeatIndex    = Mathf.FloorToInt(safeOffset / BeatDuration) - 1;
         _lastHalfBeatIdx  = Mathf.FloorToInt(safeOffset / HalfBeatDuration) - 1;
+    }
+
+    /// <summary>Velocidad de reproducción (negativa = hacia atrás; lo usa el Rebobinado). StartMusicFromAt la devuelve a 1.</summary>
+    public void SetPlaybackPitch(float pitch)
+    {
+        if (_audioSource != null) _audioSource.pitch = pitch;
+    }
+
+    /// <summary>
+    /// Solo para el Rebobinado: mueve el reloj DSP de todo el nivel para que "ahora" sea el segundo 'songTime' de la
+    /// canción. Así todo lo que se calcula a partir de ScheduledStartDSP (osciladores, bloques que caen…) se ve
+    /// volviendo atrás junto con el jugador. StartMusicFromAt lo deja bien al retomar.
+    /// </summary>
+    public void SetRewindClock(float songTime)
+    {
+        ScheduledStartDSP = AudioSettings.dspTime - (double)Mathf.Max(0f, songTime);
     }
 
     /// <summary>Para la musica y resetea el estado.</summary>

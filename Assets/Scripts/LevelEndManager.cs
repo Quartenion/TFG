@@ -143,11 +143,32 @@ public class LevelEndManager : MonoBehaviour
         }
     }
 
+    private bool _blocked;
+
+    /// <summary>Bloquea el fin de nivel por Z (p. ej. mientras dura el jefe: el final lo lanza él con BeginEnd).</summary>
+    public void SetBlocked(bool blocked) => _blocked = blocked;
+
+    /// <summary>Lanza YA la secuencia de fin (auto-movimiento + mirar alrededor) hacia 'finishPoint'.</summary>
+    public void BeginEnd(Transform finishPoint)
+    {
+        if (CurrentPhase != Phase.Playing) return;
+        if (finishPoint != null) _finishPoint = finishPoint;
+        _blocked = false;
+        StartEndSequence();
+    }
+
+    /// <summary>Coloca el final en tiempo de ejecución (p. ej. el END que emerge al acabar el jefe).</summary>
+    public void SetEnd(float endZ, Transform finishPoint)
+    {
+        _endZ = endZ;
+        if (finishPoint != null) _finishPoint = finishPoint;
+    }
+
     // ── Phase: Playing ────────────────────────────────────────────────────────
 
     private void UpdatePlaying()
     {
-        if (_player == null) return;
+        if (_player == null || _blocked) return;
 
         if (_player.transform.position.z >= _endZ)
         {
@@ -159,10 +180,24 @@ public class LevelEndManager : MonoBehaviour
     private void StartEndSequence()
     {
         CurrentPhase = Phase.AutoMoving;
+        CheckpointSystem.Clear();   // nivel superado
+
+        // «Sangre de oro» (tienda): +1 moneda por cada % de energía que quede al terminar.
+        if (PlayerProgress.GetLevel(ShopIds.BloodGold) > 0 && EnergyManager.Instance != null)
+            LevelCoins.Collect(Mathf.RoundToInt(Mathf.Clamp01(EnergyManager.Instance.EnergyPercent) * 100f));
 
         _accuracy = _totalBeats > 0
             ? (float)_syncedBeats / _totalBeats * 100f
             : 0f;
+
+        // Contratos firmados: los cumplidos se cobran ahora (van directos al monedero).
+        _contractsDone = ContractRunner.EvaluateLevelEnd(new LevelResult
+        {
+            accuracy      = _accuracy,
+            energyPercent = EnergyManager.Instance != null ? Mathf.Clamp01(EnergyManager.Instance.EnergyPercent) : 0f,
+            runCoins      = LevelCoins.RunCoins,
+            songBeats     = ContractCatalog.SongBeatsNow(),
+        });
 
         _player.enabled = false;
 
@@ -293,10 +328,27 @@ public class LevelEndManager : MonoBehaviour
 
     // ── Phase: ShowingResults ─────────────────────────────────────────────────
 
+    private int _coinsBanked;
+    private System.Collections.Generic.List<ContractDef> _contractsDone = new System.Collections.Generic.List<ContractDef>();
+
     private void EnterShowingResults()
     {
         CurrentPhase  = Phase.ShowingResults;
         _resultsTimer = 0f;
+
+        // «Pago por precisión» (tienda): +1 moneda por cada % de precisión.
+        if (PlayerProgress.GetLevel(ShopIds.AccuracyPay) > 0) LevelCoins.Collect(Mathf.RoundToInt(_accuracy));
+
+        // Cobrar las monedas de la partida (pasan al monedero; con «Bolsa de oro» ×1.5 si precisión ≥ 80 %).
+        _coinsBanked = LevelCoins.BankRun(_accuracy);
+
+        // «Interés» (tienda): +5 % del monedero (máx. 100).
+        if (PlayerProgress.GetLevel(ShopIds.Interest) > 0)
+        {
+            int interest = Mathf.Min(100, Mathf.FloorToInt(PlayerProgress.Coins * 0.05f));
+            PlayerProgress.AddCoins(interest);
+            _coinsBanked += interest;
+        }
 
         Debug.Log($"[LevelEndManager] Mostrando resultados. Precisión={_accuracy:F1}%. Cargando '{_nextSceneName}'...");
 
@@ -341,6 +393,7 @@ public class LevelEndManager : MonoBehaviour
     {
         if (CurrentPhase != Phase.Playing) return;
         if (_player == null || _grid == null || _beatManager == null) return;
+        if (TimeRewinder.IsRewinding) return;   // (los beats "hacia atrás" del rebobinado no cuentan)
 
         _totalBeats++;
 
@@ -369,7 +422,8 @@ public class LevelEndManager : MonoBehaviour
 
         InitStyles();
 
-        const float pw = 480f, ph = 280f;
+        const float pw = 480f;
+        float ph = 320f + (_contractsDone.Count > 0 ? 30f + 26f * _contractsDone.Count : 0f);
         float px = (Screen.width  - pw) * 0.5f;
         float py = (Screen.height - ph) * 0.5f;
 
@@ -400,6 +454,22 @@ public class LevelEndManager : MonoBehaviour
         // Precisión
         DrawStat(ref y, x, pw, "Precisión de beats",
             $"{_accuracy:F1}%  ({_syncedBeats}/{_totalBeats} beats)");
+
+        // Monedas cobradas
+        DrawStat(ref y, x, pw, "Monedas", $"+{_coinsBanked}  (monedero: {PlayerProgress.Coins})");
+
+        // Contratos cumplidos en este nivel
+        if (_contractsDone.Count > 0)
+        {
+            int total = 0;
+            foreach (ContractDef c in _contractsDone) total += c.reward;
+            DrawStat(ref y, x, pw, "Contratos cumplidos", $"{total} por cobrar");
+            foreach (ContractDef c in _contractsDone)
+            {
+                GUI.Label(new Rect(x + 16f, y, pw - 76f, 24f), $"· {c.title}   ({c.reward}, cóbralo en el puesto)", _bodyStyle);
+                y += 26f;
+            }
+        }
 
         y += 20f;
 

@@ -84,7 +84,7 @@ public class ObstacleCollision : MonoBehaviour
 
             if (verbose)
                 Debug.Log($"[ObstacleCollision] Obstáculo detectado (tirolina): \"{hit.name}\"  cara: {face}");
-            Die();
+            Die(hit.gameObject);
             return;
         }
     }
@@ -103,7 +103,7 @@ public class ObstacleCollision : MonoBehaviour
 
         if (verbose)
             Debug.Log($"[ObstacleCollision] Choque con \"{hit.gameObject.name}\"  cara: {face}. Game Over.");
-        Die();
+        Die(hit.gameObject);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -119,7 +119,7 @@ public class ObstacleCollision : MonoBehaviour
 
         if (verbose)
             Debug.Log($"[ObstacleCollision] Trigger con \"{other.gameObject.name}\"  cara: {face}. Game Over.");
-        Die();
+        Die(other.gameObject);
     }
 
     // ── Configuración del obstáculo ───────────────────────────────────────────
@@ -136,14 +136,16 @@ public class ObstacleCollision : MonoBehaviour
 
     // ── Game Over ─────────────────────────────────────────────────────────────
 
-    private void Die()
+    private void Die(GameObject obstacle)
     {
-        _dead = true;
-
-        if (gameOverManager != null)
-            gameOverManager.TriggerGameOver();
-        else
+        if (gameOverManager == null)
+        {
+            _dead = true;
             Debug.LogError("[ObstacleCollision] GameOverManager NO está asignado en el Inspector.");
+            return;
+        }
+        // Con ESCUDO (tienda) el obstáculo se rompe y sigues vivo (se sigue detectando lo siguiente).
+        _dead = gameOverManager.TryKillByObstacle(obstacle);
     }
 
     // ── Clasificación de cara ────────────────────────────────────────────────

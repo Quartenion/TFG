@@ -10,6 +10,8 @@ using UnityEngine.Events;
 ///     girándolo de vertical a HORIZONTAL (puño por delante, listo para barrer).
 ///   • SWING: barre lateralmente (arco) justo por donde está el jugador, a la altura elegida.
 ///   • VOLVER: regresa a flotar vertical al lado del jefe y la mano vuelve a su sitio.
+///   • LANZAMIENTO (Fase 3, Throw): mismo wind-up, arco y velocidad, pero lo SUELTA: vuela solo por el arco
+///     girando sobre sí mismo y la OTRA mano lo coge al final y lo deja flotando en su sitio.
 ///
 /// DAÑO: por VOLUMEN BARRIDO (caja de las puntas del frame anterior + la actual) contra el jugador,
 /// solo durante el swing, así no hay tunneling. Al tocar → game over.
@@ -98,12 +100,47 @@ public class BossTailSweep : MonoBehaviour
 
     [System.Serializable] public class BoolEvent : UnityEvent<bool> { }
 
+    [Header("Lanzamiento (Fase 3): MISMO arco y velocidad que el barrido, pero SOLTADO")]
+    [Tooltip("Vueltas completas sobre sí mismo desde que lo suelta hasta que pasa por el jugador. El giro es\n" +
+             "PROPORCIONAL al arco recorrido, así que al pasar por el jugador apunta igual que en el barrido.")]
+    [Min(0)][SerializeField] private int _throwSpinTurns = 1;
+    [Tooltip("Calcular solo el centro de giro (centro de la malla del tridente).")]
+    [SerializeField] private bool _autoSpinCenter = true;
+    [Tooltip("Centro de giro en espacio LOCAL del tridente (si 'Auto Spin Center' está desactivado).")]
+    [SerializeField] private Vector3 _throwSpinCenterLocal = Vector3.zero;
+    [Tooltip("En qué punto del vuelo (0-1) la OTRA mano empieza a ir a por él para cogerlo al final del arco.")]
+    [Range(0f, 1f)][SerializeField] private float _catchReachStart = 0.5f;
+    [Tooltip("Beats que tarda la otra mano en soltarlo y volver a su sitio tras dejarlo flotando.")]
+    [SerializeField] private float _catchReleaseBeats = 0.5f;
+
     [Header("Eventos (animación / SFX)")]
     public BoolEvent OnWindUp;   // bool = high
     public BoolEvent OnContact;  // bool = high
+    public UnityEvent OnThrowCharge;    // empieza el wind-up del lanzamiento
+    public UnityEvent OnThrowRelease;   // lo suelta (empieza a volar por el arco)
+    public UnityEvent OnThrowCaught;    // la otra mano lo coge al final del arco
+
+    /// <summary>¿Está ocupado (barriendo, lanzado o volviendo)? Si no, está flotando en reposo.</summary>
+    public bool IsBusy => _phase != Phase.Idle;
+
+    /// <summary>¿Hay un lanzamiento/recuperación EN CURSO? (Sujetándolo a la espera del siguiente lanzamiento = no.)</summary>
+    public bool IsThrowInProgress => _phase == Phase.WindUp || _phase == Phase.Sweeping || _phase == Phase.Recover;
 
     // ── Estado ────────────────────────────────────────────────────────────────
-    private enum Phase { Idle, WindUp, Sweeping, Recover }
+    private enum Phase { Idle, WindUp, Sweeping, Recover, Held }
+    private bool   _holdForNext;      // tras cogerlo, NO lo deja en su sitio: lo sujeta para el siguiente lanzamiento
+    private double _heldStart;
+    private const float HeldTimeoutBeats = 4f;   // si no llega otro lanzamiento, lo deja en su sitio igualmente
+
+    // Lanzamiento: usa las fases del barrido (WindUp → Sweeping → Recover) con '_throwing' activo.
+    private bool      _throwing;                    // el barrido actual es un LANZAMIENTO (va suelto)
+    private float     _thrPassY;                    // altura (mundo) a la que vuela
+    private Vector3   _spinCenterLocal;             // centro de giro (espacio local del tridente)
+    private Vector3   _handReleaseLocal;
+    private Transform _catchHand, _catchHandParent; // la OTRA mano, que lo coge al final del arco
+    private Vector3   _catchHandRestLocal;
+    private bool      _recoverCatch;                // recuperación llevándolo con la otra mano
+    private bool    _recoverHand = true;           // al recuperar, ¿la mano suelta el tridente? (tras lanzarlo ya está suelta)
     private const float RecoverHoldBeats = 0.25f;   // pausa agarrándolo antes de soltarlo (margen para encadenar)
     private Phase _phase = Phase.Idle;
 
@@ -142,6 +179,17 @@ public class BossTailSweep : MonoBehaviour
             _gripHandParent    = _gripHand.parent;
             _gripHandRestLocal = _gripHand.localPosition;
         }
+        _spinCenterLocal = _throwSpinCenterLocal;
+        if (_autoSpinCenter)
+        {
+            // Centro de TODO el tridente (no solo las puntas) para que gire sobre sí mismo.
+            bool any = false; Bounds b = default;
+            foreach (Renderer r in _tailPivot.GetComponentsInChildren<Renderer>())
+            {
+                if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds);
+            }
+            _spinCenterLocal = any && b.size.sqrMagnitude > 0.0001f ? _tailPivot.InverseTransformPoint(b.center) : Vector3.zero;
+        }
         SetTells(false, false);
     }
 
@@ -159,6 +207,17 @@ public class BossTailSweep : MonoBehaviour
     /// <param name="sweepBeatsOverride">Duración del barrido en beats (si &gt; 0). Lo usa el jefe para acortarlo
     /// cuando los barridos van muy seguidos y así dejar siempre tiempo de aviso entre uno y otro.</param>
     public void Sweep(BossController boss, bool high, bool fromRight, double contactDSP, float sweepBeatsOverride = -1f)
+    {
+        UseGripHand(null);   // el barrido siempre con la mano asignada en el Inspector
+        _throwing     = false;
+        _recoverCatch = false;
+        BeginSwing(boss, high, fromRight, contactDSP, sweepBeatsOverride);
+        SetTells(high, !high);
+        OnWindUp?.Invoke(high);
+    }
+
+    /// <summary>Prepara wind-up + barrido (común al barrido normal y al lanzamiento).</summary>
+    private void BeginSwing(BossController boss, bool high, bool fromRight, double contactDSP, float sweepBeatsOverride)
     {
         _boss      = boss;
         _high      = high;
@@ -180,10 +239,8 @@ public class BossTailSweep : MonoBehaviour
         _fromRot = _tailPivot.localRotation;
         // Si viene encadenado de otro barrido, la mano YA tiene el tridente: no lo suelta para volver a cogerlo.
         _handGripFrom01 = _handGrip01;
+        _recoverHand    = true;
         _phase   = Phase.WindUp;
-
-        SetTells(high, !high);
-        OnWindUp?.Invoke(high);
     }
 
     private void Update()
@@ -245,6 +302,13 @@ public class BossTailSweep : MonoBehaviour
                     _phase = Phase.Sweeping;
                     SetTells(false, false);
                     if (!_contacted) { _contacted = true; OnContact?.Invoke(_high); }
+                    if (_throwing)
+                    {
+                        // LO SUELTA: a partir de aquí vuela solo por el mismo arco (y a la misma velocidad).
+                        if (_gripHand != null) _handReleaseLocal = _gripHand.localPosition;
+                        _handGrip01 = 0f;
+                        OnThrowRelease?.Invoke();
+                    }
                 }
                 break;
             }
@@ -259,10 +323,19 @@ public class BossTailSweep : MonoBehaviour
                 float dirS = _fromRight ? 1f : -1f;
                 float ang  = Mathf.Lerp(dirS * (_swingHalfArcDeg + _anticipationDeg), -dirS * _swingHalfArcDeg, u);
                 GetSwingPoseAngle(ang, out Vector3 sp, out Quaternion sr);
+                if (_throwing) ApplyThrowSpin(ang, ref sp, ref sr);
                 _tailPivot.localPosition = sp;
                 _tailPivot.localRotation = sr;
-                PlaceHand(1f);
-                CheckHit();
+                if (_throwing)
+                {
+                    UpdateThrowHands(now, u);
+                    CheckThrowHit();
+                }
+                else
+                {
+                    PlaceHand(1f);
+                    CheckHit();
+                }
 
                 if (u >= 1f)
                 {
@@ -270,15 +343,47 @@ public class BossTailSweep : MonoBehaviour
                     _recoverStart = now;
                     _recFromPos   = sp;
                     _recFromRot   = sr;
+                    if (_throwing)
+                    {
+                        if (_gripHand != null) _gripHand.localPosition = _gripHandRestLocal;
+                        _recoverHand  = false;              // la mano del lanzamiento ya lo soltó
+                        _recoverCatch = CatchHandUsable;    // la OTRA mano lo coge…
+                        if (_recoverCatch) OnThrowCaught?.Invoke();
+
+                        // …y se queda flotando en el lado donde ACABÓ el arco (vaya de izq→der o de der→izq):
+                        // el reposo original o su simétrico (X local → −X), el que quede más cerca.
+                        Vector3 orig   = _floatLocalPos;
+                        Vector3 mirror = new Vector3(-_floatLocalPos.x, _floatLocalPos.y, _floatLocalPos.z);
+                        _floatMirrored = (sp - mirror).sqrMagnitude < (sp - orig).sqrMagnitude;
+
+                        // Encadenado: la mano que lo coge lo SUJETA ahí y lo vuelve a lanzar (no lo deja flotando).
+                        if (_recoverCatch && _holdForNext) { _phase = Phase.Held; _heldStart = now; }
+                    }
+                }
+                break;
+            }
+
+            case Phase.Held:
+            {
+                // Sujetándolo con la mano que lo cogió, en la pose en la que lo cogió, a la espera del siguiente.
+                _tailPivot.localPosition = _recFromPos;
+                _tailPivot.localRotation = _recFromRot;
+                PlaceCatchHand(1f);
+                if (now > _heldStart + HeldTimeoutBeats * _beatDur)
+                {
+                    _phase = Phase.Recover;          // no llegó otro lanzamiento: lo deja en su sitio
+                    _recoverStart = now;
                 }
                 break;
             }
 
             case Phase.Recover:
             {
+                if (_recoverCatch) { UpdateCatchRecover(now); break; }
+
                 // Pequeña pausa agarrándolo en la pose final antes de soltarlo: si llega otro barrido
                 // encadenado (aunque sea un frame tarde) arranca desde aquí sin haber empezado a soltarlo.
-                double holdEnd = _recoverStart + RecoverHoldBeats * _beatDur;
+                double holdEnd = _recoverStart + (_recoverHand ? RecoverHoldBeats : 0f) * _beatDur;
                 if (now < holdEnd)
                 {
                     PlaceHand(1f);
@@ -294,16 +399,233 @@ public class BossTailSweep : MonoBehaviour
                 GetIdlePose(now, out Vector3 ip, out Quaternion ir);
                 _tailPivot.localPosition = Vector3.Lerp(_recFromPos, ip, e);
                 _tailPivot.localRotation = Quaternion.Slerp(_recFromRot, ir, e);
-                PlaceHand(1f - e);
+                if (_recoverHand) PlaceHand(1f - e);   // tras un lanzamiento la mano ya está suelta
 
                 if (g >= 1f)
                 {
-                    _phase = Phase.Idle;
+                    _phase    = Phase.Idle;
+                    _throwing = false;
                     if (_gripHand != null) _gripHand.localPosition = _gripHandRestLocal;
                     SetTells(false, false);
                 }
                 break;
             }
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    //  LANZAMIENTO (Fase 3): el barrido, pero SOLTADO
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Lanza el tridente siguiendo EXACTAMENTE el arco y la velocidad del barrido (mismo wind-up: lo coge,
+    /// se coloca, se echa atrás y tiembla), pero al arrancar el barrido lo SUELTA: vuela solo por el arco,
+    /// girando sobre sí mismo de forma proporcional al arco recorrido (al pasar por el jugador apunta igual
+    /// que en el barrido). Pasa a la altura 'passY' (mundo) → hay que SALTAR. Al final del arco la OTRA mano
+    /// ('catchHand') lo coge y lo deja flotando en su sitio. Si esa mano no existe/está destruida, vuelve solo.
+    /// El lado de salida se elige para que acabe en el lado de la mano que lo coge.
+    /// </summary>
+    public void Throw(BossController boss, double contactDSP, float passY, Transform throwHand, Transform catchHand,
+                      float sweepBeatsOverride = -1f, bool holdForNext = false)
+    {
+        // ¿Encadenado? La mano que lo sujeta (la que lo cogió) es la que lo lanza ahora, sin soltarlo.
+        bool chained = _phase == Phase.Held && _catchHand != null && SameHand(throwHand, _catchHand);
+        Transform heldBy = _catchHand, heldParent = _catchHandParent;
+        Vector3   heldRest = _catchHandRestLocal;
+        Transform prevGrip = _gripHand, prevGripParent = _gripHandParent;
+        Vector3   prevGripRest = _gripHandRestLocal;
+
+        if (_phase == Phase.Held && !chained && heldBy != null) heldBy.localPosition = heldRest;   // lo suelta
+        UseGripHand(throwHand);
+        if (chained)
+        {
+            _gripHand = heldBy; _gripHandParent = heldParent; _gripHandRestLocal = heldRest;
+            _handGrip01 = 1f;
+        }
+        _boss     = boss;
+        _throwing = true;
+        _thrPassY = passY;
+        _recoverCatch = false;
+        _holdForNext  = holdForNext;
+
+        _catchHand = catchHand != null && !SameHand(catchHand, _gripHand) ? catchHand : null;
+        if (_catchHand != null)
+        {
+            _catchHandParent = _catchHand.parent;
+            // Si la que va a cogerlo es la que lo lanzó antes, su reposo es el que ya teníamos (ahora puede estar
+            // volviendo a su sitio).
+            _catchHandRestLocal = chained && prevGrip != null && SameHand(_catchHand, prevGrip) && _catchHandParent == prevGripParent
+                ? prevGripRest : _catchHand.localPosition;
+        }
+
+        _high = false;
+        bool fromRight = ChooseThrowSide();
+        BeginSwing(boss, false, fromRight, contactDSP, sweepBeatsOverride);
+
+        SetTells(false, true);
+        OnWindUp?.Invoke(false);
+        OnThrowCharge?.Invoke();
+    }
+
+    /// <summary>¿Son la misma mano? (el mismo objeto o uno dentro del otro).</summary>
+    public static bool SameHand(Transform a, Transform b) =>
+        a != null && b != null && (a == b || a.IsChildOf(b) || b.IsChildOf(a));
+
+    /// <summary>Mano asignada en el Inspector para el barrido (Grip Hand).</summary>
+    public Transform GripHand => _defGripHand != null ? _defGripHand : _gripHand;
+
+    private Transform _defGripHand, _defGripParent;
+    private Vector3   _defGripRestLocal;
+    private bool      _defGripSaved;
+
+    /// <summary>Cambia la mano que agarra el tridente (null = la del Inspector).</summary>
+    private void UseGripHand(Transform hand)
+    {
+        if (!_defGripSaved)
+        {
+            _defGripHand = _gripHand; _defGripParent = _gripHandParent; _defGripRestLocal = _gripHandRestLocal;
+            _defGripSaved = true;
+        }
+        if (hand == null || hand == _defGripHand)
+        {
+            _gripHand = _defGripHand; _gripHandParent = _defGripParent; _gripHandRestLocal = _defGripRestLocal;
+        }
+        else
+        {
+            _gripHand = hand; _gripHandParent = hand.parent; _gripHandRestLocal = hand.localPosition;
+            _handGrip01 = 0f;   // la otra mano no tenía el tridente
+        }
+    }
+
+    private Transform  PivotParent => _tailPivot.parent;
+
+    private bool CatchHandUsable => _catchHand != null && _catchHand.gameObject.activeInHierarchy;
+
+    /// <summary>Empieza en el lado de la mano que lanza y acaba en el de la mano que lo coge.</summary>
+    private bool ChooseThrowSide()
+    {
+        GetSwingPoseAngle( _swingHalfArcDeg, out Vector3 pPlus,  out _);
+        GetSwingPoseAngle(-_swingHalfArcDeg, out Vector3 pMinus, out _);
+
+        if (CatchHandUsable)
+        {
+            Vector3 rest = HandRestInPivotSpace(_catchHandParent, _catchHandRestLocal);
+            bool endPlus = (pPlus - rest).sqrMagnitude < (pMinus - rest).sqrMagnitude;
+            return !endPlus;   // fromRight = empieza en + y acaba en −
+        }
+        if (_gripHand != null && _gripHand.gameObject.activeInHierarchy)
+        {
+            Vector3 rest = HandRestInPivotSpace(_gripHandParent, _gripHandRestLocal);
+            return (pPlus - rest).sqrMagnitude < (pMinus - rest).sqrMagnitude;
+        }
+        return Random.value < 0.5f;
+    }
+
+    private Vector3 HandRestInPivotSpace(Transform handParent, Vector3 restLocal)
+    {
+        Vector3 w = handParent != null ? handParent.TransformPoint(restLocal) : restLocal;
+        return PivotParent != null ? PivotParent.InverseTransformPoint(w) : w;
+    }
+
+    /// <summary>Giro sobre sí mismo (eje vertical, por su centro) PROPORCIONAL al arco recorrido desde que
+    /// se soltó: 0 al soltarlo y un número entero de vueltas al pasar por el jugador (ángulo 0).</summary>
+    private void ApplyThrowSpin(float ang, ref Vector3 pos, ref Quaternion rot)
+    {
+        if (_throwSpinTurns <= 0) return;
+        float dir      = _fromRight ? 1f : -1f;
+        float angStart = dir * (_swingHalfArcDeg + _anticipationDeg);
+        float travel   = Mathf.Abs(angStart - ang);
+        float spin     = -dir * 360f * _throwSpinTurns * travel / Mathf.Max(1f, Mathf.Abs(angStart));
+
+        Vector3 c      = Vector3.Scale(_tailPivot.localScale, _spinCenterLocal);
+        Vector3 center = pos + rot * c;
+        rot = Quaternion.Euler(0f, spin, 0f) * rot;
+        pos = center - rot * c;
+    }
+
+    /// <summary>En vuelo: la mano que lo lanzó vuelve a su sitio y la otra va a por él para cogerlo al final.</summary>
+    private void UpdateThrowHands(double now, float u)
+    {
+        if (_gripHand != null)
+        {
+            float h = Mathf.Clamp01((float)((now - _sweepStart) / (0.4 * _beatDur)));
+            _gripHand.localPosition = Vector3.Lerp(_handReleaseLocal, _gripHandRestLocal, 1f - (1f - h) * (1f - h));
+        }
+        if (CatchHandUsable)
+        {
+            float c = Mathf.InverseLerp(_catchReachStart, 1f, u);
+            PlaceCatchHand(c * c * (3f - 2f * c));
+        }
+    }
+
+    /// <summary>La otra mano lo SUJETA donde lo cogió, lo lleva a su sitio de flotación y lo suelta allí.</summary>
+    private void UpdateCatchRecover(double now)
+    {
+        double holdEnd  = _recoverStart + RecoverHoldBeats * _beatDur;
+        double carryEnd = holdEnd + Mathf.Max(0.05f, _recoverBeats) * _beatDur;
+        double relEnd   = carryEnd + Mathf.Max(0.05f, _catchReleaseBeats) * _beatDur;
+
+        GetIdlePose(now, out Vector3 ip, out Quaternion ir);
+        float g = now <= holdEnd ? 0f : Mathf.Clamp01((float)((now - holdEnd) / (carryEnd - holdEnd)));
+        float e = 1f - (1f - g) * (1f - g);
+        _tailPivot.localPosition = Vector3.Lerp(_recFromPos, ip, e);
+        _tailPivot.localRotation = Quaternion.Slerp(_recFromRot, ir, e);
+
+        if (now < carryEnd) PlaceCatchHand(1f);
+        else
+        {
+            float r = Mathf.Clamp01((float)((now - carryEnd) / (relEnd - carryEnd)));
+            PlaceCatchHand(1f - r * r * (3f - 2f * r));
+        }
+
+        if (now >= relEnd)
+        {
+            if (_catchHand != null) _catchHand.localPosition = _catchHandRestLocal;
+            _recoverCatch = false;
+            _throwing     = false;
+            _phase        = Phase.Idle;
+            SetTells(false, false);
+        }
+    }
+
+    private void PlaceCatchHand(float t)
+    {
+        if (!CatchHandUsable) return;
+        Vector3 gripWorld = _tailPivot.TransformPoint(_gripLocalOnObject);
+        Vector3 restWorld = _catchHandParent != null
+            ? _catchHandParent.TransformPoint(_catchHandRestLocal)
+            : _catchHandRestLocal;
+        _catchHand.position = Vector3.Lerp(restWorld, gripWorld, Mathf.Clamp01(t));
+    }
+
+    /// <summary>
+    /// Golpe del tridente lanzado por VOLUMEN BARRIDO contra la caja del jugador. La caja se reconstruye con
+    /// las medidas de su CharacterController y su posición real: así vale también SENTADO en el kayak
+    /// (donde el CC está desactivado y sus bounds no sirven). Si salta, su caja sube y el tridente pasa por debajo.
+    /// </summary>
+    private void CheckThrowHit()
+    {
+        if (_hit || _hitVolume == null || _boss == null || _boss.PlayerT == null || _playerCC == null) return;
+
+        Bounds cur = _hitVolume.bounds;
+        if (_hitPadding != 0f) cur.Expand(_hitPadding);
+        Bounds swept = cur;
+        if (_hasPrevBounds) { swept.Encapsulate(_prevBounds.min); swept.Encapsulate(_prevBounds.max); }
+        _prevBounds = cur;
+        _hasPrevBounds = true;
+
+        Transform pt = _boss.PlayerT;
+        Vector3 sc = pt.lossyScale;
+        float r = _playerCC.radius * Mathf.Max(sc.x, sc.z);
+        float h = Mathf.Max(_playerCC.height * sc.y, 2f * r);
+        Vector3 center = pt.position + Vector3.up * (_playerCC.center.y * sc.y);
+        Bounds player = new Bounds(center, new Vector3(2f * r, h, 2f * r));
+
+        if (swept.Intersects(player))
+        {
+            _hit = true;
+            if (_debug) Debug.Log("[Tridente] ¡El tridente lanzado te ha dado! (había que saltar)", this);
+            _boss.KillPlayer();
         }
     }
 
@@ -318,9 +640,30 @@ public class BossTailSweep : MonoBehaviour
         float tiltX = _idleTiltAmplitude * Mathf.Sin((float)(now / tiltPeriod) * 2f * Mathf.PI);
         float tiltZ = _idleTiltAmplitude * Mathf.Cos((float)(now / tiltPeriod) * 2f * Mathf.PI * 0.8f);
 
-        pos = _floatLocalPos + Vector3.up * bob;
+        pos = FloatLocalPos + Vector3.up * bob;
         // Pre-multiplicar → el giro se aplica en los ejes GLOBALES (spin sobre la vertical, no tumbado).
-        rot = Quaternion.Euler(tiltX, _spinAngle, tiltZ) * _floatLocalRot;
+        rot = Quaternion.Euler(tiltX, _spinAngle, tiltZ) * FloatLocalRot;
+    }
+
+    // Lado de reposo: el original o su SIMÉTRICO respecto al plano X = 0 del padre (tras cogerlo la otra mano).
+    private bool _floatMirrored;
+
+    private Vector3 FloatLocalPos =>
+        _floatMirrored ? new Vector3(-_floatLocalPos.x, _floatLocalPos.y, _floatLocalPos.z) : _floatLocalPos;
+
+    // Reflejo de una rotación respecto al plano YZ: (x, y, z, w) → (x, −y, −z, w).
+    private Quaternion FloatLocalRot =>
+        _floatMirrored ? new Quaternion(_floatLocalRot.x, -_floatLocalRot.y, -_floatLocalRot.z, _floatLocalRot.w)
+                       : _floatLocalRot;
+
+    /// <summary>Posición (mundo) donde flota ahora en reposo. El jefe lo lanza con la mano de ESE lado.</summary>
+    public Vector3 IdleWorldPosition
+    {
+        get
+        {
+            Transform par = _tailPivot != null ? _tailPivot.parent : null;
+            return par != null ? par.TransformPoint(FloatLocalPos) : FloatLocalPos;
+        }
     }
 
     /// <summary>Pose del swing para un ÁNGULO del hachazo (grados alrededor del eje vertical del hombro):
@@ -336,6 +679,14 @@ public class BossTailSweep : MonoBehaviour
         // El tridente cuelga del hombro: sale hacia delante (-Z) y a la altura elegida; gira con el pivote.
         Vector3 reach = new Vector3(0f, hoff, -_reachForward);
         pos = shoulder + pivotRot * reach;
+        // Lanzamiento: el MISMO arco, pero a la altura pedida (mundo), p. ej. el torso del jugador en el kayak.
+        if (_throwing)
+        {
+            Transform par = PivotParent;
+            Vector3 w = par != null ? par.TransformPoint(pos) : pos;
+            w.y = _thrPassY;
+            pos = par != null ? par.InverseTransformPoint(w) : w;
+        }
         // Swing ALTO: el tridente gira además _highRollDeg (90°) en el eje Z global.
         Quaternion highRot = _high ? Quaternion.Euler(0f, 0f, _highRollDeg) : Quaternion.identity;
         rot = pivotRot * highRot * Quaternion.Euler(_attackEuler);
