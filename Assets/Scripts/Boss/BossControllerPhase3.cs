@@ -140,6 +140,7 @@ public partial class BossController
     private float      _p3LavaY;
     private bool       _p3LavaFound;
     private KayakController _p3Kayak;
+    private BossLifeOrb     _p3LifeOrb;   // orbe de vida (sustituye a un BloodSucker, una vez en la fase)
 
     private readonly List<BloodSucker> _p3Suckers       = new List<BloodSucker>();
     private readonly List<Vector3>     _p3SuckerOffsets = new List<Vector3>();
@@ -520,9 +521,25 @@ public partial class BossController
         _p3Suckers.Clear();
         _p3SuckerOffsets.Clear();
 
-        for (int i = 0; i < n; i++)
+        // Una vez en la Fase 3: uno de los huecos de BloodSucker lo ocupa el ORBE DE VIDA (míralo → vida extra).
+        // Se añade un hueco más para que los BloodSuckers sigan siendo impares (la diadema queda simétrica).
+        int slots   = n;
+        int lifeIdx = -1;
+        if (!_p3LifeSpawned) { slots = n + 1; lifeIdx = Random.Range(0, slots); }
+
+        for (int i = 0; i < slots; i++)
         {
-            Vector3 offset = PickSuckerOffset(i, n);
+            Vector3 offset = PickSuckerOffset(i, slots);
+            if (i == lifeIdx)
+            {
+                _p3LifeSpawned = true;
+                Vector3 off = offset;
+                if (_p3LifeOrb != null) Destroy(_p3LifeOrb.gameObject);
+                _p3LifeOrb = BossLifeOrb.Create(() => SuckerWorld(off), LifeColor, _lifeOrbGazeSeconds, _gazeMaxDistance,
+                                                PlayerCamera(), () => GiveExtraLife(Loc.T("¡Orbe de vida!", "Life orb!")),
+                                                PlayerT, _p3Kayak != null ? _p3Kayak.transform : null);
+                continue;   // (ocupa su propia franja: los BloodSuckers se reparten en las demás)
+            }
             Vector3 pos = SuckerWorld(offset);
 
             GameObject go = _bloodSuckerPrefab != null
@@ -1215,7 +1232,7 @@ public partial class BossController
         var textGo = new GameObject("Hint");
         textGo.transform.SetParent(_p3Marker.transform, false);
         _p3HintText = textGo.AddComponent<TextMesh>();
-        _p3HintText.text          = "¡MÍRALO!";
+        _p3HintText.text          = Loc.T("¡MÍRALO!", "LOOK AT IT!");
         _p3HintText.anchor        = TextAnchor.LowerCenter;
         _p3HintText.alignment     = TextAlignment.Center;
         _p3HintText.fontSize      = 64;
@@ -1476,6 +1493,7 @@ public partial class BossController
     {
         foreach (BloodSucker bs in _p3Suckers) if (bs != null) Destroy(bs.gameObject);
         _p3Suckers.Clear();
+        if (_p3LifeOrb != null) { Destroy(_p3LifeOrb.gameObject); _p3LifeOrb = null; }
         _p3SuckerOffsets.Clear();
         _p3Ring.Clear();
         _p3RingPolar.Clear();

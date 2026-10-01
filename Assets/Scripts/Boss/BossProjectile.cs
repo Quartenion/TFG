@@ -59,6 +59,22 @@ public class BossProjectile : MonoBehaviour
     private CharacterController _playerCC;
     private float   _startZOffset;
 
+    private bool    _life;                      // BARRIL DE VIDA: devuélvelo con [Q] → +1 vida extra (no hace daño)
+
+    /// <summary>Lo convierte en el BARRIL DE VIDA (color de vida; [Q] a tiempo → vida extra; si no, se pierde).</summary>
+    public void MakeLifeBarrel()
+    {
+        _life = true;
+        _deflectable = true;
+        var rend = GetComponentInChildren<Renderer>();
+        if (rend != null && _boss != null)
+        {
+            rend.material.color = _boss.LifeColor;
+            rend.material.EnableKeyword("_EMISSION");
+            rend.material.SetColor("_EmissionColor", _boss.LifeColor * 0.8f);
+        }
+    }
+
     private Vector3 _returnStartPos;
     private double  _returnStartDSP, _returnEndDSP;
 
@@ -84,6 +100,10 @@ public class BossProjectile : MonoBehaviour
             rend.material.color = deflectable ? boss.DeflectColor : boss.NormalColor;
             _radius = rend.bounds.extents.y;   // sobrescribe el valor del inspector con la altura real
         }
+
+        // El barril NO es un obstáculo físico: su golpe lo decide ResolveArrival (golpe de sangre del jefe). Su
+        // collider (el prefab está en la capa Obstacle) hacía que ObstacleCollision diera GAME OVER al tocarlo.
+        foreach (Collider c in GetComponentsInChildren<Collider>(true)) c.enabled = false;
 
         _init = true;
     }
@@ -141,6 +161,12 @@ public class BossProjectile : MonoBehaviour
             if (now >= _landDSP - beatDur && now <= _landDSP + _deflectWindow)
             {
                 if (_debug) Debug.Log("[BossProjectile] ¡Deflect!", this);
+                if (_life)
+                {
+                    _boss?.GiveExtraLife(Loc.T("¡Barril de vida!", "Life barrel!"));
+                    Destroy(gameObject);
+                    return;
+                }
                 StartReturn(now);
                 return;
             }
@@ -152,8 +178,8 @@ public class BossProjectile : MonoBehaviour
 
     private void ResolveArrival()
     {
-        // No deflectado (o no era deflectable): si el jugador está en el carril, le golpea.
-        if (_player != null && Mathf.Abs(_player.position.x - _laneX) <= _hitRadius)
+        // No deflectado (o no era deflectable): si el jugador está en el carril, le golpea. (El de vida no hace daño.)
+        if (!_life && _player != null && Mathf.Abs(_player.position.x - _laneX) <= _hitRadius)
             _boss?.HitPlayer();
 
         Destroy(gameObject);

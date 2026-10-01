@@ -62,7 +62,7 @@ public static class RunStats
         get
         {
             BeatManager bm = BeatManager.Instance;
-            if (bm == null || !bm.IsPlaying) return false;
+            if (bm == null || !bm.IsPlaying || LevelEndManager.Finished) return false;
             if (_pm == null) _pm = Object.FindAnyObjectByType<PlayerMovement>();
             return _pm == null || !_pm.IsFreeroam;
         }

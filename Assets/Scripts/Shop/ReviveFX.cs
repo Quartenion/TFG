@@ -14,7 +14,7 @@ public class ReviveFX : MonoBehaviour
     private const float Life = 2.2f;
 
     public static ReviveFX Show(int livesLeft) =>
-        ShowMessage("¡VIDA EXTRA!", livesLeft > 0 ? $"Te quedan {livesLeft}" : "Era la última");
+        ShowMessage(Loc.T("¡VIDA EXTRA!", "EXTRA LIFE!"), livesLeft > 0 ? Loc.T($"Te quedan {livesLeft}", $"{livesLeft} left") : Loc.T("Era la última", "That was the last one"));
 
     /// <summary>Mismo efecto con otro texto (Adrenalina, Paracaídas…).</summary>
     public static ReviveFX ShowMessage(string title, string sub, Color? flash = null)

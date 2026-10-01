@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
@@ -52,6 +55,9 @@ public class PauseMenuManager : MonoBehaviour
     [SerializeField] private bool _verbose = true;
 
     private bool _isPaused;
+
+    /// <summary>¿Está abierto el menú de pausa? (los avisos OnGUI y los carteles del tutorial se esconden).</summary>
+    public static bool IsPaused { get; private set; }
     private CursorLockMode _previousCursorLockState;
     private bool _previousCursorVisible;
 
@@ -77,6 +83,7 @@ public class PauseMenuManager : MonoBehaviour
         }
 
         _lastFrameCursorLock = Cursor.lockState;
+        SetupSettings();
     }
 
     private void Update()
@@ -133,6 +140,7 @@ public class PauseMenuManager : MonoBehaviour
     /// <summary>Alterna entre pausado y reanudado.</summary>
     public void TogglePause()
     {
+        if (_isPaused && (AbandonDialog.IsOpen || IsSettingsOpen)) { CloseConfirm(); CloseSettings(); return; }   // Esc: atrás
         if (_isPaused) Resume();
         else Pause();
     }
@@ -142,6 +150,7 @@ public class PauseMenuManager : MonoBehaviour
     {
         if (_isPaused) return;
         _isPaused = true;
+        IsPaused = true;
 
         if (_verbose) Debug.Log("[Pause] Pausado");
 
@@ -161,7 +170,8 @@ public class PauseMenuManager : MonoBehaviour
             _pauseMenuGroup.blocksRaycasts = true;
         }
 
-        // Esconder HUD
+        // Esconder TODO el HUD (barra, mirilla, monedas, avisos…): solo queda el menú de pausa.
+        HideHud();
         if (_hideWhilePaused != null)
             foreach (var go in _hideWhilePaused)
                 if (go != null) go.SetActive(false);
@@ -178,7 +188,10 @@ public class PauseMenuManager : MonoBehaviour
     public void Resume()
     {
         if (!_isPaused) return;
+        CloseConfirm();
+        CloseSettings();
         _isPaused = false;
+        IsPaused = false;
 
         if (_verbose) Debug.Log("[Pause] Reanudado");
 
@@ -202,6 +215,7 @@ public class PauseMenuManager : MonoBehaviour
         if (_hideWhilePaused != null)
             foreach (var go in _hideWhilePaused)
                 if (go != null) go.SetActive(true);
+        RestoreHud();
 
         // Restaurar cursor
         Cursor.lockState = _previousCursorLockState;
@@ -217,15 +231,23 @@ public class PauseMenuManager : MonoBehaviour
             Time.timeScale = 1f;
             AudioListener.pause = false;
         }
+        IsPaused = false;
     }
 
     /// <summary>Engancha al boton MENU PRINCIPAL.</summary>
     public void GoToMainMenu()
     {
+        // Modo prueba: salir a mitad descalifica. Se avisa antes.
+        if (StudySession.InLevel && !AbandonDialog.IsOpen) { ShowAbandonConfirm(); return; }
+        LoadMainMenu();
+    }
+
+    private void LoadMainMenu()
+    {
         if (_verbose) Debug.Log("[Pause] Volver al menu principal");
+        IsPaused = false;
         Time.timeScale = 1f;
         AudioListener.pause = false;
-        AudioListener.volume = 1f;
 
         if (string.IsNullOrEmpty(_mainMenuSceneName))
         {
@@ -242,4 +264,64 @@ public class PauseMenuManager : MonoBehaviour
         if (EnergyManager.Instance == null) return false;
         return EnergyManager.Instance.IsDead;
     }
+
+    // ── Esconder el HUD ───────────────────────────────────────────────────────
+
+    private void HideHud() => HudHider.Hide(_pauseMenuPanel);
+    private void RestoreHud() => HudHider.Restore();
+
+    // ── Ajustes (Settings) ────────────────────────────────────────────────────
+    // PauseMenuPanel/SettingsButton + el prefab compartido SettingsMenu (el mismo que en el menú principal).
+    // (Se crean con «Tools/Menús/Rediseñar menús».)
+
+    private SettingsMenu _settings;
+    private readonly List<GameObject> _hiddenForSettings = new List<GameObject>();
+
+    private bool IsSettingsOpen => _settings != null && _settings.gameObject.activeSelf;
+
+    private void SetupSettings()
+    {
+        if (_pauseMenuPanel == null) return;
+        _settings = _pauseMenuPanel.GetComponentInChildren<SettingsMenu>(true);
+        Transform btn = _pauseMenuPanel.transform.Find("SettingsButton");
+        if (_settings == null || btn == null)
+        {
+            Debug.LogWarning("[Pause] Falta el botón/panel de ajustes en el menú de pausa. Ejecuta «Tools/Menús/Rediseñar menús».");
+            return;
+        }
+        _settings.gameObject.SetActive(false);
+        _settings.onBack = CloseSettings;
+        btn.GetComponent<Button>()?.onClick.AddListener(OpenSettings);
+
+        // Metrónomo del volumen al tempo de la canción del nivel.
+        BeatManager bm = _beatManager != null ? _beatManager : BeatManager.Instance;
+        if (bm != null) _settings.Preview.Bpm = bm.Bpm;
+    }
+
+    /// <summary>Muestra los ajustes en lugar de los botones de pausa.</summary>
+    public void OpenSettings()
+    {
+        if (_settings == null || IsSettingsOpen) return;
+        _hiddenForSettings.Clear();
+        foreach (Transform c in _pauseMenuPanel.transform)
+            if (c.gameObject != _settings.gameObject && c.name != "BackgroundDim" && c.gameObject.activeSelf)
+            {
+                c.gameObject.SetActive(false);
+                _hiddenForSettings.Add(c.gameObject);
+            }
+        _settings.gameObject.SetActive(true);
+    }
+
+    public void CloseSettings()
+    {
+        if (!IsSettingsOpen) return;
+        _settings.gameObject.SetActive(false);
+        foreach (var go in _hiddenForSettings) if (go != null) go.SetActive(true);
+        _hiddenForSettings.Clear();
+    }
+
+    // ── Aviso: abandonar la prueba (AbandonDialog, compartido con el game over) ──
+
+    private void ShowAbandonConfirm() => AbandonDialog.Show(Loc.T("Seguir jugando", "Keep playing"));
+    private void CloseConfirm() => AbandonDialog.Close();
 }

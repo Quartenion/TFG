@@ -65,6 +65,7 @@ public class StartWall : MonoBehaviour
 
     [Tooltip("Texto del prompt que aparece al apuntar a la pared.")]
     [SerializeField] private string _promptText = "[ E ]  Empezar";
+    [SerializeField] private string _promptTextEn = "[ E ]  Start";
 
     // ── Estado ────────────────────────────────────────────────────────────────
 
@@ -169,6 +170,7 @@ public class StartWall : MonoBehaviour
 
     private void OnGUI()
     {
+        if (HudHider.IsHidden) return;   // (con la pausa o el game over no se ve ningún aviso)
         if (_triggered || !_inRange) return;
         InitStyles();
 
@@ -189,7 +191,7 @@ public class StartWall : MonoBehaviour
         {
             normal = { textColor = new Color(1f, 1f, 1f, alpha) }
         };
-        GUI.Label(new Rect(px, py, pw, ph), _promptText, style);
+        GUI.Label(new Rect(px, py, pw, ph), Loc.T(_promptText, _promptTextEn), style);
     }
 
     private void InitStyles()

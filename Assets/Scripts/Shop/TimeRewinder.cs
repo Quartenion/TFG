@@ -204,7 +204,7 @@ public class TimeRewinder : MonoBehaviour
         if (em != null) em.SetPaused(true);
 
         int left = PlayerShield.Count;
-        ReviveFX.ShowMessage("◀◀  REBOBINADO", left > 0 ? $"Te quedan {left}" : "Era el último", new Color(0.25f, 0.55f, 1f, 0.5f));
+        ReviveFX.ShowMessage(Loc.T("◀◀  REBOBINADO", "◀◀  REWIND"), left > 0 ? Loc.T($"Te quedan {left}", $"{left} left") : Loc.T("Era el último", "That was the last one"), new Color(0.25f, 0.55f, 1f, 0.5f));
         Debug.Log($"[Rebobinado] {from:F2} s → {to:F2} s (quedan {left}).");
 
         // La música, hacia atrás (efecto cinta). Si el clip no admite pitch negativo, simplemente no suena.

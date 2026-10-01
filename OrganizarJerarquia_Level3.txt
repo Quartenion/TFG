@@ -1,0 +1,115 @@
+Escena: Level3   ·   beat = 10,29 m   ·   segmento = 4 beats = 41,14 m
+Unidades en el Timeline: 287   ·   Grupos con script en varios segmentos: 0
+Segmento 000 · beats 0-3
+    Escenario: Segment, Segment (10) (9), Segment (11) (9)
+Segmento 001 · beats 4-7
+    Escenario: Segment (10) (8), Segment (11) (8), Segment (1)
+    Obstáculos: Cube, Cube (1)
+Segmento 002 · beats 8-11
+    Escenario: Segment (10) (7), Segment (11) (7), Segment (2)
+Segmento 003 · beats 12-15
+    Escenario: Segment (10) (6), Segment (11) (6), Segment (3)
+Segmento 004 · beats 16-19
+    Escenario: Segment (10) (5), Segment (11) (5), Segment (4)
+Segmento 005 · beats 20-23
+    Escenario: Segment (10) (4), Segment (11) (4), Segment (5,6,7)
+Segmento 006 · beats 24-27
+    Escenario: Segment (10) (3), Segment (11) (3)
+    Obstáculos: Cube (5), Cube (6)
+Segmento 007 · beats 28-31
+    Escenario: Segment (10) (2), Segment (11) (2)
+    Obstáculos: Cube (7), Cube (8), Cube (9), Cube (10)
+Segmento 008 · beats 32-35
+    Escenario: Segment (9), Segment (10), Segment (11)
+Segmento 010 · beats 40-43
+    Escenario: Segment (10) (1) (1), Segment (11) (1) (1)
+    Obstáculos: Trigger Door
+Segmento 011 · beats 44-47
+    Escenario: Segment (10) (1) (1) (1), Segment (11) (1) (1) (1)
+    Obstáculos: Fireball (3), Fireball (4), Fireball (7), Trigger Door (1)
+Segmento 012 · beats 48-51
+    Escenario: Segment (10) (1) (1) (1) (1), Segment (11) (1) (1) (1) (1)
+    Obstáculos: Fireball (9), Fireball (10), Fireball (6), Fireball (8), Trigger Door (2)
+Segmento 013 · beats 52-55
+    Escenario: Segment (10) (1) (1) (1) (1) (1), Segment (11) (1) (1) (1) (1) (1)
+    Obstáculos: Fireball (5), Fireball (11), Fireball (12), Fireball (13), Trigger Door (3)
+Segmento 014 · beats 56-59
+    Escenario: Segment (10) (1) (1) (1) (1) (1) (1), Segment (11) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Fireball (14), Fireball (15), Fireball (16), Fireball (17), Fireball (18), Trigger Door (4)
+Segmento 015 · beats 60-63
+    Escenario: Segment (10) (1) (1) (1) (1) (1) (1) (1), Segment (11) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Fireball (19), Fireball (20), Fireball (21), Fireball (22), Fireball (23), Trigger Door (5)
+Segmento 016 · beats 64-67
+    Escenario: Segment (10) (1) (1) (1) (1) (1) (1) (1) (1), Segment (11) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Trigger Door (6)
+Segmento 017 · beats 68-71
+    Escenario: Segment (17), Segment (10) (1) (1) (1) (1) (1) (1) (1) (1) (1), Segment (11) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 018 · beats 72-75
+    Escenario: Segment (18), Segment (10) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Segment (11) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: TumblingCube (34), TumblingCube (35), TumblingCube (36), TumblingCube (37), TumblingCube (38), TumblingCube (39), TumblingCube (40), TumblingCube (41), TumblingCube (42), TumblingCube (43), TumblingCube (44), TumblingCube (45)
+Segmento 019 · beats 76-79
+    Escenario: Segment (19), Segment (10) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Segment (11) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: TumblingCube (73), TumblingCube (72), TumblingCube (71), TumblingCube (70), TumblingCube (50), TumblingCube (51), TumblingCube (52), TumblingCube (53), TumblingCube (54), TumblingCube (55), TumblingCube (56), TumblingCube (57), TumblingCube (58), TumblingCube (59), TumblingCube (60), TumblingCube (61), TumblingCube (62), TumblingCube (63), TumblingCube (64), TumblingCube (65), TumblingCube (66), TumblingCube (67), TumblingCube (68), TumblingCube (69)
+Segmento 020 · beats 80-83
+    Escenario: Segment (20)
+    Obstáculos: TumblingCube (97), TumblingCube (96), TumblingCube (95), TumblingCube (94), TumblingCube (74), TumblingCube (75), TumblingCube (76), TumblingCube (77), TumblingCube (78), TumblingCube (79), TumblingCube (80), TumblingCube (81), TumblingCube (82), TumblingCube (83), TumblingCube (84), TumblingCube (85), TumblingCube (86), TumblingCube (87), TumblingCube (88), TumblingCube (89), TumblingCube (90), TumblingCube (91), TumblingCube (92), TumblingCube (93)
+Segmento 021 · beats 84-87
+    Escenario: Segment (21)
+    Obstáculos: TumblingCube (121), TumblingCube (120), TumblingCube (119), TumblingCube (118), TumblingCube (98), TumblingCube (99), TumblingCube (100), TumblingCube (101), TumblingCube (102), TumblingCube (103), TumblingCube (104), TumblingCube (105), TumblingCube (106), TumblingCube (107), TumblingCube (108), TumblingCube (109), TumblingCube (110), TumblingCube (111), TumblingCube (112), TumblingCube (113), TumblingCube (114), TumblingCube (115), TumblingCube (116), TumblingCube (117)
+Segmento 022 · beats 88-91
+    Escenario: Segment (22)
+    Obstáculos: TumblingCube (145), TumblingCube (144), TumblingCube (143), TumblingCube (142), TumblingCube (122), TumblingCube (123), TumblingCube (124), TumblingCube (125), TumblingCube (126), TumblingCube (127), TumblingCube (128), TumblingCube (129), TumblingCube (130), TumblingCube (131), TumblingCube (132), TumblingCube (133), TumblingCube (134), TumblingCube (135), TumblingCube (136), TumblingCube (137), TumblingCube (138), TumblingCube (139), TumblingCube (140), TumblingCube (141)
+Segmento 023 · beats 92-95
+    Escenario: Segment (23)
+    Obstáculos: TumblingCube (169), TumblingCube (168), TumblingCube (167), TumblingCube (166), TumblingCube (146), TumblingCube (147), TumblingCube (148), TumblingCube (149), TumblingCube (150), TumblingCube (151), TumblingCube (152), TumblingCube (153), TumblingCube (154), TumblingCube (155), TumblingCube (156), TumblingCube (157), TumblingCube (158), TumblingCube (159), TumblingCube (160), TumblingCube (161), TumblingCube (162), TumblingCube (163), TumblingCube (164), TumblingCube (165)
+Segmento 024 · beats 96-99
+    Escenario: Segment (24)
+    Obstáculos: TumblingCube (178), TumblingCube (179), TumblingCube (170), TumblingCube (171)
+Segmento 025 · beats 100-103
+    Escenario: Segment (25)
+Segmento 026 · beats 104-107
+    Escenario: Segment (26)
+    Obstáculos: RisingPlatform (10), RisingPlatform (11), RisingPlatform (12), RisingPlatform (13)
+Segmento 027 · beats 108-111
+    Interactivos: BloodSucker
+Segmento 028 · beats 112-115
+    Interactivos: BloodSucker (1)
+    Obstáculos: Bridge
+Segmento 029 · beats 116-119
+    Escenario: Segment (29)
+Segmento 030 · beats 120-123
+    Escenario: Segment (30)
+    Obstáculos: SwingObstacle
+Segmento 031 · beats 124-127
+    Escenario: Walls (1) (1), Walls (2) (1), Segment (31)
+Segmento 032 · beats 128-131
+    Escenario: Walls (1) (1) (1), Walls (2) (1) (1), Segment (32)
+    Obstáculos: SwingObstacle (2), Cube (8), Cube (9)
+Segmento 033 · beats 132-135
+    Escenario: Walls (1) (1) (1) (1), Walls (2) (1) (1) (1), Segment (33)
+    Interactivos: BloodSucker (3)
+    Obstáculos: Cube (10), Cube (11), Cube (12)
+Segmento 034 · beats 136-139
+    Escenario: Walls (1) (1) (1) (1) (1), Walls (2) (1) (1) (1) (1), Segment (34)
+    Obstáculos: SwingObstacle (1)
+Segmento 035 · beats 140-143
+    Escenario: Wall, Walls (1) (1) (1) (1) (1) (1), Walls (2) (1) (1) (1) (1) (1), Segment (35)
+Segmento 036 · beats 144-147
+    Escenario: Walls (1) (1) (1) (1) (1) (1) (1), Walls (2) (1) (1) (1) (1) (1) (1), Segment (36)
+    Obstáculos: Saw (2), Saw (4)
+Segmento 037 · beats 148-151
+    Escenario: Walls (1) (1) (1) (1) (1) (1) (1) (1), Walls (2) (1) (1) (1) (1) (1) (1) (1), Segment (37)
+Segmento 038 · beats 152-155
+    Escenario: Walls (1) (1) (1) (1) (1) (1) (1) (1) (1), Walls (2) (1) (1) (1) (1) (1) (1) (1) (1), Segment (38)
+    Obstáculos: RisingPlatform (6), RisingPlatform (5)
+Segmento 039 · beats 156-159
+    Escenario: Walls (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Walls (2) (1) (1) (1) (1) (1) (1) (1) (1) (1), Segment (39)
+    Obstáculos: RisingPlatform (7), RisingPlatform (8)
+Segmento 040 · beats 160-163
+    Escenario: Walls (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Walls (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Segment (40)
+    Obstáculos: Cube (13)
+Segmento 041 · beats 164-167
+    Escenario: Walls (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Walls (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 042 · beats 168-171
+    Escenario: Walls (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Walls (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Contenedor de monedas «Coins (por beat)»: 934 monedas sueltas → se agrupan por segmento dentro de él.

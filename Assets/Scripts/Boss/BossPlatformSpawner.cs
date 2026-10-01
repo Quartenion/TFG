@@ -105,8 +105,6 @@ public class BossPlatformSpawner : MonoBehaviour
     private readonly List<(Transform t, Vector3 basePos, float roll, Quaternion rot0)> _falling =
         new List<(Transform, Vector3, float, Quaternion)>();
 
-    /// <summary>¿Ya se ha derrumbado el suelo? (deja de generar plataformas para siempre).</summary>
-    public bool IsCollapsed => _collapsed;
 
     /// <summary>
     /// El suelo se ROMPE: deja de generar plataformas; primero TIEMBLA 'shakeBeats' (se desmorona, cada vez más)
@@ -133,18 +131,10 @@ public class BossPlatformSpawner : MonoBehaviour
         _spawned.Clear();
     }
 
-    /// <summary>Cuánto ha bajado ya el suelo (m) en este instante del derrumbe (0 mientras tiembla).</summary>
-    public float CollapseDropAt(double dsp)
-    {
-        if (!_collapsed || dsp <= _collapseStart) return 0f;
-        float u = _collapseEnd > _collapseStart ? Mathf.Clamp01((float)((dsp - _collapseStart) / (_collapseEnd - _collapseStart))) : 1f;
-        return _collapseDepth * u * u;
-    }
-
     /// <summary>
     /// Tras derrotar al jefe: el suelo VUELVE A SALIR de la lava. Las primeras plataformas (bajo el jugador y
     /// justo delante) emergen en 'firstRiseBeats' con su TOP a 'topY'; luego se sigue generando suelo por
-    /// delante como siempre (auto-sostén) hasta que se llame a StopSpawning().
+    /// delante como siempre (auto-sostén).
     /// </summary>
     public void Resume(float topY, float firstRiseBeats, float firstRiseDepth = -1f, int firstCount = 3)
     {
@@ -186,18 +176,8 @@ public class BossPlatformSpawner : MonoBehaviour
 
     private bool BeyondStop => Vector3.Dot(_nextCenter, Forward) - _platformLength * 0.5f > _stopAlong;
 
-    /// <summary>Deja de generar suelo nuevo (las plataformas que ya hay se quedan).</summary>
-    public void StopSpawning()
-    {
-        _activated = false;
-        _stopped   = true;
-    }
-
-    private bool _stopped;
-
     public void SpawnNext()
     {
-        if (_stopped) return;
         if (_collapsed) return;   // tras el derrumbe no vuelve a generar suelo
         if (!_started) { if (_beatManager == null) _beatManager = BeatManager.Instance; _nextCenter = transform.position; _started = true; }
         if (_platformPrefab == null) return;

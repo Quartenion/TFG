@@ -109,6 +109,9 @@ MonoBehaviour:
   _turnFraction: 0.2
   _beatPulse: 0.18
   _pickupSound: {fileID: 0}
+  _pickupSounds:
+  - {fileID: 8300000, guid: 36cc8f7bb11900a43a7c20380be6f412, type: 3}
+  - {fileID: 8300000, guid: 88d44b23ecec48f4397140ecf53a9acd, type: 3}
   _pickupVolume: 0.6
   _color: {r: 1, g: 0.78, b: 0.15, a: 1}
   _spawnBeatsAhead: 4

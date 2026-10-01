@@ -85,9 +85,6 @@ public class BloodSucker : MonoBehaviour
     /// <summary>True mientras está chupando sangre este frame (útil para animaciones externas).</summary>
     public bool IsSucking { get; private set; }
 
-    /// <summary>Cambia cuánta sangre drena por segundo (0 = solo es una diana, no chupa).</summary>
-    public void SetDrain(float perSecond) => _drainPerSecond = Mathf.Max(0f, perSecond);
-
     /// <summary>
     /// Mueve el punto alrededor del que flota. Úsalo cada frame para que el bicho VIAJE con algo
     /// (p. ej. con el jefe en la Fase 3), en lugar de quedarse fijo donde apareció.

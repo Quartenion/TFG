@@ -86,11 +86,12 @@ public class Checkpoint : MonoBehaviour
 
     private void OnGUI()
     {
+        if (HudHider.IsHidden) return;   // (con la pausa o el game over no se ve ningún aviso)
         if (_toastT <= 0f) return;
         var st = new GUIStyle { fontSize = 30, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter,
                                 normal = { textColor = new Color(0.5f, 1f, 0.6f, Mathf.Clamp01(_toastT)) } };
         GUI.Label(new Rect(0f, Screen.height * 0.18f, Screen.width, 40f),
-                  $"CHECKPOINT  ·  te quedan {PlayerProgress.GetCount(ShopIds.Checkpoint)}", st);
+                  Loc.T($"CHECKPOINT  ·  te quedan {PlayerProgress.GetCount(ShopIds.Checkpoint)}", $"CHECKPOINT  ·  {PlayerProgress.GetCount(ShopIds.Checkpoint)} left"), st);
     }
 
 #if UNITY_EDITOR

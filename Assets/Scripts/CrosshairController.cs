@@ -70,8 +70,6 @@ public class CrosshairController : MonoBehaviour
 
     /// <summary>Angulo acumulado de rotacion de los pinchos (grados). Para sincronizar otros objetos.</summary>
     public float CurrentRotationAngle => _currentRotationAngle;
-    /// <summary>Velocidad angular actual (grados/segundo).</summary>
-    public float CurrentAngularVelocity => _currentAngularVelocity + _clickImpulse;
 
     // Action del nuevo Input System para el clic izquierdo del raton
     private InputAction _clickAction;
@@ -106,6 +104,7 @@ public class CrosshairController : MonoBehaviour
         if (_listenForMouseClick)
         {
             _clickAction = new InputAction("Click", binding: "<Mouse>/leftButton");
+            _clickAction.AddBinding("<Mouse>/rightButton");
             _clickAction.Enable();
         }
     }

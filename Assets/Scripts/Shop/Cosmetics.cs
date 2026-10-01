@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 /// <summary>Huecos de cosmético: en cada uno se lleva puesto uno (o el «Original»).</summary>
 public enum CosmeticSlot { Heart, Hand, Coins, Kayak }
@@ -9,7 +7,9 @@ public enum CosmeticSlot { Heart, Hand, Coins, Kayak }
 /// <summary>Un cosmético: solo cambia el aspecto. Se compra con IRIS (las monedas de mirada, no las normales).</summary>
 public class CosmeticDef
 {
-    public string id, name, description;
+    public string id, nameEs, nameEn, descEs, descEn;
+    public string name        => Loc.T(nameEs, nameEn);
+    public string description => Loc.T(descEs, descEn);
     public CosmeticSlot slot;
     public int price;          // en iris
     public Color color;
@@ -40,36 +40,36 @@ public static class Cosmetics
     {
         switch (s)
         {
-            case CosmeticSlot.Hand:  return "Mano";
-            case CosmeticSlot.Coins: return "Monedas";
+            case CosmeticSlot.Hand:  return Loc.T("Mano", "Hand");
+            case CosmeticSlot.Coins: return Loc.T("Monedas", "Coins");
             case CosmeticSlot.Kayak: return "Kayak";
-            default:                 return "Corazón del punto de mira";
+            default:                 return Loc.T("Corazón del punto de mira", "Crosshair heart");
         }
     }
 
     private static List<CosmeticDef> Build()
     {
         var l = new List<CosmeticDef>();
-        void Add(string id, CosmeticSlot slot, string name, int price, Color col, string desc) =>
-            l.Add(new CosmeticDef { id = id, slot = slot, name = name, price = price, color = col, description = desc });
+        void Add(string id, CosmeticSlot slot, string name, int price, Color col, string desc, string nameEn, string descEn) =>
+            l.Add(new CosmeticDef { id = id, slot = slot, nameEs = name, nameEn = nameEn, price = price, color = col, descEs = desc, descEn = descEn });
 
-        Add("heart_gold",   CosmeticSlot.Heart, "Corazón dorado", 2, new Color(1f, 0.8f, 0.2f),    "El corazón del punto de mira, de oro.");
-        Add("heart_cyan",   CosmeticSlot.Heart, "Corazón helado", 2, new Color(0.35f, 0.9f, 1f),   "Frío como el hielo.");
-        Add("heart_violet", CosmeticSlot.Heart, "Corazón violeta", 3, new Color(0.7f, 0.35f, 1f),  "Del color de los iris.");
-        Add("heart_black",  CosmeticSlot.Heart, "Corazón negro", 5, new Color(0.12f, 0.12f, 0.14f), "Para los que ya no sienten nada.");
+        Add("heart_gold",   CosmeticSlot.Heart, "Corazón dorado", 2, new Color(1f, 0.8f, 0.2f),    "El corazón del punto de mira, de oro.", "Golden heart", "The crosshair heart, made of gold.");
+        Add("heart_cyan",   CosmeticSlot.Heart, "Corazón helado", 2, new Color(0.35f, 0.9f, 1f),   "Frío como el hielo.", "Frozen heart", "Cold as ice.");
+        Add("heart_violet", CosmeticSlot.Heart, "Corazón violeta", 3, new Color(0.7f, 0.35f, 1f),  "Del color de los iris.", "Violet heart", "The colour of the irises.");
+        Add("heart_black",  CosmeticSlot.Heart, "Corazón negro", 5, new Color(0.12f, 0.12f, 0.14f), "Para los que ya no sienten nada.", "Black heart", "For those who no longer feel anything.");
 
-        Add("hand_pale",    CosmeticSlot.Hand, "Mano pálida", 2, new Color(0.95f, 0.9f, 0.85f),     "Como si no le diera el sol.");
-        Add("hand_ghoul",   CosmeticSlot.Hand, "Mano de ghoul", 3, new Color(0.55f, 0.75f, 0.5f),   "Verdosa. Poco saludable.");
-        Add("hand_ink",     CosmeticSlot.Hand, "Mano de tinta", 4, new Color(0.18f, 0.2f, 0.35f),   "Como si hubieras firmado demasiados contratos.");
-        Add("hand_gold",    CosmeticSlot.Hand, "Mano de oro", 6, new Color(1f, 0.78f, 0.25f),       "Todo lo que toca…");
+        Add("hand_pale",    CosmeticSlot.Hand, "Mano pálida", 2, new Color(0.95f, 0.9f, 0.85f),     "Como si no le diera el sol.", "Pale hand", "As if it never saw the sun.");
+        Add("hand_ghoul",   CosmeticSlot.Hand, "Mano de ghoul", 3, new Color(0.55f, 0.75f, 0.5f),   "Verdosa. Poco saludable.", "Ghoul hand", "Greenish. Not very healthy.");
+        Add("hand_ink",     CosmeticSlot.Hand, "Mano de tinta", 4, new Color(0.18f, 0.2f, 0.35f),   "Como si hubieras firmado demasiados contratos.", "Ink hand", "As if you had signed too many contracts.");
+        Add("hand_gold",    CosmeticSlot.Hand, "Mano de oro", 6, new Color(1f, 0.78f, 0.25f),       "Todo lo que toca…", "Golden hand", "Everything it touches…");
 
-        Add("coins_silver", CosmeticSlot.Coins, "Monedas de plata", 2, new Color(0.8f, 0.85f, 0.9f), "Mismo valor, otro brillo.");
-        Add("coins_ruby",   CosmeticSlot.Coins, "Monedas de rubí", 3, new Color(0.9f, 0.15f, 0.25f), "Rojas como la sangre.");
-        Add("coins_jade",   CosmeticSlot.Coins, "Monedas de jade", 3, new Color(0.2f, 0.85f, 0.5f),  "Verdes y relucientes.");
+        Add("coins_silver", CosmeticSlot.Coins, "Monedas de plata", 2, new Color(0.8f, 0.85f, 0.9f), "Mismo valor, otro brillo.", "Silver coins", "Same value, different shine.");
+        Add("coins_ruby",   CosmeticSlot.Coins, "Monedas de rubí", 3, new Color(0.9f, 0.15f, 0.25f), "Rojas como la sangre.", "Ruby coins", "Red as blood.");
+        Add("coins_jade",   CosmeticSlot.Coins, "Monedas de jade", 3, new Color(0.2f, 0.85f, 0.5f),  "Verdes y relucientes.", "Jade coins", "Green and shiny.");
 
-        Add("kayak_red",    CosmeticSlot.Kayak, "Kayak rojo", 2, new Color(0.85f, 0.15f, 0.15f),   "Más rápido (no).");
-        Add("kayak_night",  CosmeticSlot.Kayak, "Kayak nocturno", 3, new Color(0.15f, 0.15f, 0.25f), "Discreto.");
-        Add("kayak_gold",   CosmeticSlot.Kayak, "Kayak de oro", 6, new Color(1f, 0.8f, 0.25f),     "No flota mejor, pero luce.");
+        Add("kayak_red",    CosmeticSlot.Kayak, "Kayak rojo", 2, new Color(0.85f, 0.15f, 0.15f),   "Más rápido (no).", "Red kayak", "Faster (not really).");
+        Add("kayak_night",  CosmeticSlot.Kayak, "Kayak nocturno", 3, new Color(0.15f, 0.15f, 0.25f), "Discreto.", "Night kayak", "Discreet.");
+        Add("kayak_gold",   CosmeticSlot.Kayak, "Kayak de oro", 6, new Color(1f, 0.8f, 0.25f),     "No flota mejor, pero luce.", "Golden kayak", "It doesn't float better, but it looks good.");
         return l;
     }
 

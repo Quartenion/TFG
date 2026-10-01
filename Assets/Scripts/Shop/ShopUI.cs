@@ -4,67 +4,64 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using static SimpleUI;
 
 /// <summary>
-/// TIENDA (se construye sola por código). Ábrela con ShopUI.Open():
-///   • Menú principal → botón que llame a MainMenuManager.OpenShop().
-///   • Entre niveles  → la TIENDA FÍSICA del área de freeroam (componente ShopStand): acércate, mírala y pulsa E.
-/// Muestra el catálogo (ShopCatalog) en tarjetas: nombre, descripción, nivel/cantidad y botón de compra.
-/// Esc o «Volver» la cierran.
+/// TIENDA (versión simple, se construye sola por código). Ábrela con ShopUI.Open().
+///
+///   TIENDA                               Monedas · Iris · Muescas   [Comprar muesca]
+///   [Pestaña][Pestaña][Pestaña]...      ┌──────── ficha ────────┐
+///   ┌───── rejilla (casillas) ─────┐    │ Nombre                │
+///   │ [ ] [ ] [ ] [ ] [ ]          │    │ Descripción           │
+///   │ [ ] [ ] [ ] ...              │    │ [Equipar]             │
+///   └──────────────────────────────┘    │ [Comprar]             │
+///               [Salir (Esc)]           └───────────────────────┘
+///
+/// Sin colores ni bordes redondeados a propósito: tamaños en «LAYOUT» y colores/letra en SimpleUI.cs.
 /// </summary>
-public partial class ShopUI : MonoBehaviour
+public class ShopUI : MonoBehaviour
 {
-    public static bool   IsOpen => _instance != null;
-    private static ShopUI _instance;
-    private static int    _closedFrame = -10;
-    private static float _closedTime = -10f;
+    // ── LAYOUT (cámbialo aquí) ────────────────────────────────────────────────
+    private const float PanelW = 1800f, PanelH = 900f;
+    private const float Pad = 30f;              // margen interior
+    private const float HeaderH = 80f;          // cabecera (título, monedas, muescas)
+    private const float TabH = 50f;             // pestañas (encima de la rejilla)
+    private const float FooterH = 90f;          // pie (salir + aviso)
+    private const float DetailW = 460f;         // ancho de la ficha
+    // (Las casillas son cuadradas y del MISMO ancho que las pestañas: una columna por pestaña, alineadas.)
+    private const float Gap = 10f;
+    private float _cell;                        // lado de cada casilla (= ancho de una pestaña)
+    // (Colores y letra: SimpleUI.cs, compartidos con los contratos.)
 
-    /// <summary>¿Se acaba de cerrar (este frame o el anterior)? Para que el Esc de cerrar no abra la pausa.</summary>
+    // ── Abrir / cerrar ────────────────────────────────────────────────────────
+    public static bool IsOpen => _instance != null;
+    private static ShopUI _instance;
+    private static int   _closedFrame = -10;
+    private static float _closedTime  = -10f;
+
+    /// <summary>¿Se acaba de cerrar? (para que el Esc que la cierra no abra también la pausa).</summary>
     public static bool ClosedRecently => Time.frameCount - _closedFrame <= 5 || Time.unscaledTime - _closedTime < 0.6f;
 
     private Action _onClosed;
     private CursorLockMode _prevLock;
     private bool _prevVisible;
 
-    private TextMeshProUGUI _coinsText, _toast, _title, _backLabel;
-    private RectTransform   _content;
-    private GridLayoutGroup _grid;
-    private ScrollRect      _scroll;
-    private ShopCategory    _category = ShopCategory.Auto;   // Auto = pantalla de categorías
-    private readonly List<(ShopCategory cat, TextMeshProUGUI info)> _catCards = new List<(ShopCategory, TextMeshProUGUI)>();
-    private float _toastT;
-    private readonly List<Card> _cards = new List<Card>();
-
-    private class Card
-    {
-        public ShopItem item;
-        public TextMeshProUGUI owned, desc, buyLabel;
-        public Button buy;
-        public Image bg;
-        public Toggle toggle;          // (solo mejoras) activar / desactivar
-        public TextMeshProUGUI toggleLabel;
-    }
-
-    private static readonly Color BgDim   = new Color(0f, 0f, 0f, 0.82f);
-    private static readonly Color PanelBg = new Color(0.08f, 0.05f, 0.07f, 0.97f);
-    private static readonly Color CardBg  = new Color(0.15f, 0.1f, 0.12f, 1f);
-    private static readonly Color Gold    = new Color(1f, 0.78f, 0.15f);
-
     /// <summary>Abre la tienda. 'onClosed' se llama al cerrarla.</summary>
     public static ShopUI Open(Action onClosed = null)
     {
         if (_instance != null) return _instance;
-        var go = new GameObject("ShopUI");
-        _instance = go.AddComponent<ShopUI>();
+        _instance = new GameObject("ShopUI").AddComponent<ShopUI>();
         _instance._onClosed = onClosed;
         return _instance;
     }
 
+    private float _openedAt;
+
     public void Close()
     {
-        // (Se reaplica unos frames: si se cerró con Esc, el editor desbloquearía el ratón justo después.)
+        StudyTelemetry.ShopEvent("cerrar", "", 0, Time.unscaledTime - _openedAt);   // (modo prueba)
         CursorRestorer.Restore(_prevLock, _prevVisible);
-        if (_instance == this) _instance = null;   // IsOpen = false ya (no al final del frame)
+        if (_instance == this) _instance = null;
         _closedFrame = Time.frameCount;
         _closedTime  = Time.unscaledTime;
         Destroy(gameObject);
@@ -72,6 +69,33 @@ public partial class ShopUI : MonoBehaviour
         _onClosed = null;
         cb?.Invoke();
     }
+
+    // ── Estado ────────────────────────────────────────────────────────────────
+
+    /// <summary>Una casilla de la rejilla: un objeto de la tienda o un cosmético.</summary>
+    private class Entry
+    {
+        public ShopItem item;        // objeto de la tienda…
+        public bool isCosmetic;      // …o cosmético (cos == null → «Original»)
+        public CosmeticDef cos;
+        public CosmeticSlot slot;
+        public Image bg;
+        public TextMeshProUGUI state;
+    }
+
+    // Pestañas: 0 = Mejoras (consumibles + mejoras), 1 = Cosméticos.
+    private const int CosmeticsTab = 1;
+    private const int Columns = 6;            // columnas de la rejilla (cada pestaña ocupa la mitad: 3 columnas)
+    private Entry _selected;
+    private readonly List<Entry> _entries = new List<Entry>();
+    private readonly List<Image> _tabs = new List<Image>();
+
+    private TextMeshProUGUI _wallet, _notchLabel, _toast;
+    private Button _notchBuy;
+    private RectTransform _grid;
+    private TextMeshProUGUI _dName, _dInfo, _dDesc, _dState, _dEquipLabel, _dBuyLabel;
+    private Button _dEquip, _dBuy;
+    private float _toastT;
 
     private void Awake()
     {
@@ -83,7 +107,9 @@ public partial class ShopUI : MonoBehaviour
         UIKit.EnsureEventSystem();
         Build();
         PlayerProgress.OnChanged += Refresh;
-        Refresh();
+        ShowTab(0);
+        _openedAt = Time.unscaledTime;
+        StudyTelemetry.ShopEvent("abrir", "", 0);   // (modo prueba)
     }
 
     private void OnDestroy()
@@ -94,13 +120,8 @@ public partial class ShopUI : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) { Back(); return; }
-
-        if (_toastT > 0f)
-        {
-            _toastT -= Time.unscaledDeltaTime;
-            Color c = _toast.color; c.a = Mathf.Clamp01(_toastT / 0.4f); _toast.color = c;
-        }
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) { Close(); return; }
+        if (_toastT > 0f) { _toastT -= Time.unscaledDeltaTime; if (_toastT <= 0f) _toast.text = ""; }
     }
 
     // ── Construcción ──────────────────────────────────────────────────────────
@@ -108,300 +129,254 @@ public partial class ShopUI : MonoBehaviour
     private void Build()
     {
         Canvas canvas = UIKit.CreateCanvas("ShopCanvas", 1000, transform);
+        Stretch(Box("Back", canvas.transform, Back).rectTransform, 0f, 0f, 0f, 0f);
 
-        var dim = UIKit.Panel("Dim", canvas.transform, BgDim, false);
-        UIKit.Stretch(dim.rectTransform);
-        dim.raycastTarget = true;   // bloquea clics a lo de detrás
-
-        var panel = UIKit.Panel("Panel", canvas.transform, PanelBg);
-        UIKit.Place(panel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1640f, 940f));
+        var panel = Box("Panel", canvas.transform, PanelCol);
+        Place(panel.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(PanelW, PanelH));
         Transform p = panel.transform;
 
-        _title = UIKit.Label("Title", p, "TIENDA", 64f, Color.white, TextAlignmentOptions.Left, true);
-        UIKit.Place(_title.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(50f, -30f), new Vector2(1000f, 80f));
+        // Cabecera
+        var title = Lbl("Title", p, Loc.T("TIENDA", "SHOP"), FontBig, TextAlignmentOptions.Left);
+        PlaceTopLeft(title.rectTransform, Pad, Pad, 400f, 50f);
 
-        // Monedas del monedero.
-        var coinIcon = UIKit.CoinIcon(p, 48f);
-        UIKit.Place(coinIcon.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-50f, -46f), new Vector2(48f, 48f));
-        _coinsText = UIKit.Label("Coins", p, "0", 50f, Gold, TextAlignmentOptions.Right, true);
-        UIKit.Place(_coinsText.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-112f, -36f), new Vector2(400f, 70f));
+        _wallet = Lbl("Wallet", p, "", FontMid, TextAlignmentOptions.Right);
+        PlaceTopRight(_wallet.rectTransform, Pad + 300f, Pad, 700f, 50f);
 
-        // Zona con scroll para las tarjetas.
-        var viewport = UIKit.Node("Viewport", p);
-        UIKit.Stretch(viewport, 40, 40, 130, 120);
-        viewport.gameObject.AddComponent<RectMask2D>();
-        var vpImg = viewport.gameObject.AddComponent<Image>();   // para poder arrastrar/rueda sobre el hueco
-        vpImg.color = new Color(0, 0, 0, 0.001f);
+        _notchBuy = Btn("BuyNotch", p, "", out _notchLabel);
+        PlaceTopRight((RectTransform)_notchBuy.transform, Pad, Pad, 280f, 50f);
+        _notchBuy.onClick.AddListener(BuyNotch);
 
-        var content = UIKit.Node("Content", viewport);
-        content.anchorMin = new Vector2(0f, 1f); content.anchorMax = new Vector2(1f, 1f);
-        content.pivot = new Vector2(0.5f, 1f);
-        content.offsetMin = content.offsetMax = Vector2.zero;
-        _content = content;
-        _grid = content.gameObject.AddComponent<GridLayoutGroup>();
-        _grid.spacing  = new Vector2(22f, 22f);
-        _grid.padding  = new RectOffset(8, 8, 8, 8);
-        _grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-        _grid.childAlignment = TextAnchor.UpperCenter;
-        var fitter = content.gameObject.AddComponent<ContentSizeFitter>();
-        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        var scroll = viewport.gameObject.AddComponent<ScrollRect>();
-        scroll.content = content; scroll.viewport = viewport;
-        scroll.horizontal = false; scroll.vertical = true;
-        scroll.scrollSensitivity = 40f;
-        scroll.movementType = ScrollRect.MovementType.Clamped;
-        _scroll = scroll;
-        _viewportGO = viewport.gameObject;
-
-        // Zona del ÁRBOL de desbloqueos (se usa al entrar en una categoría).
-        _treeRoot = UIKit.Node("Tree", p);
-        UIKit.Stretch(_treeRoot, 40, 40, 130, 150);
-        _treeRoot.gameObject.SetActive(false);
-
-        // Volver (a las categorías o cerrar).
-        var back = UIKit.MakeButton("Back", p, "VOLVER  (Esc)", 30f, new Color(0.3f, 0.3f, 0.35f), Color.white, out _backLabel);
-        UIKit.Place((RectTransform)back.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 34f), new Vector2(420f, 66f));
-        back.onClick.AddListener(Back);
-
-        // Aviso breve (compra hecha / sin monedas).
-        _toast = UIKit.Label("Toast", p, "", 28f, Color.white, TextAlignmentOptions.Center, true);
-        UIKit.Place(_toast.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 104f), new Vector2(900f, 40f));
-
-        ShowCategories();
-    }
-
-    // ── Pantallas: categorías ↔ objetos de una categoría ─────────────────────
-
-    /// <summary>Esc / Volver: dentro de una categoría vuelve a las categorías; en las categorías cierra la tienda.</summary>
-    private void Back()
-    {
-        if (_category != ShopCategory.Auto || _inCosmetics) ShowCategories();
-        else Close();
-    }
-
-    private void ClearContent()
-    {
-        for (int i = _content.childCount - 1; i >= 0; i--)
+        // Columna izquierda: pestañas + rejilla
+        float leftW = PanelW - Pad * 3f - DetailW;
+        float top = Pad + HeaderH;
+        var names = new List<string> { Loc.T("Mejoras", "Upgrades"), Loc.T("Cosméticos", "Cosmetics") };
+        // Casillas cuadradas en 'Columns' columnas; cada pestaña ocupa justo 'Columns / 2' casillas (bordes alineados).
+        _cell = (leftW - Gap * (Columns - 1)) / Columns;
+        int perTab = Columns / names.Count;
+        float tabW = _cell * perTab + Gap * (perTab - 1);
+        for (int i = 0; i < names.Count; i++)
         {
-            GameObject g = _content.GetChild(i).gameObject;
-            g.SetActive(false);
-            Destroy(g);
-        }
-        _cards.Clear();
-        _catCards.Clear();
-        _cosCards.Clear();
-        _cosmeticsCardInfo = null;
-        if (_scroll != null) _scroll.verticalNormalizedPosition = 1f;
-    }
-
-    private void ShowCategories()
-    {
-        _category = ShopCategory.Auto;
-        _inCosmetics = false;
-        ClearContent();
-        ClearTree();
-        _viewportGO.SetActive(true);
-        _title.text = "TIENDA";
-        _backLabel.text = "SALIR  (Esc)";
-        _grid.cellSize = new Vector2(490f, 300f);
-        _grid.constraintCount = 3;
-
-        var items = ShopCatalog.Load().items;
-        foreach (ShopCategory cat in ShopCategories.Order)
-        {
-            bool any = false;
-            foreach (ShopItem it in items) if (it != null && ShopCategories.Of(it) == cat) { any = true; break; }
-            if (any) BuildCategoryCard(cat);
-        }
-        BuildCosmeticsCategoryCard();   // (ShopUICosmetics.cs)
-        Refresh();
-    }
-
-    private void ShowCategory(ShopCategory cat)
-    {
-        _category = cat;
-        ClearContent();
-        _viewportGO.SetActive(false);
-        _title.text = "TIENDA  ·  " + ShopCategories.Name(cat).ToUpper();
-        _backLabel.text = "←  CATEGORÍAS  (Esc)";
-        BuildTree(cat);   // (ShopUITree.cs)
-        Refresh();
-    }
-
-    private void BuildCategoryCard(ShopCategory cat)
-    {
-        Color col = ShopCategories.Tint(cat);
-        var bg = UIKit.Panel(cat.ToString(), _content, CardBg);
-        var btn = bg.gameObject.AddComponent<Button>();
-        var cb = btn.colors;
-        cb.highlightedColor = new Color(1.25f, 1.25f, 1.25f, 1f);
-        cb.pressedColor     = new Color(0.85f, 0.85f, 0.85f, 1f);
-        btn.colors = cb;
-        btn.onClick.AddListener(() => ShowCategory(cat));
-        Transform t = bg.transform;
-
-        var band = UIKit.Panel("Band", t, col);
-        band.raycastTarget = false;
-        UIKit.Place(band.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(10f, 0f), new Vector2(16f, 270f));
-
-        var nameTxt = UIKit.Label("Name", t, ShopCategories.Name(cat).ToUpper(), 44f, col, TextAlignmentOptions.TopLeft, true);
-        UIKit.Place(nameTxt.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(50f, -30f), new Vector2(420f, 70f));
-
-        var desc = UIKit.Label("Desc", t, ShopCategories.Description(cat), 26f, new Color(1f, 1f, 1f, 0.85f), TextAlignmentOptions.TopLeft);
-        UIKit.Place(desc.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(50f, -110f), new Vector2(420f, 90f));
-
-        var info = UIKit.Label("Info", t, "", 21f, Gold, TextAlignmentOptions.BottomLeft, true);
-        UIKit.Place(info.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(50f, 66f), new Vector2(420f, 60f));
-        _catCards.Add((cat, info));
-
-        var enter = UIKit.Label("Enter", t, "ENTRAR  →", 26f, Color.white, TextAlignmentOptions.Right, true);
-        UIKit.Place(enter.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-30f, 26f), new Vector2(300f, 36f));
-    }
-
-    private Card BuildCard(Transform parent, ShopItem it)
-    {
-        var card = new Card { item = it };
-        Color col = ShopCategories.Tint(ShopCategories.Of(it));   // mismo color que su categoría
-        var bg = UIKit.Panel(it.id, parent, CardBg);
-        card.bg = bg;
-        Transform t = bg.transform;
-
-        var band = UIKit.Panel("Band", t, col);
-        UIKit.Place(band.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -8f), new Vector2(340f, 10f));
-
-        if (it.icon != null)
-        {
-            var ic = UIKit.Node("Icon", t).gameObject.AddComponent<Image>();
-            ic.sprite = it.icon; ic.preserveAspect = true; ic.raycastTarget = false;
-            UIKit.Place(ic.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-16f, -26f), new Vector2(56f, 56f));
+            int tab = i;
+            var b = Btn("Tab" + i, p, names[i], out _);
+            PlaceTopLeft((RectTransform)b.transform, Pad + i * (tabW + Gap), top, tabW, TabH);
+            b.onClick.AddListener(() => ShowTab(tab));
+            _tabs.Add(b.image);
         }
 
-        var nameTxt = UIKit.Label("Name", t, it.displayName, 30f, Color.white, TextAlignmentOptions.TopLeft, true);
-        UIKit.Place(nameTxt.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -26f), new Vector2(it.icon != null ? 270f : 330f, 44f));
+        // Rejilla justo debajo, con el mismo ancho que las pestañas.
+        var gridBox = UIKit.Node("GridBox", p);
+        float gridTop = top + TabH + Gap;
+        float gridH = PanelH - gridTop - FooterH;
+        PlaceTopLeft(gridBox, Pad, gridTop, leftW, gridH);
+        _grid = MakeGrid(gridBox, _cell, Gap, Columns);
 
-        string kind = it.kind == ShopItemKind.Upgrade ? "MEJORA" : "CONSUMIBLE";
-        var kindTxt = UIKit.Label("Kind", t, kind, 16f, col, TextAlignmentOptions.TopLeft, true);
-        UIKit.Place(kindTxt.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -70f), new Vector2(330f, 22f));
+        // Columna derecha: ficha
+        var detail = Box("Detail", p, BoxCol);
+        PlaceTopRight(detail.rectTransform, Pad, top, DetailW, PanelH - top - FooterH);
+        BuildDetail(detail.transform);
 
-        card.desc = UIKit.Label("Desc", t, "", 20f, new Color(1f, 1f, 1f, 0.82f), TextAlignmentOptions.TopLeft);
-        UIKit.Place(card.desc.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -98f), new Vector2(330f, 130f));
+        // Pie
+        var exit = Btn("Exit", p, Loc.T("Salir (Esc)", "Exit (Esc)"), out _);
+        Place((RectTransform)exit.transform, new Vector2(0.5f, 0f), new Vector2(0f, 20f), new Vector2(300f, 50f), new Vector2(0.5f, 0f));
+        exit.onClick.AddListener(Close);
+        _toast = Lbl("Toast", p, "", FontMid, TextAlignmentOptions.Left);
+        PlaceBottomLeft(_toast.rectTransform, Pad, 20f, 600f, 50f);
+    }
 
-        card.owned = UIKit.Label("Owned", t, "", 20f, Gold, TextAlignmentOptions.Left, true);
-        card.owned.richText = true;
-        UIKit.Place(card.owned.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 84f), new Vector2(190f, 28f));
+    private void BuildDetail(Transform d)
+    {
+        float w = DetailW - 40f;
+        _dName = Lbl("Name", d, "", FontBig, TextAlignmentOptions.TopLeft);
+        PlaceTopLeft(_dName.rectTransform, 20f, 20f, w, 50f);
 
-        // Mejoras permanentes: casilla para ACTIVARLA / DESACTIVARLA (sin perder lo comprado).
-        if (it.kind == ShopItemKind.Upgrade)
+        _dInfo = Lbl("Info", d, "", FontSmall, TextAlignmentOptions.TopLeft);
+        _dInfo.color = DimText;
+        PlaceTopLeft(_dInfo.rectTransform, 20f, 75f, w, 50f);
+
+        _dDesc = Lbl("Desc", d, "", FontMid, TextAlignmentOptions.TopLeft);
+        Stretch(_dDesc.rectTransform, 20f, 20f, 135f, 220f);
+
+        _dState = Lbl("State", d, "", FontMid, TextAlignmentOptions.Left);
+        PlaceBottomLeft(_dState.rectTransform, 20f, 160f, w, 40f);
+
+        _dEquip = Btn("Equip", d, "", out _dEquipLabel);
+        PlaceBottomLeft((RectTransform)_dEquip.transform, 20f, 90f, w, 55f);
+        _dEquip.onClick.AddListener(ToggleEquip);
+
+        _dBuy = Btn("Buy", d, "", out _dBuyLabel);
+        PlaceBottomLeft((RectTransform)_dBuy.transform, 20f, 20f, w, 60f);
+        _dBuy.onClick.AddListener(Buy);
+    }
+
+    // ── Pestañas y rejilla ────────────────────────────────────────────────────
+
+    private void ShowTab(int tab)
+    {
+        for (int i = 0; i < _tabs.Count; i++) _tabs[i].color = i == tab ? SelCol : BtnCol;
+
+        foreach (Transform c in _grid) Destroy(c.gameObject);
+        _entries.Clear();
+
+        if (tab == CosmeticsTab)
         {
-            card.toggle = UIKit.MakeToggle("Enabled", t, "Activa", 20f, col, out card.toggleLabel);
-            UIKit.Place((RectTransform)card.toggle.transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-18f, 82f), new Vector2(130f, 30f));
-            card.toggle.onValueChanged.AddListener(on =>
+            foreach (CosmeticSlot slot in Cosmetics.Slots)
             {
-                if (_refreshing) return;
-                PlayerProgress.SetUpgradeEnabled(it.id, on);
-                ShowToast(on ? $"{it.displayName}: ACTIVADA" : $"{it.displayName}: DESACTIVADA", on ? new Color(0.5f, 1f, 0.5f) : Color.white);
-            });
+                AddEntry(new Entry { isCosmetic = true, slot = slot }, "Original\n(" + Cosmetics.SlotName(slot) + ")");
+                foreach (CosmeticDef c in Cosmetics.All)
+                    if (c.slot == slot) AddEntry(new Entry { isCosmetic = true, slot = slot, cos = c }, c.name);
+            }
         }
-
-        card.buy = UIKit.MakeButton("Buy", t, "", 24f, col * 0.85f + new Color(0f, 0f, 0f, 0.15f), Color.white, out card.buyLabel);
-        UIKit.Place((RectTransform)card.buy.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 16f), new Vector2(330f, 58f));
-        card.buy.onClick.AddListener(() => OnBuy(card));
-        return card;
-    }
-
-    // ── Compra / refresco ─────────────────────────────────────────────────────
-
-    private bool _refreshing;
-
-    private void OnBuy(Card c)
-    {
-        if (c.item.IsLocked)
-        {
-            ShowToast(ShopUnlocks.MissingText(c.item.id), new Color(1f, 0.6f, 0.4f));
-            return;
-        }
-        if (c.item.TryBuy())
-            ShowToast($"¡{c.item.displayName} comprado!", new Color(0.5f, 1f, 0.5f));
-        else if (c.item.IsMaxed)
-            ShowToast("Ya lo tienes al máximo.", Color.white);
         else
-            ShowToast("No tienes suficientes monedas.", new Color(1f, 0.5f, 0.5f));
+        {
+            // Solo lo que se puede comprar ya (lo de niveles posteriores no aparece):
+            // primero los consumibles y después las mejoras, por nivel de desbloqueo.
+            var items = ShopCatalog.Load().items;
+            foreach (ShopItem it in items)
+                if (it != null && it.kind == ShopItemKind.Consumable && !it.IsLocked) AddEntry(new Entry { item = it }, it.Name);
+            for (int level = 1; level <= 3; level++)
+                foreach (ShopItem it in items)
+                    if (it != null && it.kind == ShopItemKind.Upgrade && !it.IsLocked && Mathf.Clamp(ShopUnlocks.LevelOf(it.id), 1, 3) == level)
+                        AddEntry(new Entry { item = it }, it.Name);
+        }
+
+        _selected = _entries.Count > 0 ? _entries[0] : null;
+        Refresh();
     }
+
+    private void AddEntry(Entry e, string title)
+    {
+        e.bg = Box("Item", _grid, ItemCol);
+        var btn = e.bg.gameObject.AddComponent<Button>();
+        btn.onClick.AddListener(() => { _selected = e; Refresh(); });
+
+        var label = Lbl("Name", e.bg.transform, title, FontSmall + 2f, TextAlignmentOptions.Center);
+        Stretch(label.rectTransform, 10f, 10f, 10f, 45f);
+        e.state = Lbl("State", e.bg.transform, "", FontSmall, TextAlignmentOptions.Center);
+        e.state.color = DimText;
+        Stretch(e.state.rectTransform, 6f, 6f, _cell - 45f, 8f);
+        _entries.Add(e);
+    }
+
+    // ── Refresco ──────────────────────────────────────────────────────────────
 
     private void Refresh()
     {
-        if (_coinsText != null) _coinsText.text = PlayerProgress.Coins.ToString();
+        _wallet.text = Loc.T($"Monedas: {PlayerProgress.Coins}     Iris: {PlayerProgress.GazeCoins}     Muescas: {Notches.Used}/{Notches.Total} (máx. {Notches.MaxNotches})",
+                             $"Coins: {PlayerProgress.Coins}     Iris: {PlayerProgress.GazeCoins}     Notches: {Notches.Used}/{Notches.Total} (max. {Notches.MaxNotches})");
+        if (Notches.AtMax) { _notchLabel.text = Loc.T("Muescas al máximo", "Notches maxed out"); _notchBuy.interactable = false; }
+        else { _notchLabel.text = Loc.T($"Comprar muesca ({Notches.NextNotchPrice})", $"Buy notch ({Notches.NextNotchPrice})"); _notchBuy.interactable = PlayerProgress.Coins >= Notches.NextNotchPrice; }
 
-        // Tarjetas de categoría: cuántos objetos hay, cuántos tienes y cuántos te puedes permitir ahora.
-        var items = ShopCatalog.Load().items;
-        foreach (var (cat, info) in _catCards)
+        foreach (Entry e in _entries)
         {
-            int total = 0, owned = 0, affordable = 0, locked = 0;
-            foreach (ShopItem it in items)
-            {
-                if (it == null || ShopCategories.Of(it) != cat) continue;
-                total++;
-                if (it.Owned > 0) owned++;
-                if (it.IsLocked) { locked++; continue; }
-                if (!it.IsMaxed && it.CanAfford) affordable++;
-            }
-            info.text = $"{total} objetos  ·  {owned} con algo comprado" +
-                        (locked > 0 ? $"  ·  <color=#FF9B6B>{locked} bloqueados</color>" : "") +
-                        (affordable > 0 ? $"  ·  <color=#7CFF7C>{affordable} al alcance</color>" : "");
+            bool locked = !e.isCosmetic && e.item.IsLocked;
+            e.bg.color = e == _selected ? SelCol : locked ? LockCol : ItemCol;
+            e.state.text = e.isCosmetic ? CosmeticState(e) : ItemState(e.item);
         }
-
-        _refreshing = true;
-        foreach (Card c in _cards)
-        {
-            ShopItem it = c.item;
-            bool locked = it.IsLocked;
-            c.desc.text  = locked ? it.description + "\n<color=#FF9B6B><b>" + ShopUnlocks.MissingText(it.id) + "</b></color>"
-                                  : it.NextDescription;
-            c.owned.text = locked ? "<color=#FF9B6B>BLOQUEADO</color>" : it.OwnedLabel;
-            if (c.bg != null) c.bg.color = locked ? new Color(0.09f, 0.07f, 0.08f, 1f) : CardBg;
-
-            // Casilla de activar/desactivar: solo si la tienes comprada.
-            if (c.toggle != null)
-            {
-                bool show = it.kind == ShopItemKind.Upgrade && it.Owned > 0;
-                c.toggle.gameObject.SetActive(show);
-                if (show)
-                {
-                    bool on = PlayerProgress.IsUpgradeEnabled(it.id);
-                    c.toggle.SetIsOnWithoutNotify(on);
-                    c.toggleLabel.text = on ? "Activa" : "Apagada";
-                    c.toggleLabel.color = on ? Color.white : new Color(1f, 1f, 1f, 0.5f);
-                }
-            }
-
-            if (locked)
-            {
-                c.buyLabel.text = "BLOQUEADO";
-                c.buy.interactable = false;
-            }
-            else if (it.IsMaxed)
-            {
-                c.buyLabel.text = it.kind == ShopItemKind.Upgrade ? "AL MÁXIMO" : "LLENO";
-                c.buy.interactable = false;
-            }
-            else
-            {
-                int price = it.NextPrice;
-                string verb = it.kind == ShopItemKind.Upgrade ? (it.Owned == 0 ? "COMPRAR" : "MEJORAR") : "COMPRAR";
-                c.buyLabel.text = $"{verb} · {price}";
-                c.buy.interactable = PlayerProgress.Coins >= price;
-            }
-        }
-        _refreshing = false;
-        RefreshTree();        // (ShopUITree.cs)
-        RefreshCosmetics();   // (ShopUICosmetics.cs)
+        RefreshDetail();
     }
 
-    private void ShowToast(string msg, Color color)
+    private static string ItemState(ShopItem it)
     {
-        _toast.text  = msg;
-        _toast.color = color;
-        _toastT = 1.6f;
+        if (it.IsLocked) return Loc.T($"Nivel {ShopUnlocks.LevelOf(it.id)}", $"Level {ShopUnlocks.LevelOf(it.id)}");
+        if (it.kind == ShopItemKind.Upgrade && it.Owned > 0)
+            return (it.IsMaxed ? Loc.T("Máx.", "Max.") : Loc.T($"Nv {it.Owned}/{it.MaxLevel}", $"Lv {it.Owned}/{it.MaxLevel}")) + (PlayerProgress.IsUpgradeEnabled(it.id) ? Loc.T(" · Equipada", " · Equipped") : "");
+        if (it.IsMaxed) return Loc.T($"Lleno ({it.Owned})", $"Full ({it.Owned})");
+        return (it.kind == ShopItemKind.Consumable && it.Owned > 0 ? $"x{it.Owned} · " : "") + it.NextPrice;
     }
+
+    private static bool IsWorn(Entry e) => e.cos == null ? Cosmetics.Equipped(e.slot) == null : Cosmetics.Equipped(e.slot) == e.cos;
+
+    private static string CosmeticState(Entry e)
+    {
+        if (IsWorn(e)) return Loc.T("Puesto", "Worn");
+        if (e.cos == null || Cosmetics.Owns(e.cos)) return Loc.T("Comprado", "Owned");
+        return $"{e.cos.price} iris";
+    }
+
+    private void RefreshDetail()
+    {
+        Entry e = _selected;
+        _dEquip.gameObject.SetActive(false);
+        _dBuy.gameObject.SetActive(e != null);
+        if (e == null) { _dName.text = _dInfo.text = _dDesc.text = _dState.text = ""; return; }
+
+        if (e.isCosmetic)
+        {
+            _dName.text  = e.cos != null ? e.cos.name : "Original";
+            _dInfo.text  = Loc.T("Cosmético · ", "Cosmetic · ") + Cosmetics.SlotName(e.slot) + Loc.T(" · se paga con iris", " · paid with iris");
+            _dDesc.text  = e.cos != null ? e.cos.description : Loc.T("El aspecto de siempre.", "The usual look.");
+            _dState.text = CosmeticState(e);
+            bool owned = e.cos == null || Cosmetics.Owns(e.cos);
+            if (IsWorn(e))  { _dBuyLabel.text = Loc.T("Puesto", "Worn"); _dBuy.interactable = false; }
+            else if (owned) { _dBuyLabel.text = Loc.T("Poner", "Wear");  _dBuy.interactable = true; }
+            else            { _dBuyLabel.text = Loc.T($"Comprar ({e.cos.price} iris)", $"Buy ({e.cos.price} iris)"); _dBuy.interactable = PlayerProgress.GazeCoins >= e.cos.price; }
+            return;
+        }
+
+        ShopItem it = e.item;
+        int cost = Notches.CostOf(it.id);
+        _dName.text = it.Name;
+        _dInfo.text = (it.kind == ShopItemKind.Upgrade
+                          ? Loc.T($"Mejora · ocupa {cost} muesca{(cost == 1 ? "" : "s")}", $"Upgrade · uses {cost} notch{(cost == 1 ? "" : "es")}")
+                          : Loc.T("Consumible", "Consumable"))
+                      + Loc.T($" · disponible desde el nivel {ShopUnlocks.LevelOf(it.id)}", $" · available from level {ShopUnlocks.LevelOf(it.id)}");
+        _dDesc.text = StripTags(it.NextDescription);
+        _dState.text = it.IsLocked ? ShopUnlocks.MissingText(it.id) : it.OwnedLabel;
+
+        if (it.kind == ShopItemKind.Upgrade && it.Owned > 0)
+        {
+            _dEquip.gameObject.SetActive(true);
+            _dEquipLabel.text = PlayerProgress.IsUpgradeEnabled(it.id) ? Loc.T("Quitar (libera muescas)", "Unequip (frees notches)")
+                : Loc.T($"Equipar ({cost} muesca{(cost == 1 ? "" : "s")})", $"Equip ({cost} notch{(cost == 1 ? "" : "es")})");
+        }
+
+        if (it.IsLocked)     { _dBuyLabel.text = Loc.T($"Bloqueado (nivel {ShopUnlocks.LevelOf(it.id)})", $"Locked (level {ShopUnlocks.LevelOf(it.id)})"); _dBuy.interactable = false; }
+        else if (it.IsMaxed) { _dBuyLabel.text = it.kind == ShopItemKind.Upgrade ? Loc.T("Al máximo", "Maxed out") : Loc.T("Lleno", "Full"); _dBuy.interactable = false; }
+        else
+        {
+            _dBuyLabel.text = $"{(it.kind == ShopItemKind.Upgrade && it.Owned > 0 ? Loc.T("Mejorar", "Upgrade") : Loc.T("Comprar", "Buy"))} ({it.NextPrice})";
+            _dBuy.interactable = it.CanAfford;
+        }
+    }
+
+    // ── Acciones ──────────────────────────────────────────────────────────────
+
+    private void Buy()
+    {
+        Entry e = _selected;
+        if (e == null) return;
+        if (e.isCosmetic)
+        {
+            if (e.cos == null) Cosmetics.Equip(e.slot, null);
+            else if (Cosmetics.Owns(e.cos)) Cosmetics.Equip(e.slot, e.cos.id);
+            else if (!Cosmetics.TryBuy(e.cos)) Toast(Loc.T("Te faltan iris.", "Not enough iris."));
+            Refresh();
+            return;
+        }
+        ShopItem it = e.item;
+        if (it.IsLocked)      Toast(ShopUnlocks.MissingText(it.id) + ".");
+        else if (it.TryBuy()) Toast(Loc.T($"{it.Name} comprado.", $"{it.Name} bought."));
+        else if (!it.IsMaxed) Toast(Loc.T("No tienes suficientes monedas.", "Not enough coins."));
+    }
+
+    private void ToggleEquip()
+    {
+        if (_selected == null || _selected.item == null) return;
+        ShopItem it = _selected.item;
+        bool on = !PlayerProgress.IsUpgradeEnabled(it.id);
+        if (!PlayerProgress.SetUpgradeEnabled(it.id, on))
+            Toast(Loc.T($"No hay muescas libres ({it.Name} ocupa {Notches.CostOf(it.id)}, te quedan {Notches.Free}).",
+                         $"No free notches ({it.Name} uses {Notches.CostOf(it.id)}, you have {Notches.Free} left)."));
+        else StudyTelemetry.ShopEvent(on ? "equipar" : "quitar", it.id, 0);   // (modo prueba)
+        Refresh();
+    }
+
+    private void BuyNotch()
+    {
+        int price = Notches.NextNotchPrice;
+        if (Notches.TryBuyNotch()) { Toast(Loc.T($"Muesca nueva: ahora tienes {Notches.Total}.", $"New notch: you now have {Notches.Total}.")); StudyTelemetry.ShopEvent("muesca", "muesca", price); }
+        else Toast(Notches.AtMax ? Loc.T("Ya tienes el máximo de muescas.", "You already have the maximum notches.") : Loc.T("No tienes suficientes monedas.", "Not enough coins."));
+    }
+
+    private void Toast(string msg) { _toast.text = msg; _toastT = 2.5f; }
 }

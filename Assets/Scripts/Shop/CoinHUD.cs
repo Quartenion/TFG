@@ -83,7 +83,7 @@ public class CoinHUD : MonoBehaviour
 
     private void OnTotal(int n)
     {
-        if (_total != null) _total.text = $"monedero: {n}";
+        if (_total != null) _total.text = Loc.T($"monedero: {n}", $"wallet: {n}");
     }
 
     private int _lastLives = -1;
@@ -95,8 +95,8 @@ public class CoinHUD : MonoBehaviour
         int shields = PlayerProgress.GetCount(ShopIds.Shield);
         int cps     = PlayerProgress.GetCount(ShopIds.Checkpoint);
         var sb = new System.Text.StringBuilder();
-        if (lives   > 0) sb.AppendLine($"VIDAS EXTRA ×{lives}");
-        if (shields > 0) sb.AppendLine($"<color=#5AA0FF>REBOBINADOS ×{shields}</color>");
+        if (lives   > 0) sb.AppendLine(Loc.T($"VIDAS EXTRA ×{lives}", $"EXTRA LIVES ×{lives}"));
+        if (shields > 0) sb.AppendLine(Loc.T($"<color=#5AA0FF>REBOBINADOS ×{shields}</color>", $"<color=#5AA0FF>REWINDS ×{shields}</color>"));
         if (cps     > 0) sb.AppendLine($"<color=#6CE07C>CHECKPOINTS ×{cps}</color>");
         _lives.text = sb.ToString();
         int n = lives + shields + cps;

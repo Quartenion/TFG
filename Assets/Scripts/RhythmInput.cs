@@ -14,12 +14,8 @@ using UnityEngine.InputSystem;
 ///      Perfect/Good -> HitBlue(): la barra sube (acumula riesgo).
 ///      Miss         -> MissBlueAndInject(): inyeccion masiva + boost + vuelta al rojo.
 ///
-/// CAMBIOS respecto a la version anterior:
-///   - Usa BeatManager.EvaluateTiming() en vez de comparar manualmente con _hitWindow.
-///     La ventana efectiva viene del BeatManager (con compensacion de latencia incluida).
-///   - Pasa TimingResult a EnergyManager.HitRed() para escalar la energia por precision.
-///   - Expone OnTimingResult para que TimingFeedbackUI muestre PERFECT / GOOD / MISS.
-///   - _hitWindow se conserva en el Inspector como legacy pero ya no controla la deteccion.
+/// El timing lo evalua BeatManager.EvaluateClickTiming() (con compensacion de latencia). OnTimingResult avisa a la
+/// UI de feedback (PERFECT / GOOD / MISS). Anti-spam: ver EnterSlot / ProcessClick.
 /// </summary>
 public class RhythmInput : MonoBehaviour
 {
@@ -29,13 +25,6 @@ public class RhythmInput : MonoBehaviour
     [Tooltip("Referencia al PlayerMovement para detectar el modo kayak.\n" +
              "Cuando IsOnKayak=true, KayakController gestiona los inputs; RhythmInput los ignora.")]
     [SerializeField] private PlayerMovement _player;
-
-    [Header("Deteccion de hits")]
-    [Tooltip("LEGACY: ya no controla la deteccion. La ventana viene de BeatManager.GoodWindow. " +
-             "Se mantiene para no romper prefabs existentes.")]
-    [SerializeField] private float _hitWindow = 0.15f;
-    /// <summary>Ventana legacy expuesta solo para suprimir CS0414. No se usa en la deteccion.</summary>
-    public float HitWindowLegacy => _hitWindow;
 
     [Header("Combo")]
     [Tooltip("El bonus no depende del combo. Sirve para metricas de UI y TFG.")]
@@ -62,10 +51,18 @@ public class RhythmInput : MonoBehaviour
     /// <summary>Ultimo resultado de timing registrado. Util para otros sistemas.</summary>
     public TimingResult LastTimingResult { get; private set; }
 
-    // --- Anti-spam: un solo hit valido por beat ---
-    // Si el jugador hace click varias veces en la misma ventana de beat,
-    // solo el primero cuenta como hit; los demas se convierten en miss.
-    private int _lastHitBeatIdx = -1;
+    // --- Anti-spam (por beat) ---
+    // «Slot» = beat (o medio beat, con «Doble tempo») más cercano al clic. Solo el PRIMER clic de cada slot puede
+    // acertar; cada clic de más es un fallo que cuesta el doble que el anterior (tras un acierto ya cuesta 2×,
+    // más de lo que curó). Además, si varios slots seguidos tienen clics de más, sube el «calor» del spam y TODOS
+    // los fallos cuestan (1 + calor)× más. Un jugador que no spamea nunca paga más que un fallo normal.
+    private const float MaxSpamScale = 8f;
+    private const int   MaxSpamHeat  = 3;
+    private int  _slot = int.MinValue;
+    private int  _clicksInSlot;
+    private bool _slotHadHit;
+    private int  _spamHeat;
+    private float _pendingMissScale = 1f;   // multiplicador del fallo que se está procesando
 
     // --- Input ---
 
@@ -165,26 +162,17 @@ public class RhythmInput : MonoBehaviour
         if (_beatManager != null)
             result = _beatManager.EvaluateClickTiming();   // (con «Doble tempo» también el medio beat)
 
-        // Anti-spam: un solo hit valido por beat.
-        // Si el jugador ya acerto en este mismo beat (misma ventana), el click extra
-        // se convierte en Miss aunque tecnicamente caiga dentro de la ventana.
-        // Esto impide que spamear dentro del beat window genere energia ilimitada.
-        if (result != TimingResult.Miss && _beatManager != null)
+        // Anti-spam: solo el primer clic del slot puede acertar (solo con clics reales, no con el auto-clic).
+        _pendingMissScale = 1f;
+        if (affectSyringe && _beatManager != null)
         {
-            int beatIdx = _beatManager.ClickIndex;
-            if (beatIdx == _lastHitBeatIdx)
-            {
-                // «Pulso limpio» (tienda): el clic repetido se ignora (ni acierto ni fallo).
-                if (PlayerProgress.GetLevel(ShopIds.CleanPulse) > 0) return;
+            int slot = _beatManager.NearestClickSlot;
+            if (slot != _slot) EnterSlot(slot);
 
-                // Click extra en la misma ventana → penalizar como miss
-                result = TimingResult.Miss;
-            }
-            else
-            {
-                // Primer hit valido en este beat → registrar y permitir
-                _lastHitBeatIdx = beatIdx;
-            }
+            if (_clicksInSlot > 0) result = TimingResult.Miss;
+            _pendingMissScale = Mathf.Min(MaxSpamScale, Mathf.Pow(2f, _clicksInSlot)) * (1 + _spamHeat);
+            _clicksInSlot++;
+            if (result != TimingResult.Miss) _slotHadHit = true;
         }
 
         LastTimingResult = result;
@@ -197,6 +185,7 @@ public class RhythmInput : MonoBehaviour
         if (!affectSyringe) return;
 
         RunStats.HeartPress(result);   // (contratos: latidos, fallos, Perfect, rachas)
+        if (_beatManager != null) StudyTelemetry.Click(_beatManager.ClickOffset, result);   // (modo prueba)
 
         if (result != TimingResult.Miss)
             RegisterHit(result);
@@ -239,6 +228,17 @@ public class RhythmInput : MonoBehaviour
 
     private int _coinStreak;   // aciertos seguidos (para «Racha dorada»)
 
+    /// <summary>Cambia de slot: actualiza el «calor» del spam según cómo acabó el anterior.</summary>
+    private void EnterSlot(int slot)
+    {
+        if (_slot == int.MinValue || slot - _slot > 4) _spamHeat = 0;                    // pausa larga: se enfría
+        else if (_clicksInSlot > 1)      _spamHeat = Mathf.Min(MaxSpamHeat, _spamHeat + 1);  // otro slot con spam
+        else if (_slotHadHit)            _spamHeat = Mathf.Max(0, _spamHeat - 1);            // slot limpio: enfría
+        _slot = slot;
+        _clicksInSlot = 0;
+        _slotHadHit = false;
+    }
+
     private void RegisterMiss()
     {
         _coinStreak = 0;
@@ -256,8 +256,8 @@ public class RhythmInput : MonoBehaviour
         }
         else
         {
-            // Fallo en rojo: penalizacion (la barra sube).
-            em?.MissRed();
+            // Fallo en rojo: penalizacion (la barra sube), escalada por el anti-spam.
+            em?.MissRed(_pendingMissScale);
         }
 
         if (_trackCombo)

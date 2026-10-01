@@ -89,10 +89,6 @@ public class ShopCatalog : ScriptableObject
             "También puedes acertar en los MEDIOS beats (el doble de latidos: más sangre si llevas el ritmo).",
             ShopItemKind.Upgrade, new[] { 900 }, blue));
         // ── Supervivencia ──
-        c.items.Add(ShopItem.Create(ShopIds.MissGuard, "Coágulo",
-            "Parte de tus fallos de ritmo no te quitan sangre.",
-            ShopItemKind.Upgrade, new[] { 300, 700 }, green, 5,
-            new[] { "20 % de los fallos", "35 % de los fallos" }));
         c.items.Add(ShopItem.Create(ShopIds.Parachute, "Paracaídas",
             "Una vez por nivel, si caes al agua o a la lava, rebotas hacia arriba en vez de morir.",
             ShopItemKind.Upgrade, new[] { 600 }, green));
@@ -116,9 +112,6 @@ public class ShopCatalog : ScriptableObject
         c.items.Add(ShopItem.Create(ShopIds.BarFlash, "Marca de compás",
             "El corazón del punto de mira destella en el primer beat de cada compás.",
             ShopItemKind.Upgrade, new[] { 120 }, blue));
-        c.items.Add(ShopItem.Create(ShopIds.CleanPulse, "Pulso limpio",
-            "Si pulsas otra vez en el mismo beat que ya acertaste, no cuenta como fallo.",
-            ShopItemKind.Upgrade, new[] { 350 }, blue));
         // ── Dinero ──
         c.items.Add(ShopItem.Create(ShopIds.PerfectCoin, "Latido dorado",
             "+1 moneda por cada latido PERFECTO.",

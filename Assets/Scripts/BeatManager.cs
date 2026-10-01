@@ -1,14 +1,12 @@
 using UnityEngine;
-using System.Collections.Generic;
 using UnityEngine.Events;
 
 /// <summary>
 /// Gestiona el beat de la musica y evalua la precision de los inputs del jugador.
 ///
-/// MEJORAS respecto a la version anterior:
 ///   1. Compensacion de latencia: CorrectedTime = audioSource.time - _audioLatencyOffset.
 ///      Si el jugador siempre llega tarde, aumenta el offset. Si llega pronto, ponlo negativo.
-///      Se calibra con LatencyCalibrator.cs y se guarda en PlayerPrefs.
+///      Si existe un valor guardado en PlayerPrefs ("AudioLatencyOffset"), se usa ese.
 ///
 ///   2. Ventanas de timing: Perfect (+-_perfectWindow) y Good (+-_goodWindow).
 ///      EvaluateTiming() devuelve Perfect, Good o Miss para escalar energia y mostrar feedback.
@@ -18,9 +16,7 @@ using UnityEngine.Events;
 ///
 ///   4. Singleton de acceso global (BeatManager.Instance).
 ///
-///   5. Compatibilidad total: Intervals, GetSecondsToNearestBeat(), Bpm, BeatDuration,
-///      SongTime funcionan igual que antes. PlayerMovement y RhythmInput no necesitan
-///      cambios en como acceden al BeatManager.
+///   5. Intervals: UnityEvents cada N pasos de beat (los usa PulseToTheBeat en Managers).
 ///
 ///   6. Los eventos de beat no se disparan con Time.timeScale == 0 (pausa).
 /// </summary>
@@ -39,7 +35,7 @@ public class BeatManager : MonoBehaviour
     [Tooltip("Offset en segundos para compensar la latencia del dispositivo de audio. " +
              "Si el jugador siempre llega tarde, aumenta este valor (0.03-0.08). " +
              "Si llega pronto, usa un valor negativo. " +
-             "Se calibra con LatencyCalibrator y se guarda en PlayerPrefs.")]
+             "Si hay un valor guardado en PlayerPrefs, se usa ese.")]
     [SerializeField] private float _audioLatencyOffset = 0f;
 
     [Tooltip("Si esta activo, al iniciar carga el offset guardado en PlayerPrefs por el calibrador.")]
@@ -62,8 +58,8 @@ public class BeatManager : MonoBehaviour
     [Tooltip("Se dispara dos veces por beat (cada corchea). Util para footsteps.")]
     public UnityEvent OnHalfBeat;
 
-    // --- Intervals (compatibilidad con version anterior) ---
-    [Header("Intervals (sistema heredado, sigue funcionando)")]
+    // --- Intervals: eventos cada N pasos de beat ---
+    [Header("Intervals")]
     [SerializeField] private Intervals[] _intervals;
 
     // --- Propiedades publicas ---
@@ -77,7 +73,7 @@ public class BeatManager : MonoBehaviour
     /// <summary>Duracion de medio beat en segundos.</summary>
     public float HalfBeatDuration => BeatDuration * 0.5f;
 
-    /// <summary>Tiempo crudo del AudioSource (sin compensar latencia). Compatibilidad.</summary>
+    /// <summary>Tiempo crudo del AudioSource (sin compensar latencia).</summary>
     public float SongTime => _audioSource != null ? _audioSource.time : 0f;
 
     /// <summary>
@@ -85,16 +81,6 @@ public class BeatManager : MonoBehaviour
     /// Todos los calculos de hit detection usan este valor.
     /// </summary>
     public float CorrectedTime => Mathf.Max(0f, SongTime - _audioLatencyOffset);
-
-    /// <summary>Progreso dentro del beat actual [0..1].</summary>
-    public float BeatProgress
-    {
-        get
-        {
-            float d = BeatDuration;
-            return d > 0f ? (CorrectedTime % d) / d : 0f;
-        }
-    }
 
     /// <summary>Indice del beat actual desde el inicio de la cancion.</summary>
     public int CurrentBeatIndex => BeatDuration > 0f ? Mathf.FloorToInt(CorrectedTime / BeatDuration) : 0;
@@ -144,6 +130,9 @@ public class BeatManager : MonoBehaviour
     {
         if (_audioSource == null || !_audioSource.isPlaying) return;
         if (Time.timeScale == 0f) return;
+        // Rebobinando (la canción suena al revés): sin eventos de beat. Si no, cada beat que se "desanda" dispararía
+        // OnBeat y el HUD rítmico lanzaría montones de notas a la vez.
+        if (TimeRewinder.IsRewinding) return;
 
         float corrected = CorrectedTime;
         float d = BeatDuration;
@@ -169,7 +158,7 @@ public class BeatManager : MonoBehaviour
             }
         }
 
-        // Intervals (compatibilidad) — ahora usan CorrectedTime
+        // Intervals (usan CorrectedTime)
         if (_intervals != null && _intervals.Length > 0)
         {
             foreach (Intervals interval in _intervals)
@@ -186,7 +175,6 @@ public class BeatManager : MonoBehaviour
 
     /// <summary>
     /// Distancia en segundos al beat mas cercano usando CorrectedTime.
-    /// Compatibilidad total con la version anterior: misma firma, mejor precision.
     /// </summary>
     public float GetSecondsToNearestBeat()
     {
@@ -196,20 +184,17 @@ public class BeatManager : MonoBehaviour
         return Mathf.Min(mod, d - mod);
     }
 
-    /// <summary>
-    /// Evalua el timing del input actual y devuelve Perfect, Good o Miss.
-    /// Usado por RhythmInput para escalar la energia y mostrar feedback visual.
-    /// </summary>
     /// <summary>Mejora «Doble tempo»: los clics también cuentan en los medios beats.</summary>
     public static bool HalfBeatClicks => PlayerProgress.GetLevel(ShopIds.HalfBeat) > 0;
 
     /// <summary>Paso de la rejilla de clics: un beat, o medio beat con «Doble tempo».</summary>
     public float ClickStep => HalfBeatClicks ? BeatDuration * 0.5f : BeatDuration;
 
-    /// <summary>Índice del hueco de clic actual (beat, o medio beat con «Doble tempo») para el anti-spam.</summary>
-    public int ClickIndex => HalfBeatClicks && ClickStep > 0f
-        ? Mathf.RoundToInt(CorrectedTime / ClickStep)
-        : CurrentBeatIndex;
+    /// <summary>Beat (o medio beat, con «Doble tempo») MÁS CERCANO al instante actual. Lo usa el anti-spam.</summary>
+    public int NearestClickSlot => ClickStep > 0f ? Mathf.RoundToInt(CorrectedTime / ClickStep) : 0;
+
+    /// <summary>Desfase (s) del instante actual respecto al beat (o medio beat) más cercano: + = tarde, − = pronto.</summary>
+    public float ClickOffset => ClickStep > 0f ? CorrectedTime - NearestClickSlot * ClickStep : 0f;
 
     /// <summary>Timing de un CLIC del jugador (con «Doble tempo» también vale el medio beat más cercano).</summary>
     public TimingResult EvaluateClickTiming()
@@ -224,6 +209,10 @@ public class BeatManager : MonoBehaviour
         return TimingResult.Miss;
     }
 
+    /// <summary>
+    /// Evalua el timing del input actual y devuelve Perfect, Good o Miss.
+    /// Usado por RhythmInput para escalar la energia y mostrar feedback visual.
+    /// </summary>
     public TimingResult EvaluateTiming()
     {
         float dist = GetSecondsToNearestBeat();
@@ -278,36 +267,6 @@ public class BeatManager : MonoBehaviour
         ScheduledStartDSP = dspStart;
 
         ResetBeatState();
-    }
-
-    /// <summary>
-    /// Arranca la música desde un offset en segundos (para modo test).
-    /// Ajusta ScheduledStartDSP para que represente "cuándo habría sonado el beat 0",
-    /// de modo que FallingObstacle y cualquier sistema basado en DSP sigan funcionando.
-    ///
-    /// Ejemplo: StartMusicFrom(100f) → la canción empieza en el segundo 100,
-    /// ScheduledStartDSP = dspStart - 100  → beat 0 habría ocurrido 100s antes.
-    /// </summary>
-    public void StartMusicFrom(float songTimeOffset)
-    {
-        if (_audioSource == null) return;
-
-        float safeOffset = _audioSource.clip != null
-            ? Mathf.Clamp(songTimeOffset, 0f, _audioSource.clip.length - 0.1f)
-            : Mathf.Max(0f, songTimeOffset);
-
-        _audioSource.Stop();
-        _audioSource.time = safeOffset;
-
-        double dspStart = AudioSettings.dspTime + 0.08;
-        _audioSource.PlayScheduled(dspStart);
-
-        // ScheduledStartDSP = "cuando habría sonado el beat 0"
-        ScheduledStartDSP = dspStart - (double)safeOffset;
-
-        // Inicializar beat state en el beat correcto para no disparar eventos falsos
-        _lastBeatIndex   = Mathf.FloorToInt(safeOffset / BeatDuration) - 1;
-        _lastHalfBeatIdx = Mathf.FloorToInt(safeOffset / HalfBeatDuration) - 1;
     }
 
     /// <summary>
@@ -406,21 +365,6 @@ public class BeatManager : MonoBehaviour
         if (_audioSource != null) _audioSource.UnPause();
     }
 
-    /// <summary>Cambia el BPM en caliente.</summary>
-    public void SetBpm(float newBpm)
-    {
-        _bpm = Mathf.Max(1f, newBpm);
-        ResetBeatState();
-    }
-
-    /// <summary>Aplica y guarda un nuevo offset de latencia en PlayerPrefs.</summary>
-    public void SetLatencyOffset(float offsetSeconds)
-    {
-        _audioLatencyOffset = offsetSeconds;
-        PlayerPrefs.SetFloat("AudioLatencyOffset", offsetSeconds);
-        PlayerPrefs.Save();
-    }
-
     // --- Internals ---
 
     private void ResetBeatState()
@@ -430,7 +374,7 @@ public class BeatManager : MonoBehaviour
     }
 }
 
-// Intervals: sin cambios en la API para compatibilidad total
+// Intervals: dispara _trigger cada 1/_steps beats.
 [System.Serializable]
 public class Intervals
 {

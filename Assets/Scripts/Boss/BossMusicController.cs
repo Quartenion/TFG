@@ -4,7 +4,7 @@ using UnityEngine;
 /// Gestiona los RELEVOS de música del boss fight sin romper el reloj de beats:
 ///   1. Cuando TERMINA la canción del nivel, arranca LDNM-BOSS-LOOP (en bucle) justo en ese instante.
 ///   2. Al derrotar al jefe (BossController.OnDefeated) el loop NO se corta: termina la vuelta que está sonando
-///      y justo al acabar entra LDNM-END (una vez). EndFinishDSP / EndFinished indican cuándo acaba la canción.
+///      y justo al acabar entra LDNM-END (una vez). EndFinishDSP indica cuándo acaba la canción.
 ///
 /// El relevo se programa con PlayScheduled en el instante EXACTO en que acaba la pista del nivel
 /// (ScheduledStartDSP + duración del clip), y el BeatManager cambia su fuente de reloj con SwapSource
@@ -142,8 +142,6 @@ public class BossMusicController : MonoBehaviour
     /// <summary>DSP en el que TERMINA LDNM-END (−1 si aún no se ha programado).</summary>
     public double EndFinishDSP { get; private set; } = -1;
 
-    /// <summary>¿Ha terminado ya de sonar LDNM-END (la canción entera)?</summary>
-    public bool EndFinished => EndFinishDSP > 0.0 && AudioSettings.dspTime >= EndFinishDSP;
 
     /// <summary>Arranca 'next' en 'atDSP' (desde el principio) y hace terminar la fuente actual ahí mismo.</summary>
     private void ScheduleHandoff(AudioSource next, double atDSP)

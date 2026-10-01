@@ -105,13 +105,6 @@ public class CameraDashEffect : MonoBehaviour
         }
     }
 
-    /// <summary>Version simple sin parametros, por si lo enganchas a otro evento.</summary>
-    public void OnDashSimple()
-    {
-        TriggerFOVPunch();
-        TriggerShake();
-    }
-
     /// <summary>
     /// Q (romper bloques): golpe de FOV rápido, como si saliera disparado hacia delante, + un pequeño shake.
     /// Lo llama BlockAbility al activar la ventana de rotura.

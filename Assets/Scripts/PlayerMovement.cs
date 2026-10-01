@@ -68,15 +68,11 @@ public class PlayerMovement : MonoBehaviour
     [Header("Dash (E + A/D)")]
     public float dashSpeed = 28f;
     public float dashDuration = 0.18f;
-    [Tooltip("(Sin uso) Las acciones ya no tienen cooldown.")]
-    public float dashCooldown = 0.5f;
     public float dashEnergyCost = 25f;
 
     [Header("Slide (Shift)")]
     [Tooltip("Duracion del slide en segundos")]
     public float slideDuration = 0.55f;
-    [Tooltip("(Sin uso) Las acciones ya no tienen cooldown.")]
-    public float slideCooldown = 0.8f;
     [Tooltip("Energia que cuesta el slide")]
     public float slideEnergyCost = 12f;
     [Tooltip("El slide requiere estar al ritmo")]
@@ -97,8 +93,6 @@ public class PlayerMovement : MonoBehaviour
     [Header("Wallrun / Walljump")]
     [Tooltip("Distancia del raycast lateral para detectar paredes")]
     public float wallDetectDistance = 0.7f;
-    [Tooltip("Velocidad de desplazamiento durante el wallrun")]
-    public float wallrunSpeed = 8f;
     [Tooltip("Duracion maxima del wallrun en segundos")]
     public float wallrunDuration = 1.5f;
     [Tooltip("Aceleración gravitatoria aplicada durante el wallrun (m/s²).\n" +
@@ -247,7 +241,7 @@ public class PlayerMovement : MonoBehaviour
     // Corrección de sincronía con la música
     private BeatGridVisualizer _beatGrid;  // lee Origin, Forward y walkSpeed de nivel
     /// <summary>
-    /// Corrección de velocidad calculada cada frame con la misma fórmula que PlayerSyncDisplay.
+    /// Corrección de velocidad calculada cada frame (error de posición respecto a la rejilla de beats).
     /// Positivo = jugador atrasado (acelerar). Negativo = adelantado (frenar). Cero = en sincronía.
     /// Expuesto para que KayakController y la tirolina también lo apliquen.
     /// </summary>
@@ -259,7 +253,6 @@ public class PlayerMovement : MonoBehaviour
     /// (más fuerte que la de a pie).
     /// </summary>
     public float SyncDesfase { get; private set; }
-    private GameOverManager _gameOverManager;
 
     /// <summary>True mientras el jugador está montado en el KayakController.</summary>
     public bool IsOnKayak => _isOnKayak;
@@ -281,20 +274,16 @@ public class PlayerMovement : MonoBehaviour
     // Altura suave
     private float _targetHeight;
     private float _defaultCameraLocalY;
-    private float _defaultStepOffset;
     private float _defaultSlopeLimit;
 
     // Dash
     private bool    _isDashing;
     private float   _dashTimeRemaining;
-    private float   _dashCooldownRemaining;
     private Vector3 _dashDirection;
 
     // Slide
     private bool    _isSliding;
     private float   _slideTimeRemaining;
-    private float   _slideCooldownRemaining;
-    private Vector3 _slideDirection;
     private float   _slideLateralInput;   // input lateral (A/D) en el momento de iniciar el slide
 
     // Wallrun / Walljump
@@ -367,9 +356,7 @@ public class PlayerMovement : MonoBehaviour
     {
         _cc                = GetComponent<CharacterController>();
         _targetHeight      = defaultHeight;
-        _defaultStepOffset = _cc.stepOffset;
         _defaultSlopeLimit = _cc.slopeLimit;
-        _gameOverManager   = FindAnyObjectByType<GameOverManager>();
         _beatGrid          = FindAnyObjectByType<BeatGridVisualizer>();
         _initialYRotation  = transform.eulerAngles.y;
         _rotationY         = 0f;
@@ -482,18 +469,6 @@ public class PlayerMovement : MonoBehaviour
         _isSlamming      = false;
         _moveDirection.y = upSpeed;
         _jumpsUsed       = Mathf.Min(_jumpsUsed, 1);   // deja un salto aéreo tras el rebote
-    }
-
-    /// <summary>
-    /// Programa el inicio del movimiento para que coincida exactamente con
-    /// el DSP timestamp en el que arranca la musica (BeatManager.ScheduledStartDSP).
-    /// Llama a este metodo justo despues de BeatManager.StartMusic().
-    /// </summary>
-    /// <summary>Activa el movimiento inmediatamente (llamar desde OnBeat).</summary>
-    public void StartMoving()
-    {
-        _freeroamMode = false;
-        _canMove = true;
     }
 
     /// <summary>
@@ -800,9 +775,7 @@ public class PlayerMovement : MonoBehaviour
         // =================================================================
         // DASH
         // =================================================================
-        if (_dashCooldownRemaining > 0f) _dashCooldownRemaining -= Time.deltaTime;
-
-        if (_dashAction.WasPressedThisFrame() && _canMove && !_freeroamMode && !_isDashing && _dashCooldownRemaining <= 0f)
+        if (_dashAction.WasPressedThisFrame() && _canMove && !_freeroamMode && !_isDashing)
         {
             if (dashRequiresBeat && !IsOnBeat())
             {
@@ -830,7 +803,6 @@ public class PlayerMovement : MonoBehaviour
                     {
                         _isDashing             = true;
                         _dashTimeRemaining     = dashDuration;
-                        _dashCooldownRemaining = 0f;   // (sin cooldown)
                         _dashDirection         = dir;
                         if (_isWallrunning) EndWallrun();
                         PlaySfx(dashSound);
@@ -848,11 +820,8 @@ public class PlayerMovement : MonoBehaviour
         // =================================================================
         // SLIDE
         // =================================================================
-        if (_slideCooldownRemaining > 0f) _slideCooldownRemaining -= Time.deltaTime;
-
         if (_slideAction.WasPressedThisFrame()
             && _canMove && !_freeroamMode && !_isDashing && !_isSliding
-            && _slideCooldownRemaining <= 0f
             && _cc.isGrounded
             && moveInput.sqrMagnitude > 0.01f)
         {
@@ -870,10 +839,6 @@ public class PlayerMovement : MonoBehaviour
                 {
                     _isSliding              = true;
                     _slideTimeRemaining     = slideDuration;
-                    _slideCooldownRemaining = 0f;   // (sin cooldown)
-                    Vector3 dir = forward * moveInput.y + right * moveInput.x;
-                    dir.y = 0f;
-                    _slideDirection    = dir.normalized;
                     _slideLateralInput = moveInput.x;  // guardar lateral sin normalizar
                     SetControllerHeight(defaultHeight * 0.5f);
                     PlaySfx(slideSound);
@@ -1290,7 +1255,7 @@ public class PlayerMovement : MonoBehaviour
     /// <summary>
     /// Calcula cuántos m/s hay que añadir (o restar) a walkSpeed para que el jugador
     /// vuelva a la posición que le corresponde según el tiempo de la música.
-    /// Usa la misma fórmula que PlayerSyncDisplay, con BeatGridVisualizer como fuente
+    /// Usa BeatGridVisualizer como fuente
     /// de verdad (Origin, Forward y walkSpeed del nivel).
     ///
     /// Resultado guardado en <see cref="SyncSpeedCorrection"/>; accesible desde
@@ -1317,7 +1282,7 @@ public class PlayerMovement : MonoBehaviour
         if (_freeroamMode)                                        return;
         if (positionCorrectionStrength <= 0f)                    return;
 
-        // Misma fórmula que PlayerSyncDisplay ─────────────────────────────────
+        // Error respecto a la rejilla ─────────────────────────────────
         double now         = AudioSettings.dspTime;
         float  expected    = (float)((now - BeatManager.Instance.ScheduledStartDSP) * _beatGrid.walkSpeed);
         float  actual      = Vector3.Dot(transform.position - _beatGrid.Origin, _beatGrid.Forward);
@@ -1393,7 +1358,7 @@ public class PlayerMovement : MonoBehaviour
         if (!_canMove) return;
 
         Vector2 look = _lookAction.ReadValue<Vector2>();
-        float   sens = 0.1f;
+        float   sens = 0.1f * GameSettings.Sensitivity;   // (ajuste del jugador: menú / pausa)
 
         _rotationX += -look.y * lookSpeed * sens;
         _rotationX  = Mathf.Clamp(_rotationX, -lookXLimit, lookXLimit);

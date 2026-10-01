@@ -206,14 +206,6 @@ public class FloatingObject : MonoBehaviour
         }
     }
 
-    /// <summary>Provoca una reacción de hundimiento en todos los flotadores (0..1).</summary>
-    public void React(float strength = 1f)
-    {
-        float s = Mathf.Max(0f, strength);
-        for (int i = 0; i < _floaters.Count; i++)
-            _floaters[i].springVel -= _reactImpulse * s;
-    }
-
     // ── Helpers ─────────────────────────────────────────────────────────────────
 
     private List<Transform> CollectTargets()

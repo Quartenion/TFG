@@ -9,7 +9,6 @@ using UnityEngine;
 [Serializable]
 public class SaveData
 {
-    public int version = 1;
     public int coins;                                        // monedas en el monedero
     public int totalCoinsEarned;                             // estadística
     public List<SaveEntry> upgrades    = new List<SaveEntry>();   // id → nivel comprado
@@ -17,8 +16,9 @@ public class SaveData
     public List<string>    activeContracts = new List<string>();  // contratos firmados (sin cumplir)
     public List<string>    doneContracts   = new List<string>();  // contratos ya cumplidos
     public List<string>    claimedContracts = new List<string>(); // cumplidos Y ya cobrados en el puesto
-    public int             contractsClaimVersion;                 // (migración: antes se cobraban solos)
-    public List<string>    disabledUpgrades = new List<string>(); // mejoras compradas pero APAGADAS por el jugador
+    public List<string>    equippedUpgrades = new List<string>(); // MUESCAS: mejoras compradas que llevas PUESTAS
+    public int             notchesBought;                         // muescas extra compradas (además de las 3 base)
+    public int             levelReached;                               // nivel más alto al que has llegado (desbloqueos de la tienda)
     public int             gazeCoins;                                  // IRIS: monedas de mirada (solo para cosméticos)
     public List<string>    collectedGazeCoins = new List<string>();    // iris ya recogidos (cada uno, una vez)
     public List<string>    ownedCosmetics     = new List<string>();    // cosméticos comprados
@@ -105,18 +105,48 @@ public static class PlayerProgress
     /// «A pelo») o si el jugador la ha APAGADO en la tienda.
     /// </summary>
     public static int GetLevel(string id) =>
-        _suspended || Data.disabledUpgrades.Contains(id) ? 0 : Get(Data.upgrades, id);
+        _suspended || !Data.equippedUpgrades.Contains(id) ? 0 : Get(Data.upgrades, id);
 
     /// <summary>Nivel COMPRADO de una mejora (aunque esté apagada o suspendida). Para la tienda y los desbloqueos.</summary>
     public static int GetOwnedLevel(string id) => Get(Data.upgrades, id);
 
-    /// <summary>¿La mejora está encendida? (las compradas lo están por defecto; se apagan con la casilla de la tienda)</summary>
-    public static bool IsUpgradeEnabled(string id) => !Data.disabledUpgrades.Contains(id);
+    // ── Muescas (mejoras EQUIPADAS) ───────────────────────────────────────────
 
-    public static void SetUpgradeEnabled(string id, bool enabled)
+    /// <summary>¿La mejora está EQUIPADA en una muesca? (solo las equipadas funcionan)</summary>
+    public static bool IsUpgradeEnabled(string id) => Data.equippedUpgrades.Contains(id);
+    public static IReadOnlyList<string> EquippedUpgrades => Data.equippedUpgrades;
+
+    /// <summary>Equipa / quita una mejora. Equipar falla si no la tienes o no hay muescas libres (ver Notches).</summary>
+    public static bool SetUpgradeEnabled(string id, bool enabled)
     {
-        if (enabled == IsUpgradeEnabled(id)) return;
-        if (enabled) Data.disabledUpgrades.Remove(id); else Data.disabledUpgrades.Add(id);
+        if (enabled == IsUpgradeEnabled(id)) return true;
+        if (enabled)
+        {
+            if (GetOwnedLevel(id) <= 0 || !Notches.CanEquip(id)) return false;
+            Data.equippedUpgrades.Add(id);
+        }
+        else Data.equippedUpgrades.Remove(id);
+        Save();
+        OnChanged?.Invoke();
+        return true;
+    }
+
+    public static int NotchesBought => Data.notchesBought;
+
+    /// <summary>Nivel más alto al que has llegado (1, 2, 3…). Desbloquea objetos de la tienda (ShopUnlocks).</summary>
+    public static int LevelReached => Data.levelReached;
+
+    public static void ReachLevel(int level)
+    {
+        if (level <= Data.levelReached) return;
+        Data.levelReached = level;
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    public static void AddNotch()
+    {
+        Data.notchesBought++;
         Save();
         OnChanged?.Invoke();
     }
@@ -159,12 +189,12 @@ public static class PlayerProgress
         if (active == IsContractActive(id)) return;
         if (active) Data.activeContracts.Add(id); else Data.activeContracts.Remove(id);
         Save();
+        StudyTelemetry.ContractEvent(active ? "firmar" : "rescindir", id);   // (modo prueba)
         OnChanged?.Invoke();
     }
 
     /// <summary>¿Cumplido pero todavía SIN cobrar? (hay que ir al puesto de contratos a por el dinero)</summary>
     public static bool IsContractClaimable(string id) => Data.doneContracts.Contains(id) && !Data.claimedContracts.Contains(id);
-    public static bool IsContractClaimed(string id)   => Data.claimedContracts.Contains(id);
 
     /// <summary>Cobra un contrato cumplido: suma 'reward' monedas y lo marca como cobrado. Devuelve si se ha podido.</summary>
     public static bool ClaimContract(string id, int reward)
@@ -174,6 +204,7 @@ public static class PlayerProgress
         Data.coins += Mathf.Max(0, reward);
         Data.totalCoinsEarned += Mathf.Max(0, reward);
         Save();
+        StudyTelemetry.ContractEvent("cobrar", id);   // (modo prueba)
         OnCoinsChanged?.Invoke(Data.coins);
         OnChanged?.Invoke();
         return true;
@@ -185,6 +216,7 @@ public static class PlayerProgress
         Data.activeContracts.Remove(id);
         if (!Data.doneContracts.Contains(id)) Data.doneContracts.Add(id);
         Save();
+        StudyTelemetry.ContractEvent("cumplido", id);   // (modo prueba)
         OnChanged?.Invoke();
     }
 
@@ -264,15 +296,8 @@ public static class PlayerProgress
         if (_data.consumables == null) _data.consumables = new List<SaveData.SaveEntry>();
         if (_data.activeContracts == null) _data.activeContracts = new List<string>();
         if (_data.doneContracts   == null) _data.doneContracts   = new List<string>();
-        if (_data.disabledUpgrades == null) _data.disabledUpgrades = new List<string>();
+        if (_data.equippedUpgrades == null) _data.equippedUpgrades = new List<string>();
         if (_data.claimedContracts == null) _data.claimedContracts = new List<string>();
-        if (_data.contractsClaimVersion < 1)
-        {
-            // Partidas antiguas: los contratos cumplidos ya se habían cobrado solos → cuentan como cobrados.
-            foreach (string id in _data.doneContracts)
-                if (!_data.claimedContracts.Contains(id)) _data.claimedContracts.Add(id);
-            _data.contractsClaimVersion = 1;
-        }
         if (_data.collectedGazeCoins == null) _data.collectedGazeCoins = new List<string>();
         if (_data.ownedCosmetics     == null) _data.ownedCosmetics     = new List<string>();
         if (_data.equippedCosmetics  == null) _data.equippedCosmetics  = new List<string>();

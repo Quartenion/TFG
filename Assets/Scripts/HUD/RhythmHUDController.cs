@@ -14,7 +14,7 @@ using UnityEngine.UI;
 ///      - "TargetRing"   → Image con sprite de anillo, 120x120 px, color gris oscuro (referencia visual).
 ///      - "CrosshairImg" → tu crosshair actual (cambia su color a gris oscuro en el Inspector).
 ///      - "RingContainer" → GameObject vacío, aquí se spawnean los anillos entrantes.
-/// 4. Crea los dos prefabs (ver RhythmRingVisual y RhythmShockwave) y asígnalos aquí.
+/// 4. Crea el prefab del anillo (ver RhythmRingVisual) y asígnalo aquí.
 /// 5. Asigna BeatManager y RhythmInput.
 /// </summary>
 public class RhythmHUDController : MonoBehaviour
@@ -70,62 +70,81 @@ public class RhythmHUDController : MonoBehaviour
             return;
         }
 
-        beatManager.OnBeat.AddListener(SpawnRing);
-        beatManager.OnHalfBeat.AddListener(SpawnHalfRing);
         rhythmInput.OnTimingResult.AddListener(HandleTimingResult);
     }
 
     private void OnDestroy()
     {
-        if (beatManager != null) beatManager.OnBeat.RemoveListener(SpawnRing);
-        if (beatManager != null) beatManager.OnHalfBeat.RemoveListener(SpawnHalfRing);
         if (rhythmInput  != null) rhythmInput.OnTimingResult.RemoveListener(HandleTimingResult);
     }
 
     // =========================================================================
-    // SPAWN DE ANILLOS
+    // SPAWN DE ANILLOS (guiado por el TIEMPO DE LA CANCIÓN, no por eventos)
     // =========================================================================
-
-    private void SpawnRing()
-    {
-        if (ringPrefab == null || ringContainer == null) return;
-        // Las notas entrantes solo se ven con el «Crosshair rítmico» de la tienda.
-        if (PlayerProgress.GetLevel(ShopIds.RhythmSight) <= 0) return;
-
-        float travelDuration = beatsAhead * beatManager.BeatDuration;
-
-        RhythmRingVisual ring = Instantiate(ringPrefab, ringContainer);
-        ring.Init(startDiameter, targetDiameter, travelDuration, beatManager, crosshair);
-        _activeRings.Add(ring);
-
-        // Limpiar de la lista cuando se destruya
-        ring.OnExpired += () => _activeRings.Remove(ring);
-    }
+    //
+    // Cada nota sabe en qué segundo de la canción tiene que llegar (su beat) y su posición se calcula con el reloj
+    // de la música. Cada frame se asegura de que existen las notas de los próximos 'beatsAhead' beats:
+    //   • Al empezar la canción (tras el 3-2-1-¡YA!) ya salen bien desde el primer beat, sin notas "de más" ni
+    //     huecos (antes, un evento de beat disparado con la canción aún programada lanzaba una nota a destiempo).
+    //   • Tras un rebobinado se rehacen solas desde el nuevo punto.
 
     [Header("Medios beats (contrato «Al compás»)")]
     [Tooltip("Tamaño de los spikes de las notas de MEDIO beat respecto a las normales.")]
     [Range(0.2f, 1f)]
     public float halfBeatSpikeScale = 0.55f;
 
-    /// <summary>
-    /// Con el contrato «Al compás» (acciones también en los medios beats) y el «Crosshair rítmico», entra una nota
-    /// más pequeña que llega en cada MEDIO beat (a contratiempo).
-    /// </summary>
-    private void SpawnHalfRing()
-    {
-        if (!BeatManager.HalfBeatMoves) return;
-        if (ringPrefab == null || ringContainer == null) return;
-        if (PlayerProgress.GetLevel(ShopIds.RhythmSight) <= 0) return;
-        float halfD = beatManager.HalfBeatDuration;
-        if (halfD <= 0f) return;
-        int halfIdx = Mathf.FloorToInt(beatManager.CorrectedTime / halfD);
-        if (halfIdx % 2 == 0) return;   // (los beats enteros ya tienen su nota normal)
+    private bool _wasRewinding;
 
-        RhythmRingVisual ring = Instantiate(ringPrefab, ringContainer);
-        ring.Init(startDiameter, targetDiameter, beatsAhead * beatManager.BeatDuration, beatManager, crosshair);
-        ring.MakeHalfBeat(halfBeatSpikeScale);
-        _activeRings.Add(ring);
-        ring.OnExpired += () => _activeRings.Remove(ring);
+    private void Update()
+    {
+        bool rew = TimeRewinder.IsRewinding;
+        if (rew && !_wasRewinding) ClearRings();   // empieza el rebobinado: fuera todas las notas en vuelo
+        _wasRewinding = rew;
+        if (rew) return;
+
+        EnsureUpcomingRings();
+    }
+
+    private void ClearRings()
+    {
+        foreach (RhythmRingVisual r in _activeRings) if (r != null) Destroy(r.gameObject);
+        _activeRings.Clear();
+    }
+
+    /// <summary>Crea las notas que falten para los beats (y medios beats con «Al compás») de los próximos 'beatsAhead'.</summary>
+    private void EnsureUpcomingRings()
+    {
+        if (ringPrefab == null || ringContainer == null || beatManager == null) return;
+        if (!beatManager.IsPlaying) return;
+        // Las notas entrantes solo se ven con el «Crosshair rítmico» de la tienda.
+        if (PlayerProgress.GetLevel(ShopIds.RhythmSight) <= 0) return;
+        float beatDur = beatManager.BeatDuration;
+        if (beatDur <= 0f) return;
+
+        float travel = beatsAhead * beatDur;
+        float bt     = beatManager.CorrectedTime / beatDur;     // posición actual, en beats
+        bool  halves = BeatManager.HalfBeatMoves;
+        float step   = halves ? 0.5f : 1f;
+
+        for (float n = Mathf.Floor(bt / step) * step + step; n <= bt + beatsAhead + 0.0001f; n += step)
+        {
+            float arrival = n * beatDur;
+            if (HasRingFor(arrival)) continue;
+            bool half = Mathf.Abs(n - Mathf.Round(n)) > 0.01f;
+            RhythmRingVisual ring = Instantiate(ringPrefab, ringContainer);
+            ring.Init(startDiameter, targetDiameter, travel, beatManager, crosshair);
+            if (half) ring.MakeHalfBeat(halfBeatSpikeScale);
+            ring.SetArrival(arrival);
+            _activeRings.Add(ring);
+            ring.OnExpired += () => _activeRings.Remove(ring);
+        }
+    }
+
+    private bool HasRingFor(float arrival)
+    {
+        foreach (RhythmRingVisual r in _activeRings)
+            if (r != null && Mathf.Abs(r.ArrivalSongTime - arrival) < 0.01f) return true;
+        return false;
     }
 
     // =========================================================================

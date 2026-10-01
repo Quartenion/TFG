@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -47,18 +46,6 @@ public class EnergyManager : MonoBehaviour
     [Tooltip("Multiplicador del boost: boost = bluePercent * multiplier")]
     [SerializeField] private float _blueBoostMultiplier = 1.5f;
 
-    [Header("Anti-spam (ventana deslizante)")]
-    [Tooltip("Numero de inputs (hits + misses) que se tienen en cuenta para calcular la tasa de fallos. " +
-             "Ventana mas grande = reaccion mas lenta al spam pero mas estable.")]
-    [SerializeField] private int   _antispamWindow      = 10;
-    [Tooltip("Porcentaje de fallos en la ventana a partir del cual se activa el multiplicador. " +
-             "0.5 = se activa cuando hay mas fallos que aciertos (igual que tu idea original).")]
-    [Range(0f, 1f)]
-    [SerializeField] private float _antispamThreshold   = 0.5f;
-    [Tooltip("Multiplicador maximo de penalizacion cuando TODOS los inputs de la ventana son fallos. " +
-             "3 = un fallo en spam puro cuesta 3x mas sangre que un fallo normal.")]
-    [SerializeField] private float _antispamMaxMult     = 3f;
-
     [Header("Debug / Diseño de nivel")]
     [Tooltip("God Mode: las acciones no gastan energía y la jeringuilla no se llena pasivamente.\n" +
              "Los obstáculos siguen siendo letales (ObstacleCollision no se ve afectado).")]
@@ -77,16 +64,11 @@ public class EnergyManager : MonoBehaviour
 
     private float _syringe;
     private bool  _isBlueMode;
-    private bool  _paused;   // congela el llenado pasivo (p. ej. mientras el jugador bucea)
+    private bool  _paused;   // congela el llenado pasivo (rebobinado, fin de nivel)
     private float _lastDrainTime = -999f;   // último instante en que un BloodSucker drenó sangre
-
-    // Anti-spam — ventana deslizante de los ultimos N inputs
-    private readonly Queue<bool> _inputWindow = new Queue<bool>(); // true = hit, false = miss
-    private int _windowMisses;  // cuantos false hay en _inputWindow (evita recorrer la cola)
 
     public float SyringeBlood => _syringe;
     public float MaxSyringe => _maxSyringe;
-    public float MaxEnergy => _maxSyringe;
 
     /// <summary>
     /// Energia disponible para gastar.
@@ -115,25 +97,6 @@ public class EnergyManager : MonoBehaviour
 
     /// <summary>True si un BloodSucker ha drenado sangre en los últimos 0.15 s. Lo usa la barra para parpadear.</summary>
     public bool IsBeingDrained => Time.time - _lastDrainTime < 0.15f;
-
-    /// <summary>
-    /// Tasa de fallos en la ventana deslizante [0..1].
-    /// 0 = todos aciertos, 1 = todos fallos. Util para mostrar feedback visual.
-    /// </summary>
-    public float SpamMissRate => _inputWindow.Count > 0
-        ? (float)_windowMisses / _inputWindow.Count
-        : 0f;
-
-    /// <summary>
-    /// Multiplicador de penalizacion anti-spam actual [1..maxMult].
-    /// 1 = sin spam, maxMult = spam puro. Util para UI de warning.
-    /// </summary>
-    public float SpamMultiplier => GetMissMultiplier();
-    /// <summary>
-    /// En modo azul siempre true (energia base = 100%).
-    /// En modo rojo, comprueba si hay hueco suficiente.
-    /// </summary>
-    public bool HasEnergy(float amount) => _isBlueMode || Energy >= amount * ActionCostMultiplier;
 
     private void Awake()
     {
@@ -192,19 +155,6 @@ public class EnergyManager : MonoBehaviour
     /// <summary>«Metabolismo eficiente»: las acciones cuestan un 5 % menos por nivel.</summary>
     public static float ActionCostMultiplier => 1f - 0.05f * PlayerProgress.GetLevel(ShopIds.Efficient);
 
-    /// <summary>«Coágulo»: probabilidad de que un fallo NO quite sangre (20 % / 35 %).</summary>
-    public static float MissGuardChance
-    {
-        get
-        {
-            int l = PlayerProgress.GetLevel(ShopIds.MissGuard);
-            return l <= 0 ? 0f : l == 1 ? 0.2f : 0.35f;
-        }
-    }
-
-    /// <summary>Un fallo que «Coágulo» ha perdonado (para feedback).</summary>
-    public UnityEvent OnMissGuarded;
-
     /// <summary>«Pulso fuerte»: cada acierto devuelve +15 % / +30 % / +50 % de sangre.</summary>
     public static float PulseMultiplier
     {
@@ -243,7 +193,7 @@ public class EnergyManager : MonoBehaviour
     {
         bool owned   = PlayerProgress.GetLevel(ShopIds.SteadyHeart) > 0;
         bool playing = BeatManager.Instance == null || BeatManager.Instance.IsPlaying;
-        bool pressed = owned && playing && Mouse.current != null && Mouse.current.leftButton.isPressed;
+        bool pressed = owned && playing && Mouse.current != null && (Mouse.current.leftButton.isPressed || Mouse.current.rightButton.isPressed);
         _steadyHoldTime = pressed ? _steadyHoldTime + Time.deltaTime : 0f;
         // En cuanto la mano se queda cerrada (ver HandAnimationController) ya cuenta; si no hay mano visible
         // (p. ej. en el kayak), vale con mantener el clic '_steadyHoldDelay' segundos.
@@ -257,7 +207,7 @@ public class EnergyManager : MonoBehaviour
         // God Mode: congelar toda la lógica de energía (sin llenado pasivo, sin muerte por jeringuilla).
         if (godMode) return;
 
-        // Pausada (p. ej. buceando): la amenaza es el oxígeno, no la jeringuilla.
+        // Pausada (rebobinado, fin de nivel): la jeringuilla no cambia sola.
         if (_paused) return;
 
         // No aplicar cambios pasivos antes de que empiece el juego.
@@ -288,14 +238,6 @@ public class EnergyManager : MonoBehaviour
     // =========================================================================
 
     /// <summary>
-    /// Acierto en modo rojo sin timing explicito. Equivale a Good. Compatibilidad.
-    /// </summary>
-    public float HitRed()
-    {
-        return HitRed(TimingResult.Good);
-    }
-
-    /// <summary>
     /// Acierto en modo rojo con resultado de timing.
     /// Perfect = 1.5x de la cantidad base. Good = 1.0x.
     /// Si el overflow supera la sangre disponible, entra en modo azul automaticamente.
@@ -303,8 +245,6 @@ public class EnergyManager : MonoBehaviour
     public float HitRed(TimingResult timing)
     {
         if (_isBlueMode) return 0f;
-
-        RecordInput(isHit: true);   // registrar acierto en la ventana anti-spam
 
         float timingMultiplier;
         if (timing == TimingResult.Perfect)
@@ -321,6 +261,7 @@ public class EnergyManager : MonoBehaviour
         if (PlayerProgress.GetLevel(ShopIds.Streak) > 0 && _streak >= 8) subtract *= 1.25f;
         float redAvailable = _syringe;
 
+        StudyTelemetry.Recovered(subtract);
         if (redAvailable >= subtract)
         {
             ChangeSyringe(-subtract);
@@ -346,28 +287,18 @@ public class EnergyManager : MonoBehaviour
 
     /// <summary>
     /// Fallo en modo rojo: anade sangre extra (penalizacion).
-    /// La cantidad se multiplica por el factor anti-spam si el jugador
-    /// lleva mas fallos que aciertos en los ultimos _antispamWindow inputs.
-    /// <paramref name="penaltyScale"/> escala la penalizacion (1 = normal). Lo usa el kayak
-    /// para que fallar remando cueste mas energia que un fallo a pie.
+    /// <paramref name="penaltyScale"/> escala la penalizacion (1 = normal). Lo usan el kayak (fallar remando
+    /// cuesta mas) y el anti-spam de RhythmInput (cada clic fallido de mas en el mismo beat cuesta el doble).
     /// </summary>
     public float MissRed(float penaltyScale = 1f)
     {
         if (_isBlueMode) return 0f;
-        RecordInput(isHit: false);  // registrar fallo en la ventana anti-spam
         _streak = 0;                // (se rompe la racha)
 
-        // «Coágulo» (tienda): un % de los fallos no quita sangre.
-        float guard = MissGuardChance;
-        if (guard > 0f && Random.value < guard)
-        {
-            OnMissGuarded?.Invoke();
-            return 0f;
-        }
-        float multiplier = GetMissMultiplier();
         float before = _syringe;
-        ChangeSyringe(_missAbsorbAmount * multiplier * Mathf.Max(0f, penaltyScale));
+        ChangeSyringe(_missAbsorbAmount * Mathf.Max(0f, penaltyScale) * StudyConfig.MissPenaltyMult);   // (modo prueba)
         float absorbed = _syringe - before;
+        StudyTelemetry.MissPenalty(absorbed);
         if (absorbed > 0f) OnRedMiss?.Invoke(absorbed);
         return absorbed;
     }
@@ -387,17 +318,10 @@ public class EnergyManager : MonoBehaviour
         if (!_isBlueMode) return 0f;
         float bluePercent = SyringePercent;
         float boost = bluePercent * _blueBoostMultiplier;
+        StudyTelemetry.BlueLost(_syringe);
         ChangeSyringe(-_syringe);
         OnBlueInjection?.Invoke(boost);
         return boost;
-    }
-
-    /// <summary>Activa el modo bonus manualmente.</summary>
-    public void EnterBlueMode()
-    {
-        if (_isBlueMode) return;
-        _isBlueMode = true;
-        ChangeSyringe(-_syringe);
     }
 
     /// <summary>Sale del modo bonus sin inyectar.</summary>
@@ -413,8 +337,9 @@ public class EnergyManager : MonoBehaviour
     public bool TrySpend(float amount)
     {
         if (amount <= 0f) return true;
-        amount *= ActionCostMultiplier;   // «Metabolismo eficiente» (tienda)
+        amount *= ActionCostMultiplier * StudyConfig.ActionCostMult;   // «Metabolismo eficiente» (tienda) · modo prueba
         if (godMode)      return true;  // God Mode: acción siempre permitida, sin coste
+        if (_isBlueMode || Energy >= amount || CanOverspendWithExtraLife) StudyTelemetry.ActionCost(amount);
 
         if (_isBlueMode)
         {
@@ -439,10 +364,20 @@ public class EnergyManager : MonoBehaviour
             return true;
         }
 
-        if (Energy < amount) return false;
+        if (Energy < amount)
+        {
+            // Sin energía suficiente PERO con VIDAS EXTRA: la acción se permite igual. La jeringuilla se llena, el
+            // corazón se queda seco y se gasta una vida extra (vuelves con el corazón a tope en el siguiente beat).
+            if (!CanOverspendWithExtraLife) return false;
+            ChangeSyringe(amount);
+            return true;
+        }
         ChangeSyringe(amount);
         return true;
     }
+
+    /// <summary>¿Se pueden hacer acciones sin energía? Sí mientras quede alguna VIDA EXTRA (se gastará al secarse).</summary>
+    public static bool CanOverspendWithExtraLife => PlayerProgress.GetCount(ShopIds.ExtraLife) > 0;
 
     /// <summary>Restaura energia gratis. Resta de la jeringuilla.</summary>
     public void Restore(float amount)
@@ -456,6 +391,30 @@ public class EnergyManager : MonoBehaviour
     /// IsBeingDrained para que la barra parpadee. Si la jeringuilla se llena, dispara la muerte
     /// (OnSyringeFull) igual que llenarla por fallos.
     /// </summary>
+    /// <summary>
+    /// GOLPE (ataques del jefe): quita 'fraction' de TODA la sangre que se puede llegar a tener, contando la roja y la
+    /// azul (el máximo total es 2 × la jeringuilla: 100 % rojo + 100 % azul). 0.25 = un cuarto.
+    ///   • En azul: primero se gasta la sangre azul; si no llega, se sale del azul y el resto sale de la roja.
+    ///   • En rojo: la jeringuilla se llena esa cantidad (si se llena del todo, mueres por sangre; vidas extra y
+    ///     Adrenalina funcionan).
+    /// God Mode lo ignora. «Piel gruesa» lo reduce.
+    /// </summary>
+    public void TakeHitFraction(float fraction)
+    {
+        if (fraction <= 0f || godMode) return;
+        float amount = 2f * _maxSyringe * fraction * DrainMultiplier;
+        _lastDrainTime = Time.time;
+        if (_isBlueMode)
+        {
+            if (_syringe > amount) { ChangeSyringe(-amount); return; }   // solo baja el azul
+            amount -= _syringe;                                          // se acaba el azul…
+            _isBlueMode = false;
+            ChangeSyringe(-_syringe);
+            OnBlueDepleted?.Invoke();
+        }
+        ChangeSyringe(amount);                                           // …y el resto, sangre roja
+    }
+
     public void DrainBlood(float amount)
     {
         if (amount <= 0f) return;
@@ -466,43 +425,10 @@ public class EnergyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Pausa/reanuda la lógica pasiva de la jeringuilla (llenado y decay del azul). Se usa mientras
-    /// el jugador bucea: bajo el agua la amenaza es el oxígeno, no la jeringuilla.
+    /// Pausa/reanuda la lógica pasiva de la jeringuilla (llenado y decay del azul). La usan el Rebobinado
+    /// y el fin de nivel.
     /// </summary>
     public void SetPaused(bool paused) => _paused = paused;
-
-    // =========================================================================
-    // Anti-spam internals
-    // =========================================================================
-
-    /// <summary>
-    /// Registra un input en la ventana deslizante.
-    /// Si la ventana esta llena, descarta el input mas antiguo.
-    /// </summary>
-    private void RecordInput(bool isHit)
-    {
-        // Expulsar el input mas antiguo si la ventana esta llena
-        if (_inputWindow.Count >= _antispamWindow)
-        {
-            bool removed = _inputWindow.Dequeue();
-            if (!removed) _windowMisses--;
-        }
-
-        _inputWindow.Enqueue(isHit);
-        if (!isHit) _windowMisses++;
-    }
-
-    /// <summary>
-    /// Devuelve el multiplicador de penalizacion [1 .. _antispamMaxMult].
-    /// Escala linealmente entre el threshold y el 100% de fallos.
-    /// </summary>
-    private float GetMissMultiplier()
-    {
-        if (_inputWindow.Count == 0) return 1f;
-        float missRate = (float)_windowMisses / _inputWindow.Count;
-        float t = Mathf.InverseLerp(_antispamThreshold, 1f, missRate);
-        return Mathf.Lerp(1f, _antispamMaxMult, t);
-    }
 
     // =========================================================================
     // Internals

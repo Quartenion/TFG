@@ -10,8 +10,9 @@ using UnityEngine.SceneManagement;
 ///       – «Al compás»: salto, dash, slide y remo solo en el beat.
 ///       – «A pelo»: sin mejoras ni consumibles de la tienda.
 ///   • Muestra a la izquierda los contratos firmados con su progreso en directo.
-///   • Al llegar a la meta, LevelEndManager llama a EvaluateLevelEnd(): los cumplidos se cobran.
-/// En la pelea del jefe los contratos no cuentan (ni se aplican sus reglas).
+///   • Al llegar a la meta, LevelEndManager llama a EvaluateLevelEnd(): los cumplidos quedan por cobrar.
+/// Solo cuentan los contratos firmados DEL NIVEL ACTUAL (cada contrato tiene una versión por nivel). En el nivel 3
+/// cuentan durante todo el nivel, también en la pelea del jefe.
 /// </summary>
 public class ContractRunner : MonoBehaviour
 {
@@ -22,7 +23,6 @@ public class ContractRunner : MonoBehaviour
 
     private PlayerMovement _pm;
     private EnergyManager  _em;
-    private bool _bossScene;
 
     // Valores originales de las reglas que se tocan (para devolverlos)
     private bool _origJump, _origDash, _origSlide;
@@ -63,7 +63,6 @@ public class ContractRunner : MonoBehaviour
     {
         _pm = FindAnyObjectByType<PlayerMovement>();
         _em = EnergyManager.Instance != null ? EnergyManager.Instance : FindAnyObjectByType<EnergyManager>();
-        _bossScene = FindAnyObjectByType<BossController>() != null;
 
         if (_pm != null)
         {
@@ -113,15 +112,15 @@ public class ContractRunner : MonoBehaviour
         if (_midCheckT > 0f) return;
         _midCheckT = 0.2f;
         var now = new LevelResult { runCoins = LevelCoins.RunCoins, songBeats = ContractCatalog.SongBeatsNow() };
-        foreach (string id in new List<string>(PlayerProgress.ActiveContracts))
+        foreach (ContractDef c in ContractCatalog.ActiveHere())
         {
-            ContractDef c = ContractCatalog.Get(id);
-            if (c == null || !c.midLevel || c.check == null) continue;
+            if (!c.midLevel || c.check == null) continue;
             bool ok;
             try { ok = c.check(now); } catch { ok = false; }
             if (!ok) continue;
             PlayerProgress.CompleteContract(c.id);   // (se cobra en el puesto de contratos)
-            ShowBanner($"¡CONTRATO CUMPLIDO!  «{c.title}»\n<size=70%>Cobra tus <color=#FFC83A>{c.reward} monedas</color> en el puesto de contratos</size>");
+            ShowBanner(Loc.T($"¡CONTRATO CUMPLIDO!  «{c.title}»\n<size=70%>Cobra tus <color=#FFC83A>{c.reward} monedas</color> en el puesto de contratos</size>",
+                             $"CONTRACT COMPLETE!  «{c.title}»\n<size=70%>Claim your <color=#FFC83A>{c.reward} coins</color> at the contract stand</size>"));
             Debug.Log($"[Contratos] Cumplido a mitad de nivel «{c.title}» (pendiente de cobrar: {c.reward}).");
         }
     }
@@ -143,19 +142,15 @@ public class ContractRunner : MonoBehaviour
 
     // ── Reglas ────────────────────────────────────────────────────────────────
 
-    /// <summary>Reglas de todos los contratos firmados.</summary>
+    /// <summary>Reglas de los contratos firmados de este nivel.</summary>
     public static ContractRule ActiveRules()
     {
         ContractRule r = ContractRule.None;
-        foreach (string id in PlayerProgress.ActiveContracts)
-        {
-            ContractDef c = ContractCatalog.Get(id);
-            if (c != null) r |= c.rules;
-        }
+        foreach (ContractDef c in ContractCatalog.ActiveHere()) r |= c.rules;
         return r;
     }
 
-    private bool Playing => _pm != null && !_pm.IsFreeroam && !_bossScene;
+    private bool Playing => _pm != null && !_pm.IsFreeroam;
 
     private void Update()
     {
@@ -179,24 +174,22 @@ public class ContractRunner : MonoBehaviour
         // Contratos de "consigue N…": se cobran EN CUANTO se cumplen, sin esperar al final del nivel.
         if (Playing) CheckMidLevel();
 
-        // «A pelo»: la tienda cuenta como si no tuvieras nada (en el jefe ya lo gestiona BossController).
-        if (!_bossScene)
+        // «A pelo»: la tienda cuenta como si no tuvieras nada.
+        bool noShop = (rules & ContractRule.NoShop) != 0;
+        if (noShop != _suspendedByUs)
         {
-            bool noShop = (rules & ContractRule.NoShop) != 0;
-            if (noShop != _suspendedByUs)
-            {
-                PlayerProgress.Suspended = noShop;
-                _suspendedByUs = noShop;
-            }
+            PlayerProgress.Suspended = noShop;
+            _suspendedByUs = noShop;
         }
 
         // «Contrarreloj»: una pulsación de más → GAME OVER directo (sin vidas extra ni checkpoints).
-        if ((rules & ContractRule.PressLimit) != 0 && !_pressLimitHit && RunStats.HeartPresses > ContractCatalog.PressLimit)
+        int pressLimit = ContractCatalog.PressLimitFor(ContractCatalog.CurrentLevel);
+        if ((rules & ContractRule.PressLimit) != 0 && !_pressLimitHit && RunStats.HeartPresses > pressLimit)
         {
             _pressLimitHit = true;
             var gom = FindAnyObjectByType<GameOverManager>();
             if (gom != null && !gom.IsDead)
-                gom.ForceGameOver("¡CONTRARRELOJ!", $"Te has pasado de {ContractCatalog.PressLimit} pulsaciones");
+                gom.ForceGameOver(Loc.T("¡CONTRARRELOJ!", "OUT OF PRESSES!"), Loc.T($"Te has pasado de {pressLimit} pulsaciones", $"You went over {pressLimit} presses"));
         }
 
         UpdateHud();
@@ -213,12 +206,12 @@ public class ContractRunner : MonoBehaviour
     public static List<ContractDef> EvaluateLevelEnd(LevelResult result)
     {
         var done = new List<ContractDef>();
-        if (FindAnyObjectByType<BossController>() != null) return done;   // (no cuentan en el jefe)
-
+        // (Firmados que ya no existen en el catálogo, p. ej. de una versión anterior: se quitan.)
         foreach (string id in new List<string>(PlayerProgress.ActiveContracts))
+            if (ContractCatalog.Get(id) == null) PlayerProgress.SetContractActive(id, false);
+
+        foreach (ContractDef c in ContractCatalog.ActiveHere())
         {
-            ContractDef c = ContractCatalog.Get(id);
-            if (c == null) { PlayerProgress.SetContractActive(id, false); continue; }
             bool ok;
             try { ok = c.check == null || c.check(result); }
             catch (System.Exception e) { Debug.LogException(e); ok = false; }
@@ -258,7 +251,8 @@ public class ContractRunner : MonoBehaviour
     {
         UpdateBanner();
         if (_hudGroup == null) return;
-        bool show = Playing && PlayerProgress.ActiveContracts.Count > 0 && !ContractUI.IsOpen && !ShopUI.IsOpen;
+        List<ContractDef> here = ContractCatalog.ActiveHere();
+        bool show = Playing && here.Count > 0 && !ContractUI.IsOpen && !ShopUI.IsOpen;
         _hudGroup.alpha = show ? 1f : 0f;
         if (!show) return;
 
@@ -266,17 +260,15 @@ public class ContractRunner : MonoBehaviour
         if (_hudRefresh > 0f) return;
         _hudRefresh = 0.1f;
 
-        var sb = new System.Text.StringBuilder("<b><color=#FFC83A>CONTRATOS</color></b>\n");
-        foreach (string id in PlayerProgress.ActiveContracts)
+        var sb = new System.Text.StringBuilder(Loc.T("<b><color=#FFC83A>CONTRATOS</color></b>\n", "<b><color=#FFC83A>CONTRACTS</color></b>\n"));
+        foreach (ContractDef cd in here)
         {
-            ContractDef cd = ContractCatalog.Get(id);
-            if (cd == null) continue;
             bool broken = cd.broken != null && cd.broken();
             string col = broken ? "#FF6B6B" : "#" + ColorUtility.ToHtmlStringRGB(ContractDef.TierColor(cd.tier));
             sb.Append($"<color={col}>•</color> <b>{cd.title}</b>");
-            if (broken) sb.Append("  <color=#FF6B6B>(fallado)</color>");
+            if (broken) sb.Append(Loc.T("  <color=#FF6B6B>(fallado)</color>", "  <color=#FF6B6B>(failed)</color>"));
             sb.Append('\n');
-            string p = cd.progress != null ? cd.progress() : "al llegar a la meta";
+            string p = cd.progress != null ? cd.progress() : Loc.T("al llegar a la meta", "on reaching the goal");
             sb.Append($"<size=18><color=#{(broken ? "FF9B9B" : "CFCFCF")}>   {p}</color></size>\n");
         }
         _hudText.text = sb.ToString();

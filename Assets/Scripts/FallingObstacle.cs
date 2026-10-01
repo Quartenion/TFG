@@ -77,7 +77,6 @@ public class FallingObstacle : MonoBehaviour, IRewindable
     private double _warningDSP;
     private double _startFallDSP;
     private double _sfxDSP;          // DSP en el que se dispara el sonido (antes del impacto)
-    private float  _fallDuration;    // √(2h/g) en segundos
     private bool   _initialized;
     private bool   _sfxPlayed;
 
@@ -170,12 +169,6 @@ public class FallingObstacle : MonoBehaviour, IRewindable
 
     private void CalculateTiming()
     {
-        float fallDistance = _ceilingY - _landY;
-        float g            = Mathf.Max(_fallGravity, 0.01f);
-
-        // Tiempo que tarda en caer con gravedad real: h = ½gt² → t = √(2h/g)
-        _fallDuration = Mathf.Sqrt(2f * fallDistance / g);
-
         if (double.IsNaN(_arrivalOffset)) _arrivalOffset = ComputeArrivalOffset();
 
         double arrivalDSP   = _beatManager.ScheduledStartDSP + _arrivalOffset;

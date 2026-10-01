@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 5059723756717244951}
   - component: {fileID: 6219721651040084895}
   - component: {fileID: 2827996424418594057}
-  - component: {fileID: -4576094801213851434}
   - component: {fileID: 6756282296554821106}
   m_Layer: 3
   m_Name: Breakable
@@ -136,24 +135,6 @@ MonoBehaviour:
   OnBroken:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &-4576094801213851434
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8578409370327873310}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 748ea4f02f5dd5f48b63b0d639b64350, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BeatApproachIndicator
-  colorSafe: {r: 1, g: 1, b: 1, a: 1}
-  colorWarning: {r: 1, g: 0.85, b: 0, a: 1}
-  colorDanger: {r: 1, g: 0.25, b: 0, a: 1}
-  pulseStartBeats: 3
-  pulseEmission: 1
-  pulseScale: 0.1
 --- !u!114 &6756282296554821106
 MonoBehaviour:
   m_ObjectHideFlags: 0

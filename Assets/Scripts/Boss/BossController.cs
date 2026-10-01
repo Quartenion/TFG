@@ -82,8 +82,28 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     [Header("Daño")]
     [SerializeField] private int _maxHp = 9;
     [SerializeField] private int _hitsPerPhase = 3;
-    [Tooltip("Sangre que pierde el jugador cuando un ataque le acierta (vía EnergyManager.DrainBlood).")]
-    [SerializeField] private float _playerHitBlood = 14f;
+    [Tooltip("Parte de TODA la sangre posible (roja + azul) que quita cada golpe del jefe. 0.25 = un cuarto.\n" +
+             "(Si la jeringuilla se llena, mueres por sangre.)")]
+    [Range(0.05f, 1f)]
+    [SerializeField] private float _hitFractionOfTotal = 0.25f;
+    [Tooltip("Segundos de invulnerabilidad tras recibir un golpe fuerte (para que un mismo ataque no te pegue varias veces).")]
+    [SerializeField] private float _hitInvulnerability = 1f;
+
+    [Header("Vidas extra (una por fase)")]
+    [Tooltip("Color de los objetos que dan VIDA EXTRA: barril de la F1, bola de la F2 y orbe de la F3.")]
+    [SerializeField] private Color _lifeColor = new Color(0.25f, 1f, 0.45f, 1f);
+    [Tooltip("Segundos mirando el orbe de vida de la Fase 3 para cogerlo.")]
+    [SerializeField] private float _lifeOrbGazeSeconds = 0.6f;
+    private bool _p1LifeSpawned, _p2LifeSpawned, _p3LifeSpawned;
+    private int  _p2Volleys;
+
+    /// <summary>El jugador consigue una VIDA EXTRA (barril / bola / orbe de vida).</summary>
+    public void GiveExtraLife(string how)
+    {
+        PlayerProgress.AddCount(ShopIds.ExtraLife, 1);
+        ReviveFX.ShowMessage(Loc.T("+1 VIDA EXTRA", "+1 EXTRA LIFE"), how, new Color(0.2f, 0.9f, 0.35f, 0.4f));
+        if (_verbose) Debug.Log($"[Boss] +1 vida extra ({how}). Ahora: {PlayerProgress.GetCount(ShopIds.ExtraLife)}.");
+    }
 
     [Header("Deflect (colores del proyectil especial)")]
     [SerializeField] private Color _normalColor  = new Color(0.5f, 0.12f, 0.02f, 1f);
@@ -299,16 +319,14 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     public Transform PlayerT { get; private set; }
     public Transform BossT => _bossBody != null ? _bossBody : transform;
     public float BeatDuration => _beatManager != null ? _beatManager.BeatDuration : (60f / 120f);
-    public float PlayerHitBlood => _playerHitBlood;
     public float DeflectReturnBeats => _deflectReturnBeats;
     public Color NormalColor => _normalColor;
     public Color DeflectColor => _deflectColor;
+    public Color LifeColor    => _lifeColor;
 
     // ── Dificultad de la ronda actual ─────────────────────────────────────────
     private int _roundDifficulty;   // 0 fácil · 1 media · 2 difícil (fijada al empezar cada ronda)
 
-    /// <summary>Dificultad de la ronda en curso: 0 fácil, 1 media, 2 difícil.</summary>
-    public int CurrentDifficulty => _roundDifficulty;
 
     /// <summary>Multiplicador de velocidad de las ondas para la ronda actual (lo lee BossShockwave).</summary>
     public float WaveSpeedMultiplier => P2Tier.waveSpeedMul;
@@ -430,13 +448,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         UpdatePhase3();
         UpdateVictory();
 
-        // La pelea del jefe se juega SIN modificadores de la tienda.
-        PlayerProgress.Suspended = FightInProgress;
-    }
-
-    private void OnDestroy()
-    {
-        PlayerProgress.Suspended = false;
+        // (Las mejoras de la tienda SÍ funcionan en la pelea; solo el Rebobinado está bloqueado: ver TimeRewinder.)
     }
 
     /// <summary>El jefe avanza con el jugador: se coloca a _leadBeats beats por delante y mantiene ese lead.</summary>
@@ -659,10 +671,13 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         float barrelInt = Mathf.Max(MinBarrelInterval, t.barrelInterval);
         int   perThrow  = Mathf.Clamp(t.barrelsPerThrow, 1, Mathf.Max(1, (_laneX != null ? _laneX.Length : 3) - 1));
         float barrelStart = Mathf.Ceil(cursor);
+        // Una vez en la Fase 1: en uno de los lanzamientos sale además el BARRIL DE VIDA (verde) en un carril libre.
+        int lifeThrow = !_p1LifeSpawned && nBarrel > 0 ? Random.Range(0, nBarrel) : -1;
         for (int k = 0; k < nBarrel; k++)
         {
             double spawnDSP = DspAt(beat, barrelStart + k * barrelInt);
-            Schedule(spawnDSP, () => { if (_state == BossState.Phase1) ThrowBarrels(perThrow, spawnDSP); });
+            bool withLife = k == lifeThrow;
+            Schedule(spawnDSP, () => { if (_state == BossState.Phase1) ThrowBarrels(perThrow, spawnDSP, withLife); });
         }
         float lastThrow = barrelStart + Mathf.Max(0, nBarrel - 1) * barrelInt;
         int deflect = nBarrel > 0 ? Mathf.CeilToInt(lastThrow) + 1 : Mathf.CeilToInt(barrelStart);
@@ -678,18 +693,40 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     }
 
     /// <summary>Lanza 'count' barriles a la vez en carriles DISTINTOS al azar (nunca todos: siempre queda uno libre).</summary>
-    private void ThrowBarrels(int count, double spawnDSP)
+    private void ThrowBarrels(int count, double spawnDSP, bool withLife = false)
     {
         int lanes = _laneX != null ? _laneX.Length : 0;
         if (lanes == 0) return;
         count = Mathf.Clamp(count, 1, Mathf.Max(1, lanes - 1));
-        if (count == 1) { SpawnProjectile(RandomLaneExcept(_lastLane), false, spawnDSP); return; }
+        var used = new System.Collections.Generic.List<int>();
+        if (count == 1)
+        {
+            int lane = RandomLaneExcept(_lastLane);
+            SpawnProjectile(lane, false, spawnDSP);
+            used.Add(lane);
+        }
+        else
+        {
+            // Barajar los carriles y coger los primeros 'count'.
+            int[] order = new int[lanes];
+            for (int i = 0; i < lanes; i++) order[i] = i;
+            for (int i = lanes - 1; i > 0; i--) { int j = Random.Range(0, i + 1); (order[i], order[j]) = (order[j], order[i]); }
+            for (int i = 0; i < count; i++) { SpawnProjectile(order[i], false, spawnDSP); used.Add(order[i]); }
+        }
 
-        // Barajar los carriles y coger los primeros 'count'.
-        int[] order = new int[lanes];
-        for (int i = 0; i < lanes; i++) order[i] = i;
-        for (int i = lanes - 1; i > 0; i--) { int j = Random.Range(0, i + 1); (order[i], order[j]) = (order[j], order[i]); }
-        for (int i = 0; i < count; i++) SpawnProjectile(order[i], false, spawnDSP);
+        // BARRIL DE VIDA (una vez en la Fase 1): en un carril LIBRE; devuélvelo con [Q] para llevarte la vida.
+        if (withLife && !_p1LifeSpawned)
+        {
+            var free = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < lanes; i++) if (!used.Contains(i)) free.Add(i);
+            if (free.Count > 0)
+            {
+                _p1LifeSpawned = true;
+                int keepLast = _lastLane;
+                SpawnProjectile(free[Random.Range(0, free.Count)], false, spawnDSP, true);
+                _lastLane = keepLast;
+            }
+        }
     }
 
     private void TriggerFistAt(bool right, double contactDSP)
@@ -710,7 +747,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
 
     /// <summary>Lanza un barril. 'plannedDSP' = instante previsto del lanzamiento (si viene del planificador),
     /// para que aterrice exactamente a ritmo aunque el frame llegue unos ms tarde.</summary>
-    private void SpawnProjectile(int laneIndex, bool deflectable, double plannedDSP = -1)
+    private void SpawnProjectile(int laneIndex, bool deflectable, double plannedDSP = -1, bool life = false)
     {
         if (_projectilePrefab == null || PlayerT == null) return;
         laneIndex = Mathf.Clamp(laneIndex, 0, _laneX.Length - 1);
@@ -723,6 +760,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         double spawnDSP = plannedDSP > 0 ? plannedDSP : AudioSettings.dspTime;
         double landDSP  = spawnDSP + _projectileFlightBeats * BeatDuration;
         p.Init(this, _laneX[laneIndex], landDSP, deflectable);
+        if (life) p.MakeLifeBarrel();
     }
 
     private void TriggerTailAt(double contactDSP, float sweepBeats)
@@ -981,15 +1019,6 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         }
     }
 
-    /// <summary>Pilar (carril) — usado fuera de la ráfaga. Mapea el carril a X y delega.</summary>
-    private void SpawnPillar(int laneIndex, bool tall, float extraLead = 0f)
-    {
-        if (_laneX == null || _laneX.Length == 0) return;
-        laneIndex = Mathf.Clamp(laneIndex, 0, _laneX.Length - 1);
-        _lastLane = laneIndex;
-        SpawnPillarAtX(_laneX[laneIndex], tall, extraLead);
-    }
-
     private void SpawnPillarAtX(float worldX, bool tall, float extraLead = 0f)
     {
         if (_pillarPrefab == null || PlayerT == null) return;
@@ -1017,25 +1046,29 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         int lo = Mathf.Max(1, Mathf.Min(t.fireballsMin, t.fireballsMax));
         int hi = Mathf.Max(lo, t.fireballsMax);
         int n  = Random.Range(lo, hi + 1);
+        // Una vez en la Fase 2: una de las bolas de alguna ráfaga es la BOLA DE VIDA (verde): tócala para la vida.
+        _p2Volleys++;
+        int lifeIdx = !_p2LifeSpawned && (Random.value < 0.4f || _p2Volleys >= 3) ? Random.Range(0, n) : -1;
         for (int i = 0; i < n; i++)
         {
             // Repartidas a lo ancho (y un poco en altura) para que no salgan todas del mismo punto.
             float f = n > 1 ? i / (float)(n - 1) : 0.5f;
             Vector3 offset = new Vector3(Mathf.Lerp(-_fireballSpread, _fireballSpread, f),
                                          Random.Range(-1f, 1.5f), 0f);
-            SpawnFireball(offset);
+            SpawnFireball(offset, i == lifeIdx);
         }
     }
 
     private void SpawnFireball() => SpawnFireball(Vector3.zero);
 
-    private void SpawnFireball(Vector3 offset)
+    private void SpawnFireball(Vector3 offset, bool life = false)
     {
         if (_fireballPrefab == null || PlayerT == null) return;
         Vector3 spawnPos = (_fireballSpawn != null ? _fireballSpawn.position
                          : (_projectileSpawn != null ? _projectileSpawn.position : BossT.position)) + offset;
         BossHomingFireball fb = Instantiate(_fireballPrefab, spawnPos, Quaternion.identity);
         fb.Init(this, _homingBeats, 1f);   // persigue _homingBeats y va recta 1 beat antes del impacto
+        if (life) { fb.MakeLife(); _p2LifeSpawned = true; }
     }
 
     /// <summary>Fin de los obstáculos: el spike empieza a subir hacia la barbilla del jefe.</summary>
@@ -1437,17 +1470,23 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
 
     // ── Info para el jugador (hit) ─────────────────────────────────────────────
 
-    /// <summary>Un ataque acierta al jugador: pierde sangre (y la barra parpadea vía IsBeingDrained).</summary>
-    public void HitPlayer()
-    {
-        if (EnergyManager.Instance != null)
-            EnergyManager.Instance.DrainBlood(_playerHitBlood);
-    }
+    /// <summary>Un ataque (proyectil) acierta al jugador: mismo golpe que cualquier otro ataque del jefe.</summary>
+    public void HitPlayer() => KillPlayer();
 
-    /// <summary>Ataque LETAL que no se ha esquivado: game over inmediato (funciona aunque haya God Mode).</summary>
+    private float _invulnerableUntil = -1f;
+
+    /// <summary>
+    /// Ataque FUERTE que no se ha esquivado: ya NO es game over directo; quita mucha sangre (_heavyHitBlood) y da un
+    /// momento de invulnerabilidad. Si la jeringuilla se llena, se muere por sangre (vidas extra / Adrenalina /
+    /// checkpoint funcionan con normalidad).
+    /// </summary>
     public void KillPlayer()
     {
-        if (_gameOver != null) _gameOver.TryKillByObstacle(null);   // (el ESCUDO de la tienda lo para)
-        else if (EnergyManager.Instance != null) EnergyManager.Instance.DrainBlood(9999f);   // fallback
+        if (Time.time < _invulnerableUntil) return;
+        if (_gameOver != null && _gameOver.IsDead) return;
+        _invulnerableUntil = Time.time + _hitInvulnerability;
+        if (EnergyManager.Instance != null) EnergyManager.Instance.TakeHitFraction(_hitFractionOfTotal);
+        CameraShaker.Instance?.Shake(0.55f);
+        if (_verbose) Debug.Log($"[Boss] Golpe al jugador: -{_hitFractionOfTotal * 100f:0}% de la sangre total.");
     }
 }

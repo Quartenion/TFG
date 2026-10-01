@@ -30,7 +30,7 @@ public static class PlayerShield
         _graceUntil = Time.time + GraceSeconds;
         Neutralize(obstacle);
         int left = Count;
-        ReviveFX.ShowMessage("¡ESCUDO!", left > 0 ? $"Te quedan {left}" : "Era el último", new Color(0.2f, 0.55f, 1f, 0.55f));
+        ReviveFX.ShowMessage(Loc.T("¡ESCUDO!", "SHIELD!"), left > 0 ? Loc.T($"Te quedan {left}", $"{left} left") : Loc.T("Era el último", "That was the last one"), new Color(0.2f, 0.55f, 1f, 0.55f));
         Debug.Log($"[Escudo] Golpe parado{(obstacle != null ? $" ('{obstacle.name}')" : "")}. Quedan {left}.");
         return true;
     }

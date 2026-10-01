@@ -87,9 +87,6 @@ public class BeatGridVisualizer : MonoBehaviour
     /// <summary>Dirección en la que avanza el nivel (normalizada).</summary>
     public Vector3 Forward => transform.forward;
 
-    // En runtime este componente no hace nada — solo gizmos de editor
-    private void Update() { }
-
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {

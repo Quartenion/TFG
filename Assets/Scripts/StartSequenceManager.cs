@@ -12,21 +12,23 @@ using TMPro;
 ///   Restart/muerte → salta la intro directamente a los 3 círculos.
 ///
 /// METRÓNOMO:
-///   Solo necesitas un AudioSource con el clip largo ya asignado.
-///   El script lo arranca con PlayScheduled (loop ON) para precisión DSP.
-///   No hay "Metronome Clip" separado porque el clip ya está en el AudioSource.
+///   Los mismos tics generados por código que el Metrónomo de la tienda (MetronomeClicks), programados con
+///   PlayScheduled en el instante DSP exacto de cada beat → sin latencia. Suena SIEMPRE (no depende de la tienda).
+///   Tic AGUDO (beat fuerte) = puedes empezar: suena en CADA beat mientras no has empezado la racha.
+///   En cuanto aciertas el «1», los siguientes suenan GRAVES (2, 3, ¡YA!). Si fallas, el siguiente beat vuelve
+///   a ser agudo y puedes empezar ahí mismo (sin esperar a ningún compás). Ej.: HHHHH(acierta)HLL(falla)HHLLL.
 ///
 /// ACIERTO / FALLO:
 ///   · Acierto → el círculo pulsa en verde.
 ///   · Fallo   → TODOS los círculos correctos anteriores + el actual sacuden
 ///               y vuelven a gris. Se reinicia a 0.
+///   · Solo LATE el círculo que toca pulsar ahora (el «1» mientras no has empezado; luego el 2, el 3 y el ¡YA!).
+///   · El tic de cada beat se decide en el último momento (ClickLead): si aciertas dentro del margen suena el que
+///     toca (grave); si fallas o se pasa el margen, el siguiente vuelve a ser agudo.
 ///
 /// SETUP:
 ///   · _introSource   → AudioSource con el clip de la intro asignado (loop OFF).
-///   · _metroSource   → AudioSource con el clip del metrónomo asignado (loop ON).
-///                       El script llama a PlayScheduled; no toques Play Manual.
-///   · _sfxSource     → AudioSource para efectos de acierto/error (puede ser el mismo
-///                       que _metroSource usando PlayOneShot sin interrumpir el loop).
+///   · _sfxSource     → AudioSource para efectos de acierto/error.
 ///   · Circle Roots   → Circle1, Circle2, Circle3. Image y TMP_Text se buscan solos.
 /// </summary>
 public class StartSequenceManager : MonoBehaviour
@@ -37,10 +39,10 @@ public class StartSequenceManager : MonoBehaviour
     [Tooltip("AudioSource con el clip de la intro ya asignado en su campo 'AudioClip'. Loop OFF.")]
     [SerializeField] private AudioSource _introSource;
 
-    [Header("Audio — Metrónomo")]
-    [Tooltip("AudioSource con el clip del metrónomo ya asignado en su campo 'AudioClip'.\n" +
-             "El clip es el track largo (1 min) que tienes. El script activa Loop y usa PlayScheduled.")]
-    [SerializeField] private AudioSource _metroSource;
+    [Header("Audio — Metrónomo (tics generados, sin clip)")]
+    [Tooltip("Volumen de los tics del metrónomo del 3-2-1.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float _clickVolume = 0.7f;
 
     [Header("Audio — Efectos de UI")]
     [Tooltip("AudioSource para los efectos de acierto/error (puede ser el mismo que el metrónomo).")]
@@ -86,6 +88,8 @@ public class StartSequenceManager : MonoBehaviour
     [Tooltip("Escala máxima del pulso visual al ritmo del metrónomo (mucho más sutil que el acierto).")]
     [SerializeField] private float _idlePulseScale    = 1.08f;
     [SerializeField] private float _idlePulseDuration = 0.15f;
+    [Tooltip("Escala del pulso en el BEAT FUERTE (mientras se puede empezar el 3-2-1).")]
+    [SerializeField] private float _highBeatPulseScale = 1.2f;
 
     [Header("Fade del overlay al salir")]
     [SerializeField] private float _fadeDuration = 0.4f;
@@ -157,23 +161,36 @@ public class StartSequenceManager : MonoBehaviour
     private double   _beatInterval;
     private double   _lastBeatDSP;
     private double   _nextBeatDSP;
+    private MetronomeClicks _clicks;
+    private double   _lastClickDSP;  // último beat con tic ya programado
+    private bool     _lastClickHigh; // …y si era agudo
+    private const double ClickLead = 0.05;   // antelación mínima con la que se programa cada tic (decidir tarde)
     private Image[]      _imgs          = new Image[TOTAL_CIRCLES];
     private TMP_Text[]   _texts         = new TMP_Text[TOTAL_CIRCLES];
     private Coroutine[]  _activeAnims      = new Coroutine[TOTAL_CIRCLES];
     private Coroutine[]  _idleAnims        = new Coroutine[TOTAL_CIRCLES]; // pulso metrónomo
     private Vector2[]    _originPos        = new Vector2[TOTAL_CIRCLES];
-    private double       _autoFailTime     = double.MaxValue;  // DSP tras el que se auto-falla
-    private bool         _hitSinceLastBeat;                    // acertó en este beat
+    private double       _expectedBeatDSP;   // con la racha empezada: beat EXACTO en el que toca el siguiente acierto
 
     // =========================================================================
     // INICIO
     // =========================================================================
 
+    /// <summary>
+    /// Reloj del 3-2-1-¡YA!: instante DSP de un beat del metrónomo y su intervalo (−1 = aún no ha salido la cuenta).
+    /// Lo usan los carteles del tutorial para latir solo desde que aparece la cuenta.
+    /// </summary>
+    public static double CountdownBeatDSP { get; private set; } = -1;
+    public static double CountdownBeatInterval { get; private set; } = 0.5;
+
+    private void OnDestroy() => CountdownBeatDSP = -1;
+
     private void Start()
     {
+        CountdownBeatDSP = -1;
         Time.timeScale       = 1f;
         AudioListener.pause  = false;
-        AudioListener.volume = 1f;
+        AudioListener.volume = GameSettings.Volume;   // (el volumen elegido en Ajustes)
 
         if (_rhythmInput   != null) _rhythmInput.enabled   = false;
         if (_energyManager != null) _energyManager.enabled = false;
@@ -194,7 +211,6 @@ public class StartSequenceManager : MonoBehaviour
         HideCircles();
 
         PreloadClip(_introSource);
-        PreloadClip(_metroSource);
         if (_beatManager != null) _beatManager.PreloadAudio();
 
         // Reaparición en un CHECKPOINT (tienda): sin freeroam ni puerta; directos al 3-2-1 desde ese punto.
@@ -265,23 +281,23 @@ public class StartSequenceManager : MonoBehaviour
             newBeat = true;
         }
 
-        // ── Auto-fallo por beat perdido ────────────────────────────────────
-        // Cuando llega un nuevo beat y el jugador ya había empezado la racha
-        // pero NO acertó en este beat, se le da hasta el final de la ventana post-beat.
-        if (newBeat && _hitsOk > 0)
+        // ── Metrónomo: programar el tic del PRÓXIMO beat en su instante DSP exacto ──
+        if (_clicks != null && _nextBeatDSP > _lastClickDSP + 0.001 && _nextBeatDSP - now <= ClickLead)
         {
-            if (!_hitSinceLastBeat)
-                _autoFailTime = _lastBeatDSP + _hitWindow; // margen post-beat
-            _hitSinceLastBeat = false;
+            ScheduleClick(_nextBeatDSP, _hitsOk == 0);   // agudo si aún no ha empezado la racha
         }
-        if (_hitsOk > 0 && now > _autoFailTime)
+
+        // ── Auto-fallo por beat perdido ────────────────────────────────────
+        // Con la racha empezada, el siguiente acierto tiene que caer en el beat que toca: en cuanto se cierra su
+        // ventana sin clic, se reinicia (y el tic del siguiente beat ya sale agudo).
+        if (_hitsOk > 0 && now > _expectedBeatDSP + _hitWindow)
         {
             TriggerAutoFail();
             return;
         }
 
-        // ── Pulso visual del metrónomo ─────────────────────────────────────
-        if (newBeat) PulseIdleCircles();
+        // ── Pulso visual del metrónomo (más grande en el beat fuerte) ──────
+        if (newBeat) PulseIdleCircles(_hitsOk == 0);
 
         // ── Input ──────────────────────────────────────────────────────────
         bool hit = Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
@@ -397,20 +413,17 @@ public class StartSequenceManager : MonoBehaviour
     {
         _hitsOk           = 0;
         _beatInterval     = 60.0 / _bpm;
-        _autoFailTime     = double.MaxValue;
-        _hitSinceLastBeat = false;
+        _expectedBeatDSP  = 0.0;
 
-        // Arrancar metrónomo con PlayScheduled → precisión DSP, sin latencia
+        // Metrónomo: el primer tic (agudo) se programa en el reloj DSP; los demás, desde Update.
         double metStart = AudioSettings.dspTime + 0.08;
-        if (_metroSource != null)
-        {
-            _metroSource.loop = true;
-            _metroSource.PlayScheduled(metStart);
-        }
+        if (_clicks == null) _clicks = new MetronomeClicks(gameObject);
+        ScheduleClick(metStart, true);
 
-        // Los beats del tracking coinciden con el primer beat del clip
         _lastBeatDSP = metStart - _beatInterval;
         _nextBeatDSP = metStart;
+        CountdownBeatDSP = metStart;
+        CountdownBeatInterval = _beatInterval;
 
         SetOverlay(true);
         ShowCircles();
@@ -425,15 +438,19 @@ public class StartSequenceManager : MonoBehaviour
     {
         if (_hitsOk >= TOTAL_CIRCLES) return;
 
-        if (IsOnBeat())
+        // Beat al que corresponde el clic (el más cercano). Con la racha empezada TIENE que ser el que toca:
+        // un clic de más en el mismo beat, o acertar tras haberse saltado uno, es un fallo.
+        double now       = AudioSettings.dspTime;
+        double clickBeat = (_nextBeatDSP - now) < (now - _lastBeatDSP) ? _nextBeatDSP : _lastBeatDSP;
+        bool ok = IsOnBeat() && (_hitsOk == 0 || System.Math.Abs(clickBeat - _expectedBeatDSP) < 0.001);
+        if (ok)
         {
             // ── Acierto ──────────────────────────────────────────────────
             PlaySfx(_hitOkSound);
             StopAnim(_hitsOk);
             _activeAnims[_hitsOk] = StartCoroutine(AnimatePulse(_hitsOk));
             _hitsOk++;
-            _hitSinceLastBeat = true;       // este beat ya está cubierto
-            _autoFailTime     = double.MaxValue;
+            _expectedBeatDSP = clickBeat + _beatInterval;   // el siguiente, justo en el beat de después
             Debug.Log($"[StartSequence] Acierto {_hitsOk}/{TOTAL_CIRCLES}");
             if (_hitsOk >= TOTAL_CIRCLES) StartCoroutine(LaunchGame());
         }
@@ -443,13 +460,12 @@ public class StartSequenceManager : MonoBehaviour
             PlaySfx(_hitErrorSound);
             int affected = _hitsOk + 1;
             _hitsOk           = 0;
-            _hitSinceLastBeat = false;
-            _autoFailTime     = double.MaxValue;
             for (int i = 0; i < affected && i < TOTAL_CIRCLES; i++)
             {
                 StopAnim(i);
                 _activeAnims[i] = StartCoroutine(AnimateShakeAndReset(i));
             }
+            ForceNextClickHigh();
             Debug.Log("[StartSequence] Fallo manual — reset a 0.");
         }
     }
@@ -459,14 +475,31 @@ public class StartSequenceManager : MonoBehaviour
         PlaySfx(_hitErrorSound);
         int affected      = _hitsOk;
         _hitsOk           = 0;
-        _autoFailTime     = double.MaxValue;
-        _hitSinceLastBeat = false;
         for (int i = 0; i < affected; i++)
         {
             StopAnim(i);
             _activeAnims[i] = StartCoroutine(AnimateShakeAndReset(i));
         }
+        ForceNextClickHigh();
         Debug.Log("[StartSequence] Auto-fallo — beat perdido.");
+    }
+
+    private void ScheduleClick(double at, bool high)
+    {
+        _clicks.Schedule(at, high, _clickVolume);
+        _lastClickDSP  = at;
+        _lastClickHigh = high;
+    }
+
+    /// <summary>
+    /// Tras un fallo: si el tic del próximo beat ya estaba programado como grave, se cambia por uno agudo
+    /// (se puede volver a empezar en ese mismo beat).
+    /// </summary>
+    private void ForceNextClickHigh()
+    {
+        if (_clicks == null || _lastClickHigh || _lastClickDSP < _nextBeatDSP - 0.001) return;
+        _clicks.StopAll();
+        ScheduleClick(_lastClickDSP, true);
     }
 
     private bool IsOnBeat()
@@ -486,12 +519,12 @@ public class StartSequenceManager : MonoBehaviour
         _challengeActive = false;
         _launching       = true;
 
-        if (_metroSource != null) _metroSource.Stop();
+        _clicks?.StopAll();   // (el beat de inicio ya lo marca la canción)
 
         // Programar canción y jugador en el siguiente beat (el 4º círculo acaba de pulsar)
         // Los círculos siguen visibles durante el pulse animation (~0.18 s) y se ocultan
         // cuando llega el beat de inicio (0.33 s después), quedando una transición limpia.
-        double startDSP = _nextBeatDSP;
+        double startDSP = _expectedBeatDSP;   // el beat justo después del ¡YA! (aunque se haya pulsado un pelín antes)
 
         if ((_testMode || _checkpointMode) && _testSongOffset > 0f)
             _beatManager.StartMusicFromAt(_testSongOffset, startDSP);  // arranca desde el offset de test
@@ -551,6 +584,7 @@ public class StartSequenceManager : MonoBehaviour
             yield return null;
         }
         rt.localScale = Vector3.one;
+        _activeAnims[idx] = null;
     }
 
     /// <summary>Sacude el círculo y lo devuelve a color idle (usado en reset).</summary>
@@ -577,7 +611,8 @@ public class StartSequenceManager : MonoBehaviour
         rt.localScale       = Vector3.one;
 
         yield return new WaitForSecondsRealtime(0.1f);
-        if (_imgs[idx] != null) _imgs[idx].color = _colorIdle;
+        if (_imgs[idx] != null) _imgs[idx].color = idx == TOTAL_CIRCLES - 1 ? _colorYaIdle : _colorIdle;
+        _activeAnims[idx] = null;   // (sin esto el círculo dejaba de latir con el metrónomo tras un fallo)
     }
 
     // =========================================================================
@@ -585,20 +620,18 @@ public class StartSequenceManager : MonoBehaviour
     // =========================================================================
 
     /// <summary>
-    /// Lanza un pulso sutil en todos los círculos pendientes (aún no acertados)
-    /// al ritmo del metrónomo. No reemplaza animaciones de acierto/error activas.
+    /// Late SOLO el círculo que toca pulsar ahora (más fuerte si aún no has empezado la racha).
+    /// No reemplaza animaciones de acierto/error activas.
     /// </summary>
-    private void PulseIdleCircles()
+    private void PulseIdleCircles(bool highBeat)
     {
-        for (int i = _hitsOk; i < TOTAL_CIRCLES; i++)
-        {
-            if (!Valid(i) || _activeAnims[i] != null) continue; // respetar acierto/error en curso
-            if (_idleAnims[i] != null) { StopCoroutine(_idleAnims[i]); _idleAnims[i] = null; }
-            _idleAnims[i] = StartCoroutine(AnimateIdlePulse(i));
-        }
+        int i = _hitsOk;   // solo late el círculo que toca pulsar ahora
+        if (!Valid(i) || _activeAnims[i] != null) return;   // respetar acierto/error en curso
+        if (_idleAnims[i] != null) { StopCoroutine(_idleAnims[i]); _idleAnims[i] = null; }
+        _idleAnims[i] = StartCoroutine(AnimateIdlePulse(i, highBeat ? _highBeatPulseScale : _idlePulseScale));
     }
 
-    private IEnumerator AnimateIdlePulse(int idx)
+    private IEnumerator AnimateIdlePulse(int idx, float pulseScale)
     {
         if (!Valid(idx)) yield break;
         var rt = _circleRoots[idx].GetComponent<RectTransform>();
@@ -610,8 +643,8 @@ public class StartSequenceManager : MonoBehaviour
             e += Time.unscaledDeltaTime;
             float t = e / _idlePulseDuration;
             float s = t < 0.5f
-                ? Mathf.Lerp(1f, _idlePulseScale, t * 2f)
-                : Mathf.Lerp(_idlePulseScale, 1f, (t - 0.5f) * 2f);
+                ? Mathf.Lerp(1f, pulseScale, t * 2f)
+                : Mathf.Lerp(pulseScale, 1f, (t - 0.5f) * 2f);
             rt.localScale = new Vector3(s, s, 1f);
             yield return null;
         }
@@ -657,7 +690,7 @@ public class StartSequenceManager : MonoBehaviour
             _circleRoots[i].SetActive(true);
             bool isYa = (i == TOTAL_CIRCLES - 1);
             if (_imgs[i]  != null) _imgs[i].color = isYa ? _colorYaIdle : _colorIdle;
-            if (_texts[i] != null) _texts[i].text = isYa ? "YA" : (i + 1).ToString();
+            if (_texts[i] != null) _texts[i].text = isYa ? Loc.T("YA", "GO") : (i + 1).ToString();
         }
     }
 

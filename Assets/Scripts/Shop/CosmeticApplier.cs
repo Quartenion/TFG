@@ -54,7 +54,6 @@ public class CosmeticApplier : MonoBehaviour
         yield return null;   // (que las monedas y la mano se hayan construido)
         // Renderers de la mano/brazo y de los kayaks, guardados AHORA (antes de que el jugador se siente en un kayak).
         foreach (var h in FindObjectsByType<HandAnimationController>()) _hand.AddRange(h.GetComponentsInChildren<Renderer>(true));
-        foreach (var a in FindObjectsByType<ArmPlaceholder>())         _hand.AddRange(a.GetComponentsInChildren<Renderer>(true));
         foreach (var k in FindObjectsByType<KayakController>())
             foreach (Renderer r in k.GetComponentsInChildren<Renderer>(true))
                 if (r.GetComponentInParent<PlayerMovement>() == null) _kayak.Add(r);

@@ -199,10 +199,6 @@ public class KayakController : MonoBehaviour
     [Tooltip("Transform que marca el final del tramo de kayak.")]
     public Transform endPoint;
 
-    [Tooltip("Radio de detección del endpoint (plano XZ).")]
-    [Range(0.5f, 10f)]
-    public float endPointRadius = 3f;
-
     [Tooltip("Velocidad vertical del salto automático al llegar al endpoint (m/s).")]
     [Range(3f, 25f)]
     public float exitJumpVelocity = 10f;
@@ -871,6 +867,7 @@ public class KayakController : MonoBehaviour
         }
 
         RunStats.HeartPress(timing);   // (contratos: cada remada es un latido)
+        StudyTelemetry.Click(BeatManager.Instance.ClickOffset, timing);   // (modo prueba)
 
         if (isHit)
         {
@@ -1300,10 +1297,8 @@ public class KayakController : MonoBehaviour
         surfaceY = 0f;
         if (waterLayerMask == 0) return false;
         Vector3 origin = transform.position + Vector3.up * 3f;
-        // IGNORAR TRIGGERS: el kayak flota sobre el agua SÓLIDA (WaterBlock). El volumen de
-        // buceo es un trigger que también está en el layer Water; sin este Ignore, el raycast
-        // podría arrancar dentro de ese trigger y fallar o devolver una superficie errónea
-        // (el kayak dejaría de "caer" al agua). Ver WaterDiveController.
+        // IGNORAR TRIGGERS: el kayak flota sobre el agua SÓLIDA (WaterBlock); cualquier trigger que esté en el
+        // layer Water no debe contar como superficie.
         if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 50f, waterLayerMask,
                             QueryTriggerInteraction.Ignore))
         {
@@ -1616,7 +1611,6 @@ public class KayakController : MonoBehaviour
     // ── API pública ───────────────────────────────────────────────────────────
 
     public KayakState State      => _state;
-    public bool       IsFloating => _state == KayakState.Floating;
 
     // ── Gizmos ────────────────────────────────────────────────────────────────
 

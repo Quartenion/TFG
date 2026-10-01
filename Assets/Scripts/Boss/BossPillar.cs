@@ -33,7 +33,7 @@ public class BossPillar : MonoBehaviour
     private PlayerMovement      _pm;
     private Vector3 _topPos;
     private double  _riseStartDSP, _riseEndDSP, _deathDSP;
-    private bool    _init, _dead;
+    private bool    _init, _dead, _hitDone;
 
     private const float DespawnBehind = 30f;   // se destruye al quedar estos metros por detrás del jugador
 
@@ -55,6 +55,11 @@ public class BossPillar : MonoBehaviour
         _deathDSP     = _riseEndDSP + (_lifeBeats + 12f) * beatDur;
 
         transform.position = _topPos - Vector3.up * _riseFrom;   // empieza escondido bajo el suelo
+
+        // Los pinchos del jefe NO son sólidos: el jugador (y el kayak) los ATRAVIESA; al tocarlos solo recibe el golpe
+        // de sangre del jefe (un cuarto de la sangre total, una vez por pincho). Sin colliders tampoco los detecta
+        // ObstacleCollision ni el choque del kayak, que antes daban game over directo.
+        foreach (Collider c in GetComponentsInChildren<Collider>(true)) c.enabled = false;
         _init = true;
     }
 
@@ -70,13 +75,11 @@ public class BossPillar : MonoBehaviour
         float eased = 1f - (1f - u) * (1f - u);
         transform.position = _topPos - Vector3.up * (_riseFrom * (1f - eased));
 
-        // Letal SOLO por la CARA FRONTAL (la que mira al jugador que viene corriendo). Rozar un lateral o
-        // aterrizar encima NO mata (el collider del pilar ya te frena/sostiene).
-        if (!_dead && HitsFrontFace())
+        // Si el jugador lo atraviesa (le toca en cualquier punto), recibe el golpe del jefe — una sola vez por pincho.
+        if (!_hitDone && TouchesPlayer())
         {
-            _dead = true;
-            if (_boss != null) _boss.KillPlayer();
-            return;
+            _hitDone = true;
+            if (_boss != null) _boss.KillPlayer();   // (ahora es un golpe de sangre, no game over)
         }
 
         // Despawn cuando el jugador ya lo ha PASADO (así no desaparece antes de llegar a él).
@@ -89,46 +92,20 @@ public class BossPillar : MonoBehaviour
         if (now >= _deathDSP) Destroy(gameObject);   // fallback de seguridad
     }
 
-    private const float FrontContactDist = 0.3f;   // a esta distancia de la cara frontal ya cuenta como choque
-    private const float SideGrace        = 0.2f;   // margen lateral: rozar la esquina/lateral no mata
     private const float TopGrace         = 0.3f;   // con los pies por encima de (techo − esto) estás ENCIMA: no mata
 
-    /// <summary>
-    /// ¿El jugador choca con la CARA FRONTAL? En el eje de avance: su frente ha llegado a la cara frontal del
-    /// pilar y su espalda sigue por delante de ella. En lateral: solapa con el pilar (menos un margen, así rozar
-    /// el lateral no cuenta). En vertical: sus pies están por debajo del techo del pilar (si está encima, no).
-    /// </summary>
-    private bool HitsFrontFace()
+    /// <summary>¿La caja del pincho toca al jugador? (sin colliders: se atraviesa). Saltar por encima lo esquiva.</summary>
+    private bool TouchesPlayer()
     {
-        if (_hitVolume == null || _playerCC == null) return false;
-
-        Vector3 f = _pm != null ? _pm.RunForward : Vector3.forward;
-        f.y = 0f;
-        if (f.sqrMagnitude < 1e-6f) f = Vector3.forward;
-        f.Normalize();
-        Vector3 r = Vector3.Cross(Vector3.up, f);   // eje lateral
-
+        if (_hitVolume == null) return false;
         Bounds pb = _hitVolume.bounds;
-        Bounds cb = _playerCC.bounds;
-
-        // Proyecciones de las cajas (AABB) sobre un eje: centro ± semiancho proyectado.
-        float Half(Bounds b, Vector3 axis) =>
-            Mathf.Abs(axis.x) * b.extents.x + Mathf.Abs(axis.y) * b.extents.y + Mathf.Abs(axis.z) * b.extents.z;
-
-        // Eje de avance: la cara frontal es la más cercana al jugador que llega.
-        float pillarFront = Vector3.Dot(pb.center, f) - Half(pb, f);
-        float playerLead  = Vector3.Dot(cb.center, f) + Half(cb, f);
-        float playerTrail = Vector3.Dot(cb.center, f) - Half(cb, f);
-        bool atFront = playerLead >= pillarFront - FrontContactDist && playerTrail < pillarFront;
-
-        // Lateral: tiene que estar DELANTE de la cara, no al lado.
-        float pc = Vector3.Dot(pb.center, r), ph = Half(pb, r) - SideGrace;
-        float cc = Vector3.Dot(cb.center, r), chh = Half(cb, r);
-        bool inLane = ph > 0f && Mathf.Abs(pc - cc) < ph + chh;
-
-        // Vertical: por debajo del techo (si va por encima o aterriza en él, no es un choque frontal).
-        bool belowTop = cb.min.y < pb.max.y - TopGrace;
-
-        return atFront && inLane && belowTop;
+        Bounds cb;
+        if (_playerCC != null && _playerCC.enabled) cb = _playerCC.bounds;
+        else if (_pm != null) cb = new Bounds(_pm.transform.position + Vector3.up * 0.9f, new Vector3(0.8f, 1.8f, 0.8f));   // (en el kayak)
+        else return false;
+        // Un pelín de margen para que rozar el borde o pasar justo por encima no cuente.
+        pb.Expand(new Vector3(-0.2f, -2f * TopGrace, -0.2f));
+        return pb.Intersects(cb);
     }
+
 }

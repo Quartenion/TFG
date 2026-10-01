@@ -38,6 +38,73 @@ public class BossHomingFireball : MonoBehaviour
     private Vector3       _dir, _prevPos, _prevAim;
     private Vector3       _playerVel, _lastPlayerPos;   // velocidad medida del jugador (para interceptarlo)
     private bool          _straight, _init, _dead;
+    private bool          _life;   // BOLA DE VIDA: al tocarte te da +1 vida extra (en vez de hacer daño)
+
+    /// <summary>La convierte en la BOLA DE VIDA (color de vida; tocarla da una vida extra).</summary>
+    public void MakeLife()
+    {
+        _life = true;
+        Color c = _boss != null ? _boss.LifeColor : Color.green;
+
+        // La bola usa el shader de LAVA (colores _ColorA/_ColorB/_ColorC): cambiar material.color no hacía nada.
+        // Se tiñen esos colores si existen y, si no, el color base normal.
+        foreach (Renderer r in GetComponentsInChildren<Renderer>())
+        {
+            Material m = r.material;
+            bool lava = false;
+            if (m.HasProperty("_ColorA")) { m.SetColor("_ColorA", c);          lava = true; }
+            if (m.HasProperty("_ColorB")) { m.SetColor("_ColorB", c * 0.55f);  lava = true; }
+            if (m.HasProperty("_ColorC")) { m.SetColor("_ColorC", c * 0.2f);   lava = true; }
+            if (!lava)
+            {
+                if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
+                if (m.HasProperty("_Color"))     m.SetColor("_Color", c);
+            }
+            if (m.HasProperty("_EmissionColor")) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", c * 1.5f); }
+        }
+        foreach (ParticleSystem ps in GetComponentsInChildren<ParticleSystem>())
+        {
+            var main = ps.main;
+            main.startColor = c;
+        }
+
+        // Además, un HALO verde brillante alrededor y una luz verde: imposible confundirla con las de fuego.
+        GameObject halo = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        Destroy(halo.GetComponent<Collider>());
+        halo.name = "LifeHalo";
+        halo.transform.SetParent(transform, false);
+        halo.transform.localScale = Vector3.one * 1.6f;
+        var hr = halo.GetComponent<Renderer>();
+        Shader unlit = Shader.Find("Universal Render Pipeline/Unlit");
+        var hm = unlit != null ? new Material(unlit) : new Material(hr.sharedMaterial);
+        Color hc = new Color(c.r, c.g, c.b, 0.35f);
+        if (hm.HasProperty("_BaseColor")) hm.SetColor("_BaseColor", hc);
+        hm.color = hc;
+        if (hm.HasProperty("_Surface"))
+        {
+            // URP Unlit transparente
+            hm.SetFloat("_Surface", 1f);
+            hm.SetFloat("_Blend", 0f);
+            hm.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            hm.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);   // aditivo: brilla
+            hm.SetInt("_ZWrite", 0);
+            hm.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            hm.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+        }
+        hr.sharedMaterial = hm;
+        hr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        _halo = halo.transform;
+
+        var lg = new GameObject("LifeLight").AddComponent<Light>();
+        lg.transform.SetParent(transform, false);
+        lg.type = LightType.Point;
+        lg.color = c;
+        lg.range = 8f;
+        lg.intensity = 3f;
+        foreach (Light l in GetComponentsInChildren<Light>()) l.color = c;
+    }
+
+    private Transform _halo;
 
     /// <summary>Configura la bola: persigue como mucho homingBeats y va recta al estar a straightBeats (≈1) de DISTANCIA.</summary>
     public void Init(BossController boss, float homingBeats, float straightBeats)
@@ -114,6 +181,7 @@ public class BossHomingFireball : MonoBehaviour
         }
 
         transform.position += _dir * (_speed * dt);
+        if (_halo != null) _halo.localScale = Vector3.one * (1.6f + 0.25f * Mathf.Sin(Time.time * 10f));   // late
         if (_dir.sqrMagnitude > 1e-6f) transform.forward = _dir;
 
         // Letal por segmento barrido en MOVIMIENTO RELATIVO (bola y jugador se mueven a la vez, a ~28 m/s
@@ -123,7 +191,8 @@ public class BossHomingFireball : MonoBehaviour
             DistSegPoint(_prevPos - _prevAim, transform.position - aimNow, Vector3.zero) <= _killRadius)
         {
             _dead = true;
-            _boss.KillPlayer();
+            if (_life) _boss.GiveExtraLife(Loc.T("¡Bola de vida!", "Life ball!"));
+            else       _boss.KillPlayer();
             Destroy(gameObject);
             return;
         }

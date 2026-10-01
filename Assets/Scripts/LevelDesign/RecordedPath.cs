@@ -72,26 +72,4 @@ public class RecordedPath : ScriptableObject
         walkSpeed = 0f;
     }
 
-    /// <summary>Posición interpolada en un songTime arbitrario.</summary>
-    public bool TryGetPositionAtTime(float songTime, out Vector3 position)
-    {
-        position = Vector3.zero;
-        if (frames == null || frames.Count == 0) return false;
-
-        int lo = 0, hi = frames.Count - 1;
-        while (lo < hi)
-        {
-            int mid = (lo + hi) / 2;
-            if (frames[mid].songTime < songTime) lo = mid + 1;
-            else hi = mid;
-        }
-
-        if (lo == 0) { position = frames[0].position; return true; }
-
-        var a = frames[lo - 1];
-        var b = frames[lo];
-        float t = Mathf.InverseLerp(a.songTime, b.songTime, songTime);
-        position = Vector3.Lerp(a.position, b.position, t);
-        return true;
-    }
 }

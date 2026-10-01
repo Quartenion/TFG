@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 /// <summary>
 /// IRIS: moneda especial escondida por los niveles que se recoge MIRÁNDOLA (mecanismo de GazeSwitch), no tocándola.
@@ -130,13 +129,14 @@ public class GazeCoin : MonoBehaviour
 
     private void OnGUI()
     {
+        if (HudHider.IsHidden) return;   // (con la pausa o el game over no se ve ningún aviso)
         if (_popupT <= 0f) return;
         if (_style == null)
             _style = new GUIStyle { fontSize = 26, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
         float a = Mathf.Clamp01(_popupT / 0.5f);
         _style.normal.textColor = new Color(0.8f, 0.6f, 1f, a);
         GUI.Label(new Rect(0f, Screen.height * 0.3f, Screen.width, 40f),
-                  $"+{_value} IRIS   ·   tienes {PlayerProgress.GazeCoins}", _style);
+                  Loc.T($"+{_value} IRIS   ·   tienes {PlayerProgress.GazeCoins}", $"+{_value} IRIS   ·   you have {PlayerProgress.GazeCoins}"), _style);
         if (_popupT <= 0.02f && _taken) gameObject.SetActive(false);
     }
 }

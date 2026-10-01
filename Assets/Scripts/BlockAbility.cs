@@ -21,7 +21,6 @@ public class BlockAbility : MonoBehaviour
 {
     [Header("Referencias")]
     public BeatManager beatManager;
-    public ArmPlaceholder armPlaceholder;
 
     [Header("Ventana de rotura")]
     [Tooltip("Duracion en segundos de la ventana activa tras pulsar Q.")]
@@ -124,7 +123,6 @@ public class BlockAbility : MonoBehaviour
         IsBlocking        = true;
         _breakWindowTimer = breakWindowDuration;
 
-        if (armPlaceholder != null) armPlaceholder.SetBlocking(true);
         PlaySfx(blockStartSound);
 
         // Feedback de cámara: golpe de FOV rápido, como un dash hacia delante.
@@ -158,7 +156,6 @@ public class BlockAbility : MonoBehaviour
         if (!IsBlocking) return;
         IsBlocking = false;
 
-        if (armPlaceholder != null) armPlaceholder.SetBlocking(false);
         PlaySfx(blockEndSound);
         OnBlockEnded?.Invoke();
     }

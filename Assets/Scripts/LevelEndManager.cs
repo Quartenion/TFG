@@ -74,6 +74,18 @@ public class LevelEndManager : MonoBehaviour
 
     public Phase CurrentPhase { get; private set; } = Phase.Playing;
 
+    /// <summary>True desde que el jugador llega a la meta: ya no se puede morir ni cuentan los latidos.</summary>
+    public static bool Finished { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void InitFinished()
+    {
+        Finished = false;
+        SceneManager.sceneLoaded -= ResetFinished;
+        SceneManager.sceneLoaded += ResetFinished;
+    }
+    private static void ResetFinished(Scene s, LoadSceneMode m) { if (m == LoadSceneMode.Single) Finished = false; }
+
     // Beat accuracy
     private int   _totalBeats  = 0;
     private int   _syncedBeats = 0;
@@ -102,6 +114,7 @@ public class LevelEndManager : MonoBehaviour
 
     private void Awake()
     {
+        Finished = false;
         if (_player      == null) _player      = FindAnyObjectByType<PlayerMovement>();
         if (_beatManager == null) _beatManager  = BeatManager.Instance;
         if (_grid        == null) _grid         = FindAnyObjectByType<BeatGridVisualizer>();
@@ -148,6 +161,9 @@ public class LevelEndManager : MonoBehaviour
     /// <summary>Bloquea el fin de nivel por Z (p. ej. mientras dura el jefe: el final lo lanza él con BeginEnd).</summary>
     public void SetBlocked(bool blocked) => _blocked = blocked;
 
+    /// <summary>Cambia la escena que se carga al terminar (el modo prueba vuelve al menú).</summary>
+    public void SetNextScene(string scene) => _nextSceneName = scene;
+
     /// <summary>Lanza YA la secuencia de fin (auto-movimiento + mirar alrededor) hacia 'finishPoint'.</summary>
     public void BeginEnd(Transform finishPoint)
     {
@@ -155,13 +171,6 @@ public class LevelEndManager : MonoBehaviour
         if (finishPoint != null) _finishPoint = finishPoint;
         _blocked = false;
         StartEndSequence();
-    }
-
-    /// <summary>Coloca el final en tiempo de ejecución (p. ej. el END que emerge al acabar el jefe).</summary>
-    public void SetEnd(float endZ, Transform finishPoint)
-    {
-        _endZ = endZ;
-        if (finishPoint != null) _finishPoint = finishPoint;
     }
 
     // ── Phase: Playing ────────────────────────────────────────────────────────
@@ -189,6 +198,7 @@ public class LevelEndManager : MonoBehaviour
         _accuracy = _totalBeats > 0
             ? (float)_syncedBeats / _totalBeats * 100f
             : 0f;
+        StudyTelemetry.EndAttempt("completado", _accuracy);   // (modo prueba)
 
         // Contratos firmados: los cumplidos se cobran ahora (van directos al monedero).
         _contractsDone = ContractRunner.EvaluateLevelEnd(new LevelResult
@@ -209,7 +219,12 @@ public class LevelEndManager : MonoBehaviour
         _camRotOnStart = cam != null ? cam.localRotation : Quaternion.identity;
         _lookTimer = 0f;
 
-        if (_beatManager != null) _beatManager.StopMusic();
+        // La canción NO se corta: sigue hasta el final durante el paseo y los resultados (hasta cambiar de escena).
+        // Para que no pase nada raro mientras tanto: se congela la energía y se desactivan los latidos del jugador.
+        Finished = true;
+        if (EnergyManager.Instance != null) EnergyManager.Instance.SetPaused(true);
+        var rhythm = FindAnyObjectByType<RhythmInput>();
+        if (rhythm != null) rhythm.enabled = false;
 
         Debug.Log($"[LevelEndManager] Secuencia de fin iniciada. Precisión: {_accuracy:F1}%  |  CC={(_cc != null ? "desactivado" : "null")}");
     }
@@ -418,6 +433,7 @@ public class LevelEndManager : MonoBehaviour
 
     private void OnGUI()
     {
+        if (HudHider.IsHidden) return;   // (con la pausa o el game over no se ve ningún aviso)
         if (CurrentPhase != Phase.ShowingResults) return;
 
         InitStyles();
@@ -439,7 +455,7 @@ public class LevelEndManager : MonoBehaviour
         float y = py + 20f;
 
         // Título
-        GUI.Label(new Rect(x, y, pw - 60f, 40f), "NIVEL COMPLETADO", _titleStyle);
+        GUI.Label(new Rect(x, y, pw - 60f, 40f), Loc.T("NIVEL COMPLETADO", "LEVEL COMPLETE"), _titleStyle);
         y += 50f;
 
         // Nota
@@ -452,21 +468,21 @@ public class LevelEndManager : MonoBehaviour
         y += 12f;
 
         // Precisión
-        DrawStat(ref y, x, pw, "Precisión de beats",
+        DrawStat(ref y, x, pw, Loc.T("Precisión de beats", "Beat accuracy"),
             $"{_accuracy:F1}%  ({_syncedBeats}/{_totalBeats} beats)");
 
         // Monedas cobradas
-        DrawStat(ref y, x, pw, "Monedas", $"+{_coinsBanked}  (monedero: {PlayerProgress.Coins})");
+        DrawStat(ref y, x, pw, Loc.T("Monedas", "Coins"), Loc.T($"+{_coinsBanked}  (monedero: {PlayerProgress.Coins})", $"+{_coinsBanked}  (wallet: {PlayerProgress.Coins})"));
 
         // Contratos cumplidos en este nivel
         if (_contractsDone.Count > 0)
         {
             int total = 0;
             foreach (ContractDef c in _contractsDone) total += c.reward;
-            DrawStat(ref y, x, pw, "Contratos cumplidos", $"{total} por cobrar");
+            DrawStat(ref y, x, pw, Loc.T("Contratos cumplidos", "Contracts completed"), Loc.T($"{total} por cobrar", $"{total} to claim"));
             foreach (ContractDef c in _contractsDone)
             {
-                GUI.Label(new Rect(x + 16f, y, pw - 76f, 24f), $"· {c.title}   ({c.reward}, cóbralo en el puesto)", _bodyStyle);
+                GUI.Label(new Rect(x + 16f, y, pw - 76f, 24f), Loc.T($"· {c.title}   ({c.reward}, cóbralo en el puesto)", $"· {c.title}   ({c.reward}, claim it at the stand)"), _bodyStyle);
                 y += 26f;
             }
         }
@@ -483,13 +499,13 @@ public class LevelEndManager : MonoBehaviour
                 alignment = TextAnchor.MiddleCenter,
                 normal    = { textColor = new Color(1f, 1f, 1f, alpha) }
             };
-            GUI.Label(new Rect(px, py + ph - 60f, pw, 30f), "PULSA CUALQUIER TECLA PARA CONTINUAR", blinkStyle);
+            GUI.Label(new Rect(px, py + ph - 60f, pw, 30f), Loc.T("PULSA CUALQUIER TECLA PARA CONTINUAR", "PRESS ANY KEY TO CONTINUE"), blinkStyle);
         }
 
         // Indicador de carga en background (pequeño, abajo del todo)
         if (_loadOp != null && _loadOp.progress < 0.9f)
         {
-            string loadStatus = $"Cargando... {_loadOp.progress / 0.9f * 100f:F0}%";
+            string loadStatus = Loc.T($"Cargando... {_loadOp.progress / 0.9f * 100f:F0}%", $"Loading... {_loadOp.progress / 0.9f * 100f:F0}%");
             GUI.Label(new Rect(px, py + ph - 28f, pw, 20f), loadStatus, _hintStyle);
         }
     }

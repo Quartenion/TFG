@@ -77,6 +77,23 @@ public class RhythmRingVisual : MonoBehaviour
     // ── API pública ──────────────────────────────────────────────────────────
     public float Progress => _travelDuration > 0f ? _elapsed / _travelDuration : 0f;
     public bool  IsConsumed => _consumed;
+    /// <summary>Segundo de la canción (CorrectedTime) en que la nota llega al punto de mira (-1 = guiada por deltaTime).</summary>
+    public float ArrivalSongTime { get; private set; } = -1f;
+
+    /// <summary>La nota sigue al RELOJ DE LA CANCIÓN: llega exactamente en 'songTime' (y espera si la música aún no suena).</summary>
+    public void SetArrival(float songTime)
+    {
+        ArrivalSongTime = songTime;
+        SyncToSong();
+        if (!_inPhase2) UpdatePhase1();
+    }
+
+    private void SyncToSong()
+    {
+        if (ArrivalSongTime < 0f || _beatManager == null) return;
+        _elapsed = Mathf.Max(0f, _travelDuration - (ArrivalSongTime - _beatManager.CorrectedTime));
+    }
+
     /// <summary>Nota de MEDIO beat (contrato «Al compás»): spikes más pequeños y sin aro; no la absorbe el latido.</summary>
     public bool  IsHalfBeat { get; private set; }
 
@@ -153,7 +170,8 @@ public class RhythmRingVisual : MonoBehaviour
     {
         if (_consumed) return;
 
-        _elapsed += Time.deltaTime;
+        if (ArrivalSongTime >= 0f) SyncToSong();      // (guiada por la canción)
+        else _elapsed += Time.deltaTime;
         RotateSpikes(Time.deltaTime);
 
         if (!_inPhase2) UpdatePhase1();

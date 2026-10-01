@@ -1,0 +1,233 @@
+Escena: Level2   ·   beat = 6,00 m   ·   segmento = 4 beats = 24,00 m
+Unidades en el Timeline: 707   ·   Grupos con script en varios segmentos: 2
+  [Varios segmentos] Timeline/Floaters  (30 hijos)
+  [Varios segmentos] Timeline/Spikes  (995 hijos)
+Segmento 000 · beats 0-3
+    Escenario: Segment
+Segmento 001 · beats 4-7
+    Escenario: Segment
+    Obstáculos: Cube (6), Cube (7)
+Segmento 002 · beats 8-11
+    Escenario: Segment
+    Obstáculos: Cube (4), Cube (5), Cube (8), Cube (9), Cube (10), Cube (11), Cube (12), Cube (13)
+Segmento 003 · beats 12-15
+    Escenario: Segment
+    Obstáculos: Cube (14), Cube (15)
+Segmento 004 · beats 16-19
+    Escenario: Segment
+    Obstáculos: Cube (16), Cube (17), Cube (18), Cube (19), Cube (20), Cube (21), Cube (22), Cube (23)
+Segmento 005 · beats 20-23
+    Escenario: Segment
+    Obstáculos: Cube (24), Cube (25), Cube (26), Cube (27), Cube (28), Cube (29)
+Segmento 006 · beats 24-27
+    Escenario: Segment
+    Obstáculos: Cube (30), Cube (31), Cube (32), Cube (33)
+Segmento 007 · beats 28-31
+    Escenario: Segment
+    Obstáculos: Cube (34), Cube (35), Cube (36), Cube (37), Cube (38), Cube (39)
+Segmento 008 · beats 32-35
+    Escenario: Segment
+    Obstáculos: Cube (40), Cube (41), Cube (42), Cube (43)
+Segmento 009 · beats 36-39
+    Escenario: Segment
+    Obstáculos: Cube (44), Cube (45), Cube (46), Cube (47), Cube (48), Cube (49)
+Segmento 010 · beats 40-43
+    Escenario: Segment
+    Obstáculos: Cube (50), Cube (51), Cube (52), Cube (53), Cube (54), Cube (55), Cube (56), Cube (57)
+Segmento 011 · beats 44-47
+    Escenario: Segment
+    Obstáculos: Cube (58), Cube (59), Cube (60), Cube (61), Cube (62), Cube (63), Cube (64), Cube (65)
+Segmento 012 · beats 48-51
+    Escenario: Segment
+    Obstáculos: Cube (66), Cube (67), Cube (68), Cube (69), Cube (70), Cube (71), Cube (72), Cube (73)
+Segmento 013 · beats 52-55
+    Escenario: Segment
+    Obstáculos: Cube (74), Cube (75), Cube (76), Cube (77), Cube (78), Cube (79), Cube (80), Cube (81)
+Segmento 014 · beats 56-59
+    Escenario: Segment
+    Obstáculos: Cube (82), Cube (83), Cube (84), Cube (85), Cube (86), Cube (87), Cube (88), Cube (89)
+Segmento 015 · beats 60-63
+    Escenario: Segment
+    Obstáculos: Cube (90), Cube (91), Cube (92), Cube (93), Cube (94), Cube (95), Cube (96), Cube (97)
+Segmento 016 · beats 64-67
+    Escenario: Segment
+    Obstáculos: Cube (98), Cube (99), Cube (100), Cube (101), Cube (102), Cube (103)
+Segmento 017 · beats 68-71
+    Escenario: Segment
+    Obstáculos: Cube, Cube (1), Cube (2), Cube (7)
+Segmento 018 · beats 72-75
+    Escenario: Segment
+    Obstáculos: Cube (3), Cube (8), Cube (4), Cube (9)
+Segmento 019 · beats 76-79
+    Escenario: Segment
+    Obstáculos: Cube (5), Cube (10), Cube (6), Cube (11)
+Segmento 020 · beats 80-83
+    Escenario: Segment
+    Obstáculos: Cube (15), Cube (13), Cube (14), Cube (9), Cube (8), Cube, Cube (1), Cube (10)
+Segmento 021 · beats 84-87
+    Escenario: Segment
+    Obstáculos: Cube (2), Cube (12), Cube (11), Cube (7), Cube (3), Cube (4), Cube (19), Cube (16), Cube (18), Cube (20)
+Segmento 022 · beats 88-91
+    Escenario: Segment
+    Obstáculos: Cube (17), Cube (5), Cube (21), Cube (6), Cube (29), Cube (22), Cube (25)
+Segmento 023 · beats 92-95
+    Escenario: Fence Left (10), Fence Left (11), Segment
+    Obstáculos: Cube (26), Cube (23), Cube (30), Cube (27), Cube (24), Cube (28)
+Segmento 024 · beats 96-99
+    Escenario: Fence Left (8), Fence Left (9), Fence Left (12), Fence Left (14), Segment
+Segmento 025 · beats 100-103
+    Obstáculos: River
+Segmento 026 · beats 104-107
+    Escenario: Barrier Right (1), Barrier Right (2)
+Segmento 027 · beats 108-111
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), WaterBlock_50m (1), Barrier Right (1) (1), Barrier Right (2) (1)
+Segmento 028 · beats 112-115
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), WaterBlock_50m (2), Barrier Right (1) (1) (1), Barrier Right (2) (1) (1)
+    Obstáculos: Cube (14)
+Segmento 029 · beats 116-119
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), WaterBlock_50m (3), Barrier Right (1) (1) (1) (1), Barrier Right (2) (1) (1) (1)
+    Obstáculos: Cube (15), Cube (18)
+Segmento 030 · beats 120-123
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), Cube (2), Cube (4), WaterBlock_50m (4), Barrier Right (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1)
+    Obstáculos: Cube (16), Cube (17)
+Segmento 031 · beats 124-127
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), Barrier Right (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1)
+    Interactivos: WaterBlock_50m (5)
+Segmento 032 · beats 128-131
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), Barrier Right (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1)
+    Interactivos: WaterBlock_50m (6)
+    Obstáculos: Cube (19)
+Segmento 033 · beats 132-135
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), WaterBlock_50m (7), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Cube (20)
+Segmento 034 · beats 136-139
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), WaterBlock_50m (8), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Cube (21)
+Segmento 035 · beats 140-143
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), WaterBlock_50m (9), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Cube (22), Cube (1)
+Segmento 036 · beats 144-147
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), WaterBlock_50m (10), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Cube (23), Cube (24)
+Segmento 037 · beats 148-151
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), WaterBlock_50m (11), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Cube (25)
+Segmento 038 · beats 152-155
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (13), Fence Left (15), WaterBlock_50m (12), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Cube (26), Cube (28)
+Segmento 039 · beats 156-159
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), End Point
+    Obstáculos: Cube (27), Cube (29)
+Segmento 040 · beats 160-163
+    Escenario: Fence Left (6), Fence Left (16), Fence Left (17), Fence Left (7), Fence Left (15), Fence Left (13), Fence Left (18), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Cube (2), Cube (4), Fence Left (19)
+Segmento 041 · beats 164-167
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), Fence Left (20), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Fence Left (21)
+Segmento 042 · beats 168-171
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), Fence Left (22), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Fence Left (23)
+Segmento 043 · beats 172-175
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), Fence Left (24), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Fence Left (25)
+Segmento 044 · beats 176-179
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), Fence Left (26), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Fence Left (28)
+Segmento 045 · beats 180-183
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), Cube (1), Fence Left (27), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 046 · beats 184-187
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 047 · beats 188-191
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 048 · beats 192-195
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 049 · beats 196-199
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 050 · beats 200-203
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 051 · beats 204-207
+    Escenario: Fence Left (6), Fence Left (7), Cube (2), Cube (4), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 052 · beats 208-211
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 053 · beats 212-215
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 054 · beats 216-219
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 055 · beats 220-223
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Cube (1)
+    Interactivos: Coffin (2)
+Segmento 056 · beats 224-227
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 057 · beats 228-231
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 058 · beats 232-235
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 059 · beats 236-239
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 060 · beats 240-243
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 061 · beats 244-247
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), Cube (2), Cube (4), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 062 · beats 248-251
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 063 · beats 252-255
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 064 · beats 256-259
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 065 · beats 260-263
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 066 · beats 264-267
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), Cube (1), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 067 · beats 268-271
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 068 · beats 272-275
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 069 · beats 276-279
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 070 · beats 280-283
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 071 · beats 284-287
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Cube (2), Cube (4)
+Segmento 072 · beats 288-291
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 073 · beats 292-295
+    Escenario: End Point (1), Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Cube
+Segmento 074 · beats 296-299
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Cube (1), Cube (2)
+Segmento 075 · beats 300-303
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 076 · beats 304-307
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Cube (3), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Cube (1)
+Segmento 077 · beats 308-311
+    Escenario: Cube (4), Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Cube (5), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 078 · beats 312-315
+    Escenario: Cube (6), Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Cube (7), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 079 · beats 316-319
+    Escenario: Cube (8), Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 080 · beats 320-323
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Interactivos: Coffin (3)
+Segmento 081 · beats 324-327
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 082 · beats 328-331
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), Cube (2), Cube (4), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Cube (11), Cube (13), Cube (12)
+Segmento 083 · beats 332-335
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Cube (15), Cube (16), Cube (17)
+Segmento 084 · beats 336-339
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+    Obstáculos: Cube (14), Cube (18), Cube (20), Cube (19)
+Segmento 085 · beats 340-343
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Prism
+Segmento 086 · beats 344-347
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 087 · beats 348-351
+    Escenario: Fence Left (6), Fence Left (7), Cube (1), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 088 · beats 352-355
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (15), Fence Left (13), WaterBlock_50m (13), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), End Point (2)
+Segmento 089 · beats 356-359
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (34), Fence Left (35), Fence Left (13), Fence Left (15), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 090 · beats 360-363
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (30), Fence Left (32), Fence Left (13), Fence Left (15), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 091 · beats 364-367
+    Escenario: Fence Left (6), Fence Left (7), Fence Left (31), Fence Left (33), Barrier Right (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1), Barrier Right (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1)
+Segmento 092 · beats 368-371
+    Escenario: Cube (2), Cube (4)
+Contenedor de monedas «Coins (por beat)»: 1051 monedas sueltas → se agrupan por segmento dentro de él.

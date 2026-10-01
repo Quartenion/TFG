@@ -7,13 +7,11 @@ using UnityEngine.Events;
 /// SETUP:
 ///   1. Añade este componente a cualquier GameObject con Collider.
 ///   2. El jugador lo rompe al colisionar con el mientras bloquea (Q).
-///   3. Configura destroyOnBreak, efectos y sonido en el Inspector.
+///   3. Configura efectos y sonido en el Inspector.
 /// </summary>
 public class BreakableBlock : MonoBehaviour, IRewindable
 {
     [Header("Comportamiento")]
-    [Tooltip("(Obsoleto) Ahora el bloque siempre se DESACTIVA al romperse, para que el Rebobinado pueda recomponerlo.")]
-    public bool destroyOnBreak = true;
     [Tooltip("Segundos de espera antes de destruir/desactivar (para reproducir efectos primero).")]
     public float breakDelay = 0.1f;
 
@@ -96,7 +94,7 @@ public class BreakableBlock : MonoBehaviour, IRewindable
 
     private void DoBreak()
     {
-        // Se desactiva siempre (aunque destroyOnBreak esté marcado) para que el Rebobinado pueda recomponerlo.
+        // Se desactiva (no se destruye) para que el Rebobinado pueda recomponerlo.
         gameObject.SetActive(false);
     }
 

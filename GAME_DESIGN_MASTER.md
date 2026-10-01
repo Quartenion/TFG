@@ -22,100 +22,114 @@
 14. [Investigación Académica — Papers y Referencias](#14-investigación-académica--papers-y-referencias)
 15. [Riesgos Técnicos Identificados](#15-riesgos-técnicos-identificados)
 16. [Código C# de Referencia](#16-código-c-de-referencia)
+17. [Registro de limpieza y cambios — auditoría sep. 2026](#17-registro-de-limpieza-y-cambios--auditoría-sep-2026)
 
 ---
 
 ## 1. ESTADO DE IMPLEMENTACIÓN — SISTEMAS CONSTRUIDOS
 
-Esta sección resume lo que **ya está construido y funcionando** en el proyecto. El resto del documento describe el diseño completo (incluyendo sistemas planificados y trabajo futuro); aquí se listan solo las piezas implementadas.
+Esta sección resume lo que **ya está construido y funcionando** en el proyecto (estado tras la auditoría y limpieza de septiembre de 2026, ver [sección 17](#17-registro-de-limpieza-y-cambios--auditoría-sep-2026)). El resto del documento describe el diseño completo (incluidos sistemas planificados y trabajo futuro).
+
+**Niveles jugables:** MainMenu + **Level1** (mina), **Level2** (prisión / río con kayaks) y **Level3** (ascenso + **pelea contra el jefe** en 3 fases). Cada nivel tiene una zona de *freeroam* inicial (lobby) con tienda y puesto de contratos.
 
 ### Motor rítmico
-- **BeatManager** — reloj maestro sincronizado por DSP (`PlayScheduled`), BPM configurable, ventanas de timing **Perfect (±70 ms) / Good (±140 ms) / Miss**, compensación de latencia de audio, eventos `OnBeat` / `OnHalfBeat`, e inicio de la canción desde cualquier posición (`StartMusicFrom`) para el modo test.
-- **RhythmInput** — evalúa cada clic contra el beat con `EvaluateTiming()`, cuenta **un solo acierto válido por beat** (anti-spam) y dispara el feedback de timing y los cambios de vida.
-- **LatencyCalibrator** — calibración de latencia de audio guardada en `PlayerPrefs`.
-- **TimingResult** — enum Perfect/Good/Miss compartido por todos los sistemas.
+- **BeatManager** — reloj maestro por DSP (`PlayScheduled`, `ScheduledStartDSP`), BPM configurable, ventanas **Perfect / Good / Miss**, compensación de latencia (lee el valor guardado en `PlayerPrefs` si existe), eventos `OnBeat` / `OnHalfBeat` e *Intervals* (eventos cada N pasos, usados por `PulseToTheBeat`). Arranque desde un segundo concreto de la canción (`StartMusicFromAt`) para checkpoints y modo test; `SetRewindClock` para el Rebobinado; soporte de medio beat con la mejora «Doble tempo» (`ClickStep`, `NearestClickSlot`).
+- **RhythmInput** — evalúa cada clic (`EvaluateClickTiming`). **Anti-spam por beat**: solo el primer clic de cada beat (o medio beat) puede acertar; cada clic de más es un fallo que cuesta el doble que el anterior (×1, ×2, ×4… hasta ×8) y, si varios beats seguidos tienen clics de más, sube un «calor» (hasta 3) que multiplica todos los fallos. Un jugador que no spamea nunca paga más que un fallo normal.
+- **MetronomeClicks** — tics generados por código y programados en el reloj DSP (sin latencia). Los usan el 3-2-1 y la mejora «Metrónomo».
+- **TimingResult** — enum Perfect/Good/Miss compartido.
 
 ### Vida / energía — la jeringuilla (EnergyManager)
-Modelo de sangre en la jeringuilla: **energía = capacidad − sangre acumulada**. Incluye llenado pasivo, coste de acciones, acierto rítmico que devuelve vida (**Perfect 1.5×, Good 1×**), penalización por fallo con **multiplicador anti-spam** (ventana deslizante de los últimos N inputs), **modo azul (bonus)** de riesgo-recompensa con inyección masiva al fallar, y **God Mode** para diseño de niveles. Acompañado de `EnergyBarUI` y `LowHealthEffects`.
+**Energía = capacidad − sangre acumulada.** Llenado pasivo, coste por acción, aciertos que devuelven sangre (Perfect 1.5× / Good 1×, con modificadores de la tienda), fallos que suman sangre (escalados por el anti-spam de `RhythmInput`), **modo azul** de riesgo-recompensa, drenaje por BloodSuckers, `TakeHitFraction` (golpes del jefe = fracción de la sangre total), gasto «a crédito» si quedan vidas extra, pausa durante el Rebobinado y el fin de nivel, y **God Mode** para diseño. Los niveles empiezan con la jeringuilla vacía (salvo «Buen desayuno»). HUD: `EnergyBarUI`, `LiquidLevel`, `SyringeSpinner`, `LowHealthEffects`.
 
 ### Movimiento a pie (PlayerMovement)
-Auto-runner de *parkour* con: **doble salto, dash, slide, slam, wallrun, walljump, tirolina (zipline)** y manejo específico de escaleras. Incluye **beat gating** (las acciones se validan/premian al ritmo), coste de energía por acción, *head-bob* de cámara al ritmo y efectos de cámara (dash, shake).
-> ⚠️ El **gancho (grappling hook) se descartó** y se eliminó del juego (`GrapplingHook.cs` queda como *stub* vacío).
+Auto-runner de *parkour*: **doble salto, dash, slide, slam, wallrun, walljump, tirolina** y escaleras, con *beat gating*, coste de energía por acción (sin cooldowns) y corrección de velocidad para ir sincronizado con la rejilla de beats. Efectos: `CameraDashEffect` (FOV, punch del bloqueo), `CameraShaker`, `ViewmodelPhysics`, `HandAnimationController`, `FootstepAudio`.
+- **BlockAbility** (Q) + **BreakableBlock** — bloqueo que rompe bloques (se desmoronan con `CrumbleFX` y el Rebobinado los recompone).
 
-### Secciones de kayak (KayakController)
-Tramos sobre el río con **flotación spring-damper**, **remo al ritmo** (clic izq./der. a cada lado), **combo de remo** (remar repetido al mismo lado sube progresivamente la velocidad lateral), **saltar dentro/fuera** del kayak para esquivar obstáculos (el kayak es una plataforma sólida con reembarque suave) y **colisiones con caras letales** (embestida frontal letal, laterales solo bloquean). Con corrientes de agua (`WaterCurrentZone`) y oleaje del líquido (`LiquidWobble`).
+### Kayak (KayakController)
+Flotación *spring-damper*, remo al ritmo (clic izq./der.), combo de remo, saltar dentro/fuera, embestida frontal letal y roce lateral seguro, corrientes (`WaterCurrentZone`), activación por volumen o horizontal, reinicio con el Rebobinado. Caer al agua fuera del kayak = game over inmediato (`WaterDiveController`, detección por raycast contra el agua sólida).
 
 ### Obstáculos
-- **ObstacleInfo** — datos de caras letales (Front/Bottom/Top/Left/Right/Back) con *gizmos* de editor.
-- **ObstacleCollision** — detección a pie leyendo `ObstacleInfo`.
-- **FallingObstacle** — caída desde el techo sincronizada por DSP para aterrizar a la llegada del jugador.
-- **StairFallingObstacle** — baja escaleras a saltos, **un escalón por beat**; aparece unos escalones antes y termina en su posición colocada.
-- **BeatObstacleSpawner** + **BeatApproachIndicator** — generación de obstáculos alineada a la rejilla de beats.
-- **BlockAbility** + **BreakableBlock** — bloqueo (tecla **Q**) que rompe los bloques cercanos.
+`ObstacleInfo` (caras letales), `ObstacleCollision`, `FallingObstacle`, `StairFallingObstacle`, `FireballObstacle`, `WaterSpike`, `BeatOscillator`, `PivotOscillator`, `FloatingObject`, `CrushBottom` (cara inferior letal de bloques móviles), `BloodSucker` + `GazeSwitch` (mirar para activar). Todos implementan **`IRewindable`** para el Rebobinado.
 
-### HUD (estética clínica)
-- **RhythmHeartMonitor** — línea de ECG que pulsa con cada acierto (verde = Perfect, blanco = Good, rojo = Miss).
-- **Jeringuillas 3D** de sangre roja/azul renderizadas al canvas (`LiquidLevel` con modos de sangre, `SyringeSpinner`).
-- **CrosshairController** — mira con pinchos que reaccionan al clic.
-- **RhythmHUDController** + **RhythmRingVisual** — notas rítmicas (anillos con pinchos) que convergen sincronizadas con la mira y se colorean de verde al acertar.
-- **TimingFeedbackUI** (PERFECT/GOOD/MISS), **HeartBeat**, **PlayerSyncDisplay**.
+### Jefe (Level3)
+`BossController` (+ `BossControllerPhase3`), `BossTailSweep` (tridente), `BossFistSlam`, `BossProjectile` (barriles), `BossHomingFireball`, `BossPillar`, `BossShockwave`, `BossPlatformSpawner`, `BossMusicController`, `BossLifeOrb`. Los golpes quitan **un cuarto de la sangre total** (1 s de invulnerabilidad); **una vida extra por fase** (barril de vida → bola de fuego de vida → orbe de vida por mirada). Las mejoras de la tienda funcionan en el jefe salvo el Rebobinado.
+
+### Tienda, economía y progreso
+- **PlayerProgress** — guardado JSON (monedas, mejoras, consumibles, muescas, contratos, iris, cosméticos). `LevelCoins` (monedas de la partida; se conservan en checkpoint y al morir), `RunStats`, `CheckpointSystem`.
+- **Monedas** (`Coin`) — suben del suelo 4 beats antes, giran 45° por beat, imán (mejora), sonido con escala ascendente en combos; el Rebobinado las devuelve. **Iris** (`GazeCoin`) — moneda de mirada para cosméticos.
+- **Tienda** (`ShopUI`, un solo archivo construido por código con `UIKit`; diseño simple sin colores ni bordes redondeados; tamaños en constantes al principio) — solo dos pestañas encima de la rejilla, **Mejoras** (consumibles + mejoras) y **Cosméticos** (sin categorías), **rejilla de casillas cuadradas a la izquierda** y **ficha a la derecha** (descripción, equipar y botón de compra). 30 objetos: 3 consumibles (siempre disponibles) + 27 mejoras que se **desbloquean por nivel, 9 en cada uno** (`ShopUnlocks`); la tienda solo muestra lo que ya se puede comprar. Básicas en el nivel 1, intermedios en el 2 y avanzados (golpes del jefe, BloodSuckers, Auto-latido, Doble tempo…) en el 3. El nivel alcanzado se guarda (`PlayerProgress.LevelReached`).
+- **Muescas** (`Notches`, estilo Hollow Knight) — las mejoras solo funcionan **equipadas**; 3 muescas base, cada mejora cuesta 1–3, se compran hasta 5 más (**máximo 8**, precios 250/450/750/1200/1800).
+- **Cosméticos** (`Cosmetics`, `CosmeticApplier`) — corazón de la mira, mano, monedas y kayak; se pagan con iris.
+- Sistemas auto-creados: `TimeRewinder`, `Metronome`, `AutoBeater`, `BarFlash`, `ContractRunner`, `CosmeticApplier`, `CursorRestorer`.
+
+### Contratos (Contracts/)
+`ContractCatalog` (18 contratos en 3 dificultades, **cada uno con una versión por nivel** (54 en total) cuyo objetivo y pago suben de un nivel al siguiente, p. ej. «Buscador de oro»: 25/50/80 monedas por 50/90/140; solo cuentan jugando su nivel, también en el nivel 3 con el jefe; reglas como «Contrarreloj» = 100/90/80 pulsaciones, «Al compás» o «A pelo»), `ContractRunner` (reglas y progreso en el nivel; los de mitad de nivel se marcan cumplidos al momento), `ContractUI` (mismo estilo simple que la tienda vía `SimpleUI`: pestañas Contratos / Cobrados, rejilla de casillas cuadradas y ficha a la derecha con la hoja de firma) + `SignaturePad` (firmar con el ratón), `ContractStand` (puesto: firmar y **cobrar** los cumplidos).
 
 ### Flujo de juego
-**MainMenuManager**, **StartSequenceManager** (cuenta atrás 3-2-1 + **modo test** para arrancar en cualquier posición/beat, con X/Y/Z editables), **GameStarter**, **StartWall**, **PauseMenuManager**, **GameOverManager**, **LevelEndManager**, **DoorInteraction**.
+- **StartSequenceManager** — intro (una vez por nivel y arranque del juego), espera a que el jugador llegue al punto de salida, y **3-2-1-¡YA!** con metrónomo generado: tic agudo = puedes empezar (suena en cada beat mientras no has empezado), grave = vas en racha; cada acierto tiene que caer en el beat siguiente exacto; al fallar, el siguiente beat vuelve a ser agudo; solo late el círculo que toca pulsar. Modo test y reaparición en checkpoint.
+- `MainMenuManager`, `StartWall` (muro que se desmorona), `LobbyMusic` (música del lobby con pasos al ritmo), `PauseMenuManager`, `GameOverManager` (música de game over, reinicio asíncrono, respawn en checkpoint), `LevelEndManager` (resultados + contratos «por cobrar»), `DoorInteraction`.
 
-### Herramientas de diseño de niveles (editor)
-- **BeatGridVisualizer** — rejilla de beats en la escena (`cellSize = walkSpeed × duración de beat`).
-- **BeatSnapHelper**, **BeatOscillator**, **PivotOscillator**, **ConstantRotator**, **PulseToTheBeat** — objetos que se mueven / pulsan / rotan al ritmo.
-- Inspectores personalizados en `Assets/Scripts/Editor/`.
+### Tutorial y modo prueba (estudio con jugadores)
+- **Tutorial:** `TutorialHint` = **carteles en el mundo** junto a cada obstáculo con la tecla/acción (p. ej. «ESPACIO · saltar») que miran a la cámara y **laten al ritmo** de la música (menú *Tools → Tutorial → Crear avisos de ejemplo*). `TutorialHUD`: **F1** = panel de controles, F2 = activar/desactivar consejos.
+- **Modo prueba** (`Study/`): botón «Participar en la prueba» en el menú → consentimiento → código anónimo → 5 partes: práctica con tutorial; Nivel 1 con configuración **Permisiva** y **Exigente** (orden AB/BA sorteado; `StudyConfig` cambia el gasto de energía de las acciones y el castigo por fallo); Nivel 2 y Nivel 3 opcionales, **con tienda y contratos** (se gastan las monedas ganadas; se registran compras, equipamiento, tiempo en la tienda, contratos firmados/cumplidos/cobrados y monedas recogidas frente a las disponibles). Hay un cuestionario corto (1–7) tras cada parte y un Google Forms final.
+- **Telemetría** (`StudyTelemetry`): una fila por intento con precisión, Perfect/Good/fallos, desfase del clic (ms), energía gastada/perdida/recuperada, tiempo en azul, acciones, resultado. Se guarda en CSV local y se envía a un Google Form oculto. Instrucciones en `ESTUDIO_FORMULARIOS.md`.
 
-### Audio y *game feel*
-**FootstepAudio** (pasos al ritmo), **CameraShaker**, **CameraDashEffect**, **ViewmodelPhysics** (*sway* de manos/arma), **HandAnimationController**.
+### HUD
+`RhythmHUDController` + `RhythmRingVisual` (notas que convergen con la mira, también de medio beat), `CrosshairController`, `RhythmHeartMonitor`, `TimingFeedbackUI`, `HeartBeat`, `GazeChargeUI`, `CoinHUD`, `ReviveFX`, `PlayerShield`.
+
+### Herramientas de editor / diseño de niveles
+- `BeatGridVisualizer` (rejilla de beats), `BeatSnapHelper`, `PulseToTheBeat`.
+- `PlayerPathRecorder` / `RecordedPath` / `PlayerPathVisualizer` (grabar la ruta del jugador), `BeatCoinPlacer` (colocar monedas cada N beats sobre la ruta), `CoinSnapEditor` (ajustar monedas a beat / medio beat / X impar).
+- **`LevelHierarchyOrganizer`** (Tools → Nivel) — ordena el Timeline de cada nivel en «Segmento NNN · beats a-b» (4 beats) con subgrupos Escenario / Obstáculos / Interactivos / Monedas, conservando posiciones.
+- Menús: tienda (catálogo, dar monedas, borrar guardado), contratos, iris, lobby; inspectores personalizados en `Assets/Scripts/Editor/`.
 
 ---
 
 ## 2. ROADMAP Y MILESTONES PARA TFG
 
+> Actualizado sep. 2026: marcado lo que ya está en el juego. Pendiente sobre todo: puntuación con la balanza, música propia y la parte académica (Fase 5).
+
 ### Fase 0 — Fundamentos (2-3 semanas)
 **Objetivo:** que el juego no tenga bugs bloqueantes y el core loop sea jugable.
 
-- [ ] Arreglar Game Over Screen (bugs actuales)
-- [ ] Arreglar Pause Menu
-- [ ] Implementar auto-run (el jugador siempre avanza solo)
-- [ ] Rediseñar BeatManager con ventanas Perfect/Good/Miss
-- [ ] Integrar feedback visual de timing (Perfect = flash dorado, Miss = flash rojo)
-- [ ] Slide básico con Shift
+- [x] Arreglar Game Over Screen (bugs actuales)
+- [x] Arreglar Pause Menu
+- [x] Implementar auto-run (el jugador siempre avanza solo)
+- [x] Rediseñar BeatManager con ventanas Perfect/Good/Miss
+- [x] Integrar feedback visual de timing (Perfect = flash dorado, Miss = flash rojo)
+- [x] Slide básico con Shift
 
 ### Fase 1 — Movimiento Completo (3-4 semanas)
 **Objetivo:** que el movimiento se sienta como Ghostrunner/Titanfall.
 
-- [ ] Wallrun (detectar pared, aplicar movimiento horizontal + vertical)
-- [ ] Walljump (salto desde pared con impulso)
-- [ ] Rehacer Grapple (física de péndulo, no teleport)
-- [ ] Ajustar costes de energía para cada acción
-- [ ] Ajuste de feel: camera tilt en wallrun, FOV en dash, screen shake leve
+- [x] Wallrun (detectar pared, aplicar movimiento horizontal + vertical)
+- [x] Walljump (salto desde pared con impulso)
+- [x] ~~Rehacer Grapple~~ — **descartado** (el gancho se eliminó del juego)
+- [x] Ajustar costes de energía para cada acción
+- [x] Ajuste de feel: camera tilt en wallrun, FOV en dash, screen shake leve
 
 ### Fase 2 — Nivel 1 Completo (4-5 semanas)
 **Objetivo:** un nivel jugable de principio a fin, pulido, con música sincronizada.
 
-- [ ] Diseñar y construir Nivel 1 completo en Unity
+- [x] Diseñar y construir Nivel 1 completo en Unity
 - [ ] Componer/conseguir música para Nivel 1 (rabia, duelo, ira)
-- [ ] Sincronizar eventos de música con el BeatManager
+- [x] Sincronizar eventos de música con el BeatManager
 - [ ] Sistema de puntuación básico al final del nivel
-- [ ] Sistema de muerte + respawn con efecto de desfibrilador
+- [x] Sistema de muerte + respawn con efecto de desfibrilador
 
 ### Fase 3 — Sistemas de Juego (3-4 semanas)
 **Objetivo:** economía, tienda y contratos funcionando.
 
-- [ ] Sistema de monedas (spawn en nivel + contador)
-- [ ] Tienda con 4-6 upgrades funcionales
-- [ ] Al menos 1 contrato demoníaco
+- [x] Sistema de monedas (spawn en nivel + contador)
+- [x] Tienda con 4-6 upgrades funcionales
+- [x] Al menos 1 contrato demoníaco
 - [ ] 1 tipo de enemigo básico con comportamiento rítmico
 
 ### Fase 4 — Niveles 2 y 3 + Polish (3-4 semanas)
 **Objetivo:** variedad de contenido y pulido general.
 
-- [ ] Nivel 2 (prisión, sufrimiento) — puede reusar assets con paleta diferente
-- [ ] Nivel 3 (pasado, traición) — cambio de atmósfera
+- [x] Nivel 2 (prisión, sufrimiento) — puede reusar assets con paleta diferente
+- [x] Nivel 3 (pasado, traición) — cambio de atmósfera
 - [ ] Sistema de puntuación con la balanza visual
 - [ ] Efectos de partículas, screen effects, audio polish
 
@@ -154,7 +168,6 @@ Assets/
 │   │   ├── PlayerMovement.cs       ← ya hecho, refactorizar
 │   │   ├── PlayerSlide.cs          ← nuevo
 │   │   ├── PlayerWallrun.cs        ← nuevo
-│   │   ├── PlayerGrapple.cs        ← rehecho
 │   │   └── PlayerStateManager.cs   ← state machine del jugador
 │   ├── Energy/
 │   │   ├── EnergyManager.cs        ← ya hecho
@@ -246,7 +259,7 @@ El `GameManager` es el único que cambia el estado. El `BeatManager` solo activa
 
 ## 4. BEATMANAGER — REDISEÑO COMPLETO
 
-> ✅ **Estado: implementado.** Este rediseño ya está en el juego y va más allá de lo descrito aquí: el `BeatManager` real usa **sincronización por DSP** (`PlayScheduled` / `StartMusicAt`) para precisión sub-frame, permite **arrancar la canción desde un offset** (`StartMusicFrom`, base del modo test) y expone `ScheduledStartDSP`, que usan `FallingObstacle` y `StairFallingObstacle` para caer al ritmo. El código de abajo es la versión de referencia; la implementación final incluye esas extensiones.
+> ✅ **Estado: implementado.** Este rediseño ya está en el juego y va más allá de lo descrito aquí: el `BeatManager` real usa **sincronización por DSP** (`PlayScheduled` / `StartMusicAt`) para precisión sub-frame, permite **arrancar la canción desde un offset** (`StartMusicFromAt`, base del modo test y de los checkpoints) y expone `ScheduledStartDSP`, que usan `FallingObstacle` y `StairFallingObstacle` para caer al ritmo. El código de abajo es la versión de referencia; la implementación final incluye esas extensiones y **ya no tiene** `BeatProgress`, `SetBpm` ni `SetLatencyOffset` (se quitaron por no usarse).
 
 ### Problemas del BeatManager de partida
 
@@ -459,38 +472,7 @@ public class TimingFeedbackUI : MonoBehaviour
 
 ### Calibración de latencia en tiempo real
 
-Implementa una pantalla de calibración sencilla: reproduce un metronomo visual (flash en pantalla) y un metronomo auditivo (click.wav). El jugador hace clic al ritmo 8 veces. Calculas la media del offset y lo guardas en PlayerPrefs.
-
-```csharp
-// LatencyCalibrator.cs (esquema)
-public class LatencyCalibrator : MonoBehaviour
-{
-    private List<float> _offsets = new();
-
-    public void RecordClick()
-    {
-        float dist = BeatManager.Instance.GetSecondsToNearestBeat();
-        // Si el clic fue antes del beat, dist es negativo
-        float signedDist = GetSignedDistanceToBeat();
-        _offsets.Add(signedDist);
-    }
-
-    public float ComputeAverageOffset()
-    {
-        if (_offsets.Count == 0) return 0f;
-        float sum = 0f;
-        foreach (float o in _offsets) sum += o;
-        return sum / _offsets.Count;
-    }
-
-    public void Apply()
-    {
-        float offset = ComputeAverageOffset();
-        BeatManager.Instance.SetLatencyOffset(offset);
-        PlayerPrefs.SetFloat("AudioLatencyOffset", offset);
-    }
-}
-```
+> ❌ **Descartado.** Existió una pantalla `LatencyCalibrator`, pero nunca se conectó a ninguna escena y se eliminó en la limpieza de sep. 2026. El `BeatManager` sigue leyendo un offset guardado en `PlayerPrefs` (`AudioLatencyOffset`) si existe, y el offset se puede ajustar en el Inspector. Si en el futuro hace falta calibrar en otros PCs, habría que rehacer la pantalla.
 
 ---
 
@@ -505,18 +487,17 @@ El movimiento se controla con una **State Machine** explícita. Esto elimina los
 ```
 Estados del jugador:
 ├── Grounded        ← en el suelo, puede saltar, slide
-├── Airborne        ← en el aire, puede doble salto, grapple
+├── Airborne        ← en el aire, puede doble salto
 ├── Dashing         ← dash activo (override total de movimiento)
 ├── WallRunning     ← pegado a pared corriendo horizontalmente
 ├── WallJumping     ← impulso desde pared (breve)
 ├── Sliding         ← deslizándose por el suelo
-├── Grappling       ← colgado del gancho
 └── Dead            ← muerto, sin input
 ```
 
 Transiciones permitidas:
 - `Grounded` → puede iniciar `Dashing`, `Airborne` (salto), `Sliding`
-- `Airborne` → puede iniciar `Dashing`, `WallRunning`, `Grappling`
+- `Airborne` → puede iniciar `Dashing`, `WallRunning`
 - `WallRunning` → puede iniciar `WallJumping`, `Airborne` (caída)
 - `Sliding` → puede cancelar a `Grounded` o `Airborne` (salto desde slide = boost)
 - `Dashing` → siempre vuelve al estado previo al terminar
@@ -709,7 +690,7 @@ public class CameraEffects : MonoBehaviour
 
 ## 6. SISTEMA DE ENERGÍA / JERINGUILLA
 
-> ✅ **Estado: implementado.** El `EnergyManager` real ya incluye los **multiplicadores de timing** (Perfect 1.5× / Good 1×) descritos abajo, además de **modo azul (bonus)** de riesgo-recompensa, **penalización anti-spam** por ventana deslizante y **God Mode** para diseño. La muerte ocurre cuando la jeringuilla se llena por completo en modo rojo.
+> ✅ **Estado: implementado.** El `EnergyManager` real ya incluye los **multiplicadores de timing** (Perfect 1.5× / Good 1×) descritos abajo, además de **modo azul (bonus)** de riesgo-recompensa, **penalización anti-spam por beat** (en `RhythmInput`: cada clic de más en el mismo beat cuesta el doble, con «calor» si se repite) y **God Mode** para diseño. La muerte ocurre cuando la jeringuilla se llena por completo en modo rojo.
 
 ### El sistema actual es bueno — ajustes recomendados
 
@@ -916,6 +897,8 @@ public enum ScoreRating { S, A, B, C, D }
 
 ## 8. SISTEMA DE TIENDA Y ECONOMÍA
 
+> ✅ **Estado: implementado** (ver sección 1). Tienda en el lobby de cada nivel con 3 consumibles y 27 mejoras que se desbloquean por nivel (9 por nivel), **muescas** para equiparlas (3 base + compradas), cosméticos pagados con **iris** y guardado en JSON. Los precios reales están en `ShopCatalog.BuildDefault()` / el asset del catálogo; las tablas de abajo son el diseño original.
+
 ### Diseño de economía base
 
 Principio: el jugador gana monedas durante el nivel (no en la tienda). La tienda es donde las gasta entre niveles. Los precios deben diseñarse para que en una primera run sin morir el jugador pueda permitirse 1-2 upgrades entre cada nivel.
@@ -986,6 +969,8 @@ public enum UpgradeEffectType
 
 ## 9. CONTRATOS DEMONÍACOS
 
+> ✅ **Estado: implementado.** 18 contratos en 3 dificultades (Encargo / Contrato / Gran contrato), cada uno con una versión por nivel de juego (objetivo y pago crecientes; máx. 3 firmados por nivel), que se firman con el ratón en un puesto del lobby. Se cumplen durante el nivel (algunos a mitad de nivel) y el pago se **cobra en el puesto**. Reglas especiales: «Contrarreloj» (máx. 100 pulsaciones → si no, game over; desactiva el Auto-latido), «Al compás» (moverse en el beat, con medios beats) y «A pelo» (sin tienda).
+
 ### Diseño inspirado en Hades / Dead Cells
 
 Cada zona hub tiene un demonio que ofrece 1-3 contratos. Aceptarlos es opcional pero da recompensas jugosas (más monedas, upgrades gratuitos, lore).
@@ -1043,6 +1028,8 @@ public enum ContractModifierType
 ---
 
 ## 10. SISTEMA DE MUERTE Y RESPAWN
+
+> ✅ **Estado: implementado, con cambios respecto al diseño.** Al morir: la música del nivel se corta y entra la de game over con *fade in*; las monedas de la partida se conservan. Consumibles: **Vida extra** (sigues en el siguiente beat), **Checkpoint** (reapareces en el último checkpoint y la canción sigue desde ese segundo, tras el 3-2-1) y **Rebobinado** (4 beats atrás: obstáculos, bloques, monedas y kayaks vuelven a su estado). Reiniciar es asíncrono.
 
 ### Flujo de muerte
 
@@ -1304,7 +1291,7 @@ El jugador descubre que el "objeto del infierno" no es un artefacto sino el cora
 
 ### Riesgo 1 — Latencia de audio en WebGL / builds de entrega ⚠️ ALTO
 **Problema:** Unity + Windows tiene latencia variable de audio. Si tu TFG se evalúa en un PC distinto al tuyo, el timing puede desincronizarse completamente.
-**Mitigación:** Implementa la pantalla de calibración de latencia OBLIGATORIA antes del primer nivel. Guarda el offset en PlayerPrefs.
+**Mitigación:** Todo el timing va por el reloj DSP (canción, metrónomo y 3-2-1 con `PlayScheduled`). El offset de latencia se puede ajustar en el `BeatManager` (y se lee de `PlayerPrefs` si existe). La pantalla de calibración se descartó; si la evaluación se hace en otro PC, ajustar el offset a mano.
 
 ### Riesgo 2 — Wallrun + CharacterController ⚠️ MEDIO
 **Problema:** El CharacterController de Unity no interactúa bien con superficies verticales. Puede clipear, flotar o quedar pegado.
@@ -1318,99 +1305,13 @@ El jugador descubre que el "objeto del infierno" no es un artefacto sino el cora
 **Problema:** Componer música original para 5 niveles más el boss es un proyecto en sí mismo.
 **Mitigación:** Para el TFG, prioriza 1 canción completa (Nivel 1) y para los demás usa versiones cortas/loops. Alternativamente, usa música libre de derechos con stems disponibles (Incompetech, Free Music Archive) para los niveles de demostración.
 
-### Riesgo 5 — Grapple con física de péndulo ⚠️ MEDIO
-**Problema:** El grapple físico (péndulo real) es notoriamente difícil de hacer bien. El jugador puede quedar atascado, el ángulo puede ser frustrante.
-**Mitigación:** Implementa el grapple como un "accelerate toward point" con damping, no como físicas de cuerda real. Mira la implementación de grapple de Dani (YouTube) como referencia.
-
-### Riesgo 6 — Performance en builds de entrega ⚠️ BAJO-MEDIO
+### Riesgo 5 — Performance en builds de entrega ⚠️ BAJO-MEDIO
 **Problema:** Efectos de postprocesado + partículas + audio layers pueden bajar los FPS en PCs de gama media.
 **Mitigación:** Profiler desde el principio. Mantén un presupuesto: máximo 500 partículas simultáneas, máximo 4 audio sources simultáneos de música.
 
 ---
 
 ## 16. CÓDIGO C# DE REFERENCIA
-
-### Grapple rediseñado (física de aceleración)
-
-```csharp
-// PlayerGrapple.cs — versión robusta
-public class PlayerGrapple : MonoBehaviour
-{
-    [SerializeField] private float _grappleRange = 20f;
-    [SerializeField] private float _grappleForce = 15f;      // aceleración hacia el punto
-    [SerializeField] private float _maxGrappleSpeed = 20f;
-    [SerializeField] private float _damping = 2f;            // reduce oscilación
-    [SerializeField] private float _energyPerSecond = 8f;
-    [SerializeField] private LayerMask _grappleMask;
-    [SerializeField] private LineRenderer _lineRenderer;
-
-    private bool _isGrappling;
-    private Vector3 _grapplePoint;
-    private CharacterController _cc;
-    private Vector3 _velocity;  // velocidad acumulada del grapple
-
-    public bool IsGrappling => _isGrappling;
-
-    void Awake() => _cc = GetComponent<CharacterController>();
-
-    // Llama esto al presionar el botón de grapple (click derecho, por ejemplo)
-    public bool TryStartGrapple(Ray cameraRay)
-    {
-        if (_isGrappling) return false;
-        if (!Physics.Raycast(cameraRay, out var hit, _grappleRange, _grappleMask)) return false;
-
-        _grapplePoint = hit.point;
-        _isGrappling = true;
-        _velocity = Vector3.zero;
-        _lineRenderer.enabled = true;
-        return true;
-    }
-
-    public void ReleaseGrapple()
-    {
-        _isGrappling = false;
-        _lineRenderer.enabled = false;
-        // Preservar velocidad en el PlayerMovement (llamar OnGrappleReleased)
-    }
-
-    // Llama esto en Update del PlayerController cuando IsGrappling
-    public Vector3 ComputeGrappleMovement(float dt)
-    {
-        if (!_isGrappling) return Vector3.zero;
-
-        // Consumir energía
-        if (EnergyManager.Instance != null &&
-            !EnergyManager.Instance.TrySpend(_energyPerSecond * dt))
-        {
-            ReleaseGrapple();
-            return Vector3.zero;
-        }
-
-        // Dirección hacia el punto de grapple
-        Vector3 toPoint = _grapplePoint - transform.position;
-        float dist = toPoint.magnitude;
-
-        if (dist < 1.5f)
-        {
-            ReleaseGrapple();
-            return Vector3.zero;
-        }
-
-        Vector3 dir = toPoint.normalized;
-
-        // Aceleración hacia el punto, con damping para evitar oscilación infinita
-        _velocity += dir * _grappleForce * dt;
-        _velocity -= _velocity * _damping * dt;
-        _velocity = Vector3.ClampMagnitude(_velocity, _maxGrappleSpeed);
-
-        // Dibujar línea
-        _lineRenderer.SetPosition(0, transform.position);
-        _lineRenderer.SetPosition(1, _grapplePoint);
-
-        return _velocity;
-    }
-}
-```
 
 ### Sistema de pasos sincronizados
 
@@ -1450,5 +1351,56 @@ public class FootstepSync : MonoBehaviour
 
 ---
 
+## 17. REGISTRO DE LIMPIEZA Y CAMBIOS — AUDITORÍA SEP. 2026
+
+Auditoría de código en 4 fases: detectar huérfanos → retirarlos (en cuarentena y verificando que compila) → simplificar el código restante sin cambiar el comportamiento → actualizar este documento.
+
+### Archivos eliminados
+| Archivo | Motivo |
+|---|---|
+| `GrapplingHook.cs`, `GrapePoint.cs` | Stubs vacíos del gancho descartado. |
+| `HUD/OxygenBarUI.cs`, `HUD/UnderwaterFX.cs` | Stubs vacíos del buceo/oxígeno (eliminado: caer al agua = game over). |
+| `HUD/SyringeFillUI.cs` | Sin uso (el HUD de la jeringuilla va por `LiquidLevel`). |
+| `HUD/RhythmShockwave.cs` | Sin prefab ni referencias. |
+| `BeatObstacleSpawner.cs`, `BeatApproachIndicator.cs` | Generador de obstáculos sin uso; el indicador (en `Breakable.prefab`) no hacía nada sin él. |
+| `GameStarter.cs` | Sustituido por `StartSequenceManager`. |
+| `LatencyCalibrator.cs` | Pantalla nunca conectada a una escena. |
+| `LiquidWobble.cs`, `ConstantRotator.cs`, `BoneRope.cs` | Sin uso en escenas ni código. |
+| `ArmPlaceholder.cs` | Brazos-cápsula del bloqueo; el objeto `ArmRig` ya estaba desactivado. |
+| `PlayerSyncDisplay.cs` | Overlay de depuración del editor. |
+| `Editor/DuplicateZOffsetTool.cs`, `Editor/DuplicateWithOffsetEditor.cs` | Herramientas duplicadas de «duplicar con offset Z». |
+| `Editor/RopeMaterialBuilder.cs` | Generador del material de cuerda (ya creado). |
+| `_Recovery/0.unity` | Copia de recuperación automática de Unity. |
+
+También se quitaron del `Player.prefab` el componente `ArmPlaceholder` y el objeto `RopeMesh` (`TubeRenderer` de la cuerda del corazón del buceo), y de `Breakable.prefab` el `BeatApproachIndicator`.
+
+### Código muerto eliminado (sin cambio de comportamiento)
+- **Métodos sin llamadas:** `BeatManager.StartMusicFrom/SetBpm/SetLatencyOffset/BeatProgress/ClickIndex`, `EnergyManager.HasEnergy/EnterBlueMode/HitRed()/MaxEnergy`, `BossController.SpawnPillar/PlayerHitBlood/CurrentDifficulty`, `BossPillar.HitsFrontFace`, `BossPlatformSpawner.CollapseDropAt/StopSpawning/IsCollapsed`, `BossTailSweep.IsBusy/GripHand`, `BossMusicController.EndFinished`, `PlayerMovement.StartMoving`, `CameraDashEffect.OnDashSimple`, `BloodSucker.SetDrain`, `FloatingObject.React`, `RhythmRingVisual.SetElapsed`, `RecordedPath.TryGetPositionAtTime`, `TubeRenderer.Hide/SetEndpoints` (modo externo), `PlayerProgress.IsContractClaimed`, `LevelCoins.SetRun`, `LevelEndManager.SetEnd`, `CrosshairController.CurrentAngularVelocity`, `KayakController.IsFloating`, `PlayerPathRecorder.IsRecording`.
+- **Campos sin efecto:** `RhythmInput._hitWindow` (legacy), `BreakableBlock.destroyOnBreak`, `PlayerMovement.dashCooldown/slideCooldown/wallrunSpeed` (+ contadores de cooldown), `KayakController.endPointRadius`, `BossController._playerHitBlood`, `WaterDiveController.debugLogs`, variables asignadas y nunca leídas (`_fallDuration`, `_musicSourceOriginalVolume`, `_gameOverManager`, `_defaultStepOffset`, `_slideDirection`), `Update()` vacío de `BeatGridVisualizer`, 6 `using` sin uso.
+- **Guardado:** fuera las migraciones antiguas (`notchVersion`, `contractsClaimVersion`, `disabledUpgrades`, `version`).
+- **Comentarios obsoletos** corregidos (referencias a buceo/oxígeno, «versión anterior», «compatibilidad», «legacy», scripts borrados).
+
+### Cambios de comportamiento acordados
+- **Anti-spam rehecho:** fuera la ventana deslizante de 10 inputs de `EnergyManager`; ahora es por beat en `RhythmInput` (clics de más ×2, ×4… hasta ×8, con «calor» hasta ×4 si se repite). Un nivel ya no se puede pasar spameando.
+- **`WaterDiveController`:** detección del agua solo por raycast (antes también por colisión y trigger, que eran redundantes: el agua es sólida).
+- **3-2-1-¡YA!:** metrónomo generado por código (`MetronomeClicks`, sin la latencia del clip de audio; el campo `_metroSource` desapareció); tic agudo = puedes empezar, grave = en racha; reinicio inmediato al fallar; cada acierto tiene que caer en el beat siguiente exacto (antes se podía saltar un beat y seguir); solo late el círculo que toca; arreglado que los círculos dejaran de latir tras un fallo; la canción entra en el beat siguiente al ¡YA! aunque se pulse un pelín antes.
+- **Metrónomo de la tienda** refactorizado para usar `MetronomeClicks` (suena igual).
+
+### Tienda (oct. 2026)
+- Quitadas las mejoras **Coágulo** (`miss_guard`) y **Pulso limpio** (`clean_pulse`), con sus assets y su código en `EnergyManager` / `RhythmInput`.
+- Quitado el **árbol de desbloqueos** y la pantalla de categorías: `ShopUITree.cs`, `ShopUINotches.cs`, `ShopUICosmetics.cs` → todo en `ShopUI.cs` con el nuevo diseño (rejilla + ficha).
+- `ShopUnlocks` pasa a ser una tabla de **nivel de desbloqueo** por objeto (10 por nivel).
+
+### Herramientas nuevas
+- `LevelHierarchyOrganizer` (Tools → Nivel → Organizar jerarquía): los tres niveles se han reorganizado por segmentos de 4 beats. Copia de seguridad previa en `_CopiaEscenas_antesDeOrganizar/` (se puede borrar tras comprobar los niveles).
+
+### Oct. 2026 — Menús, ajustes e idioma
+- **Ajustes** (`GameSettings`): volumen y sensibilidad compartidos por el menú principal y la pausa; al mover el volumen suena el metrónomo generado (`VolumePreview`). La sensibilidad ya la aplica `PlayerMovement` (0,2×–3×).
+- **Pausa**: oculta todo el HUD (Canvas, avisos OnGUI y carteles del tutorial vía `PauseMenuManager.IsPaused`); botón y panel de Ajustes en el prefab Canvas (`Tools/Pausa/…`). En modo prueba, volver al menú avisa y descalifica (`StudySession.Abort`, fila `abandono`).
+- **Menú principal**: fondo de fuego (`MenuFireBackground`), música de Game Over en bucle, rótulos de los sliders.
+- **Idioma** (`Loc`): español por defecto / inglés, elegido en Ajustes (`LanguageButton`). Textos de código con `Loc.T(es, en)`; textos de escenas/prefabs con `LocalizedText` (`Tools/Idioma/Preparar menús`). Tienda en inglés en `ShopTextsEn`; contratos, cosméticos, estudio y tutorial traducidos. El Google Form final sigue en español.
+
+---
+
 *Documento generado como referencia de desarrollo — actualizar con cada milestone completado.*
-*Prioridad inmediata: Fase 0 (fundamentos) + rediseño del BeatManager.*
+*Estado (sep. 2026): 3 niveles + jefe jugables, tienda, muescas, contratos y cosméticos implementados; código auditado y limpio (sección 17).*

@@ -40,7 +40,9 @@ public class HandAnimationController : MonoBehaviour
 
     void OnEnable()
     {
+        // El latido es con clic IZQUIERDO o DERECHO (igual que en RhythmInput).
         _clickAction = new InputAction("HandClick", binding: "<Mouse>/leftButton");
+        _clickAction.AddBinding("<Mouse>/rightButton");
         _clickAction.performed += OnClick;
         _clickAction.Enable();
     }
@@ -70,7 +72,7 @@ public class HandAnimationController : MonoBehaviour
         // Al hacer clic, la animación llega hasta el punto de mano cerrada; si EN ESE INSTANTE sigues pulsando, se
         // queda cerrada (se mantiene el corazón); si ya has soltado, sigue y termina como un latido normal.
         bool owned   = PlayerProgress.GetLevel(ShopIds.SteadyHeart) > 0;
-        bool pressed = owned && Mouse.current != null && Mouse.current.leftButton.isPressed;
+        bool pressed = owned && Mouse.current != null && (Mouse.current.leftButton.isPressed || Mouse.current.rightButton.isPressed);
 
         if (pressed)
         {

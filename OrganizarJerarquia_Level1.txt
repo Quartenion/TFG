@@ -1,0 +1,292 @@
+Escena: Level1   ·   beat = 4,00 m   ·   segmento = 4 beats = 16,00 m
+Unidades en el Timeline: 2323   ·   Grupos con script en varios segmentos: 0
+Segmento 000 · beats 0-3
+    Escenario: Mine Structure
+Segmento 001 · beats 4-7
+    Escenario: Mine Structure
+Segmento 002 · beats 8-11
+    Escenario: Mine Structure
+    Obstáculos: Cube
+Segmento 003 · beats 12-15
+    Escenario: Mine Structure
+Segmento 004 · beats 16-19
+    Escenario: Mine Structure
+    Obstáculos: Cube (4)
+Segmento 005 · beats 20-23
+    Escenario: Mine Structure
+Segmento 006 · beats 24-27
+    Escenario: Mine Structure
+    Obstáculos: Cube (5)
+Segmento 007 · beats 28-31
+    Escenario: Mine Structure
+    Obstáculos: Cube (6), Cube (7)
+Segmento 008 · beats 32-35
+    Escenario: Mine Structure
+    Obstáculos: Cube (8)
+Segmento 009 · beats 36-39
+    Escenario: Mine Structure
+Segmento 010 · beats 40-43
+    Escenario: Mine Structure
+    Obstáculos: Cube (16)
+Segmento 011 · beats 44-47
+    Escenario: Mine Structure
+Segmento 012 · beats 48-51
+    Escenario: Mine Structure
+    Obstáculos: Cube (16)
+Segmento 013 · beats 52-55
+    Escenario: Mine Structure
+Segmento 014 · beats 56-59
+    Escenario: Mine Structure
+    Obstáculos: Cube (16)
+Segmento 015 · beats 60-63
+    Escenario: Mine Structure
+    Obstáculos: Cube (18), Cube (5)
+Segmento 016 · beats 64-67
+    Escenario: Mine Structure
+    Obstáculos: Cube (19)
+Segmento 017 · beats 68-71
+    Escenario: Mine Structure
+Segmento 018 · beats 72-75
+    Escenario: Mine Structure
+Segmento 019 · beats 76-79
+    Escenario: Mine Structure
+Segmento 020 · beats 80-83
+    Escenario: Mine Structure
+Segmento 021 · beats 84-87
+    Escenario: Mine Structure
+Segmento 022 · beats 88-91
+    Escenario: Mine Structure
+Segmento 023 · beats 92-95
+    Escenario: Mine Structure
+Segmento 024 · beats 96-99
+    Escenario: Floor, Down Wall Last, Down Wall Last, Mine Structure
+Segmento 025 · beats 100-103
+    Escenario: Left Wall (2), Floor (2), Right Wall (2), Mine Structure
+    Obstáculos: Cube
+Segmento 026 · beats 104-107
+    Escenario: Mine Structure
+Segmento 027 · beats 108-111
+    Escenario: Mine Structure
+Segmento 028 · beats 112-115
+    Escenario: Mine Structure
+    Interactivos: Zipline Start
+Segmento 029 · beats 116-119
+    Escenario: Mine Structure
+    Obstáculos: Cube
+Segmento 030 · beats 120-123
+    Escenario: Zipline End, Mine Structure
+Segmento 031 · beats 124-127
+    Escenario: Mine Structure
+Segmento 032 · beats 128-131
+    Escenario: Mine Structure
+Segmento 033 · beats 132-135
+    Escenario: Mine Structure
+Segmento 034 · beats 136-139
+    Escenario: Mine Structure
+    Obstáculos: Cube (2), Cube, Cube (1), Door, Door (1), Door (2), Cube, Cube (3), Cube (4)
+Segmento 035 · beats 140-143
+    Escenario: Mine Structure
+Segmento 036 · beats 144-147
+    Escenario: Mine Structure
+    Obstáculos: Cube (2), Cube, Cube (1), Door, Door (1), Door (2), Cube, Cube (3), Cube (4)
+Segmento 037 · beats 148-151
+    Escenario: Mine Structure
+Segmento 038 · beats 152-155
+    Escenario: Mine Structure
+    Obstáculos: Cube (2), Cube (3), Cube (4), Door, Door (1), Door (2), Cube (5), Cube (6), Cube (7)
+Segmento 039 · beats 156-159
+    Escenario: Mine Structure
+    Obstáculos: Cube (2), Cube (3), Cube (4), Door (1), Cube (6), Cube (5), Cube (7), Cube (8), Door (2), Cube (9)
+Segmento 040 · beats 160-163
+    Escenario: Mine Structure
+    Obstáculos: Cube (10), Cube (11), Cube (12), Door (3), Cube (13)
+Segmento 041 · beats 164-167
+    Escenario: Mine Structure
+Segmento 042 · beats 168-171
+    Escenario: Mine Structure
+Segmento 043 · beats 172-175
+    Escenario: Mine Structure
+Segmento 044 · beats 176-179
+    Escenario: Mine Structure
+Segmento 045 · beats 180-183
+    Escenario: Mine Structure
+Segmento 046 · beats 184-187
+    Escenario: Mine Structure
+Segmento 047 · beats 188-191
+    Escenario: Mine Structure
+Segmento 048 · beats 192-195
+    Escenario: Mine Structure
+Segmento 049 · beats 196-199
+    Escenario: Mine Structure
+    Obstáculos: Cube (4), Cube (3), Cube (2)
+Segmento 050 · beats 200-203
+    Escenario: Mine Structure
+Segmento 051 · beats 204-207
+    Escenario: Mine Structure
+    Obstáculos: Cube (14), Cube (15)
+Segmento 052 · beats 208-211
+    Escenario: Mine Structure
+Segmento 053 · beats 212-215
+    Escenario: Mine Structure
+    Obstáculos: Cube, Cube (1), Cube (2)
+Segmento 054 · beats 216-219
+    Escenario: Mine Structure, Cube (16), Cube (17)
+    Obstáculos: Cube (15)
+Segmento 055 · beats 220-223
+    Escenario: Mine Structure
+Segmento 056 · beats 224-227
+    Escenario: Mine Structure
+    Obstáculos: Cube (3)
+Segmento 057 · beats 228-231
+    Escenario: Mine Structure
+Segmento 058 · beats 232-235
+    Escenario: Mine Structure
+Segmento 059 · beats 236-239
+    Escenario: Mine Structure
+Segmento 060 · beats 240-243
+    Escenario: Mine Structure
+Segmento 061 · beats 244-247
+    Escenario: Mine Structure
+Segmento 062 · beats 248-251
+    Escenario: Mine Structure
+Segmento 063 · beats 252-255
+    Escenario: Mine Structure
+Segmento 064 · beats 256-259
+    Escenario: Mine Structure
+Segmento 065 · beats 260-263
+    Escenario: Mine Structure
+Segmento 066 · beats 264-267
+    Escenario: Mine Structure
+Segmento 067 · beats 268-271
+    Escenario: Mine Structure
+Segmento 068 · beats 272-275
+    Escenario: Mine Structure
+Segmento 069 · beats 276-279
+    Escenario: Mine Structure
+Segmento 070 · beats 280-283
+    Escenario: Mine Structure, Cube (18)
+Segmento 071 · beats 284-287
+    Escenario: Mine Structure
+Segmento 072 · beats 288-291
+    Escenario: Mine Structure
+Segmento 073 · beats 292-295
+    Escenario: Mine Structure
+    Obstáculos: Cone (75), Cone (79), Cone (83), Cone (87), Cone (91), Cone (95), Cone (97), Cone (101), Cone (105), Cone (109), Cone (113), Cone (117), Cone (96), Cone (100), Cone (104), Cone (108), Cone (112), Cone (116), Cone (98), Cone (102), Cone (106), Cone (110), Cone (114), Cone (118), Cube (4)
+Segmento 074 · beats 296-299
+    Escenario: Mine Structure
+Segmento 075 · beats 300-303
+    Escenario: Mine Structure
+Segmento 076 · beats 304-307
+    Escenario: Mine Structure
+Segmento 077 · beats 308-311
+    Escenario: Mine Structure
+Segmento 078 · beats 312-315
+    Escenario: Mine Structure
+Segmento 079 · beats 316-319
+    Escenario: Mine Structure
+Segmento 080 · beats 320-323
+    Escenario: Mine Structure
+Segmento 081 · beats 324-327
+    Escenario: Mine Structure
+Segmento 082 · beats 328-331
+    Escenario: Cube (1), Mine Structure
+Segmento 083 · beats 332-335
+    Escenario: Mine Structure
+Segmento 084 · beats 336-339
+    Escenario: Mine Structure
+Segmento 085 · beats 340-343
+    Escenario: Mine Structure
+Segmento 086 · beats 344-347
+    Escenario: Mine Structure
+Segmento 087 · beats 348-351
+    Escenario: Mine Structure
+Segmento 088 · beats 352-355
+    Escenario: Mine Structure
+Segmento 089 · beats 356-359
+    Escenario: Mine Structure
+Segmento 090 · beats 360-363
+    Escenario: Mine Structure
+Segmento 091 · beats 364-367
+    Escenario: Mine Structure
+Segmento 092 · beats 368-371
+    Escenario: Mine Structure
+Segmento 093 · beats 372-375
+    Escenario: Mine Structure
+Segmento 094 · beats 376-379
+    Escenario: Mine Structure
+Segmento 095 · beats 380-383
+    Escenario: Mine Structure
+Segmento 096 · beats 384-387
+    Escenario: Zipline End, Mine Structure
+    Obstáculos: Cube (18)
+Segmento 097 · beats 388-391
+    Escenario: Mine Structure
+Segmento 098 · beats 392-395
+    Escenario: Mine Structure
+Segmento 099 · beats 396-399
+    Escenario: Mine Structure
+Segmento 100 · beats 400-403
+    Escenario: Mine Structure
+Segmento 101 · beats 404-407
+    Escenario: Mine Structure
+Segmento 102 · beats 408-411
+    Escenario: Mine Structure
+Segmento 103 · beats 412-415
+    Escenario: Mine Structure
+Segmento 104 · beats 416-419
+    Escenario: Mine Structure
+Segmento 105 · beats 420-423
+    Escenario: Mine Structure
+    Obstáculos: Cube (5)
+Segmento 106 · beats 424-427
+    Escenario: Mine Structure
+Segmento 107 · beats 428-431
+    Escenario: Mine Structure
+Segmento 108 · beats 432-435
+    Escenario: Mine Structure
+Segmento 109 · beats 436-439
+    Escenario: Mine Structure
+Segmento 110 · beats 440-443
+    Escenario: Mine Structure
+Segmento 111 · beats 444-447
+    Escenario: Mine Structure
+Segmento 112 · beats 448-451
+    Escenario: Mine Structure
+Segmento 113 · beats 452-455
+    Escenario: Mine Structure
+    Obstáculos: Cone (457), Cone (477), Cone (497), Cone (517), Cone (537), Cone (557), Cone (577), Cone (597), Cone (617), Cone (637), Cone (657), Cone (677), Cone (697), Cone (717), Cone (737), Cone (757), Cone (777), Cone (797), Cone (474), Cone (494), Cone (514), Cone (534), Cone (554), Cone (574), Cone (594), Cone (614), Cone (634), Cone (654), Cone (674), Cone (694), Cone (714), Cone (734), Cone (754), Cone (774), Cone (794), Cone (814), Cube (5), Cone (470), Cone (490), Cone (510), Cone (530), Cone (550), Cone (570), Cone (590), Cone (610), Cone (630), Cone (650), Cone (670), Cone (690), Cone (710), Cone (730), Cone (750), Cone (770), Cone (790), Cone (810), Cone (466), Cone (486), Cone (506), Cone (526), Cone (546), Cone (566), Cone (586), Cone (606), Cone (626), Cone (646), Cone (666), Cone (686), Cone (706), Cone (726), Cone (746), Cone (766), Cone (786), Cone (806), Cone (462), Cone (482), Cone (502), Cone (522), Cone (542), Cone (562), Cone (582), Cone (602), Cone (622), Cone (642), Cone (662), Cone (682), Cone (702), Cone (722), Cone (742), Cone (762), Cone (782), Cone (802), Cone (458), Cone (478), Cone (498), Cone (518), Cone (538), Cone (558), Cone (578), Cone (598), Cone (618), Cone (638), Cone (658), Cone (678), Cone (698), Cone (718), Cone (738), Cone (758), Cone (778), Cone (798), Cone (475), Cone (495), Cone (515), Cone (535), Cone (555), Cone (575), Cone (595), Cone (615), Cone (635), Cone (655), Cone (675), Cone (695), Cone (715), Cone (735), Cone (755), Cone (775), Cone (795), Cone (815), Cone (471), Cone (491), Cone (511), Cone (531), Cone (551), Cone (571), Cone (591), Cone (611), Cone (631), Cone (651), Cone (671), Cone (691), Cone (711), Cone (731), Cone (751), Cone (771), Cone (791), Cone (811)
+Segmento 114 · beats 456-459
+    Escenario: Mine Structure
+    Obstáculos: Cone (467), Cone (487), Cone (507), Cone (527), Cone (547), Cone (567), Cone (587), Cone (607), Cone (627), Cone (647), Cone (667), Cone (687), Cone (707), Cone (727), Cone (747), Cone (767), Cone (787), Cone (807), Cone (463), Cone (483), Cone (503), Cone (523), Cone (543), Cone (563), Cone (583), Cone (603), Cone (623), Cone (643), Cone (663), Cone (683), Cone (703), Cone (723), Cone (743), Cone (763), Cone (783), Cone (803), Cone (459), Cone (479), Cone (499), Cone (519), Cone (539), Cone (559), Cone (579), Cone (599), Cone (619), Cone (639), Cone (659), Cone (679), Cone (699), Cone (719), Cone (739), Cone (759), Cone (779), Cone (799), Cone (476), Cone (496), Cone (516), Cone (536), Cone (556), Cone (576), Cone (596), Cone (616), Cone (636), Cone (656), Cone (676), Cone (696), Cone (716), Cone (736), Cone (756), Cone (776), Cone (796), Cone (816), Cone (472), Cone (492), Cone (512), Cone (532), Cone (552), Cone (572), Cone (592), Cone (612), Cone (632), Cone (652), Cone (672), Cone (692), Cone (712), Cone (732), Cone (752), Cone (772), Cone (792), Cone (812), Cone (468), Cone (488), Cone (508), Cone (528), Cone (548), Cone (568), Cone (588), Cone (608), Cone (628), Cone (648), Cone (668), Cone (688), Cone (708), Cone (728), Cone (748), Cone (768), Cone (788), Cone (808), Cone (464), Cone (484), Cone (504), Cone (524), Cone (544), Cone (564), Cone (584), Cone (604), Cone (624), Cone (644), Cone (664), Cone (684), Cone (704), Cone (724), Cone (744), Cone (764), Cone (784), Cone (804), Cone (460), Cone (480), Cone (500), Cone (520), Cone (540), Cone (560), Cone (580), Cone (600), Cone (620), Cone (640), Cone (660), Cone (680), Cone (700), Cone (720), Cone (740), Cone (760), Cone (780), Cone (800), Cone (833), Cone (853), Cone (873), Cone (893), Cone (913), Cone (933), Cone (953), Cone (973), Cone (993), Cone (1013), Cone (1033), Cone (1053), Cone (1073), Cone (1093), Cone (1113), Cone (1133), Cone (1153), Cone (1173), Cone (829), Cone (849), Cone (869), Cone (889), Cone (909), Cone (929), Cone (949), Cone (969), Cone (989), Cone (1009), Cone (1029), Cone (1049), Cone (1069), Cone (1089), Cone (1109), Cone (1129), Cone (1149), Cone (1169), Cone (825), Cone (845), Cone (865), Cone (885), Cone (905), Cone (925), Cone (945), Cone (965), Cone (985), Cone (1005), Cone (1025), Cone (1045), Cone (1065), Cone (1085), Cone (1105), Cone (1125), Cone (1145), Cone (1165), Cone (821), Cone (841), Cone (861), Cone (881), Cone (901), Cone (921), Cone (941), Cone (961), Cone (981), Cone (1001), Cone (1021), Cone (1041), Cone (1061), Cone (1081), Cone (1101), Cone (1121), Cone (1141), Cone (1161), Cone (817), Cone (837), Cone (857), Cone (877), Cone (897), Cone (917), Cone (937), Cone (957), Cone (977), Cone (997), Cone (1017), Cone (1037), Cone (1057), Cone (1077), Cone (1097), Cone (1117), Cone (1137), Cone (1157), Cone (834), Cone (854), Cone (874), Cone (894), Cone (914), Cone (934), Cone (954), Cone (974), Cone (994), Cone (1014), Cone (1034), Cone (1054), Cone (1074), Cone (1094), Cone (1114), Cone (1134), Cone (1154), Cone (1174), Cone (830), Cone (850), Cone (870), Cone (890), Cone (910), Cone (930), Cone (950), Cone (970), Cone (990), Cone (1010), Cone (1030), Cone (1050), Cone (1070), Cone (1090), Cone (1110), Cone (1130), Cone (1150), Cone (1170), Cone (826), Cone (846), Cone (866), Cone (886), Cone (906), Cone (926), Cone (946), Cone (966), Cone (986), Cone (1006), Cone (1026), Cone (1046), Cone (1066), Cone (1086), Cone (1106), Cone (1126), Cone (1146), Cone (1166)
+Segmento 115 · beats 460-463
+    Escenario: Mine Structure
+    Obstáculos: Cone (822), Cone (842), Cone (862), Cone (882), Cone (902), Cone (922), Cone (942), Cone (962), Cone (982), Cone (1002), Cone (1022), Cone (1042), Cone (1062), Cone (1082), Cone (1102), Cone (1122), Cone (1142), Cone (1162), Cone (818), Cone (838), Cone (858), Cone (878), Cone (898), Cone (918), Cone (938), Cone (958), Cone (978), Cone (998), Cone (1018), Cone (1038), Cone (1058), Cone (1078), Cone (1098), Cone (1118), Cone (1138), Cone (1158), Cone (835), Cone (855), Cone (875), Cone (895), Cone (915), Cone (935), Cone (955), Cone (975), Cone (995), Cone (1015), Cone (1035), Cone (1055), Cone (1075), Cone (1095), Cone (1115), Cone (1135), Cone (1155), Cone (1175), Cone (831), Cone (851), Cone (871), Cone (891), Cone (911), Cone (931), Cone (951), Cone (971), Cone (991), Cone (1011), Cone (1031), Cone (1051), Cone (1071), Cone (1091), Cone (1111), Cone (1131), Cone (1151), Cone (1171), Cone (827), Cone (847), Cone (867), Cone (887), Cone (907), Cone (927), Cone (947), Cone (967), Cone (987), Cone (1007), Cone (1027), Cone (1047), Cone (1067), Cone (1087), Cone (1107), Cone (1127), Cone (1147), Cone (1167), Cone (823), Cone (843), Cone (863), Cone (883), Cone (903), Cone (923), Cone (943), Cone (963), Cone (983), Cone (1003), Cone (1023), Cone (1043), Cone (1063), Cone (1083), Cone (1103), Cone (1123), Cone (1143), Cone (1163), Cone (819), Cone (839), Cone (859), Cone (879), Cone (899), Cone (919), Cone (939), Cone (959), Cone (979), Cone (999), Cone (1019), Cone (1039), Cone (1059), Cone (1079), Cone (1099), Cone (1119), Cone (1139), Cone (1159), Cone (836), Cone (856), Cone (876), Cone (896), Cone (916), Cone (936), Cone (956), Cone (976), Cone (996), Cone (1016), Cone (1036), Cone (1056), Cone (1076), Cone (1096), Cone (1116), Cone (1136), Cone (1156), Cone (1176), Cone (832), Cone (852), Cone (872), Cone (892), Cone (912), Cone (932), Cone (952), Cone (972), Cone (992), Cone (1012), Cone (1032), Cone (1052), Cone (1072), Cone (1092), Cone (1112), Cone (1132), Cone (1152), Cone (1172), Cone (828), Cone (848), Cone (868), Cone (888), Cone (908), Cone (928), Cone (948), Cone (968), Cone (988), Cone (1008), Cone (1028), Cone (1048), Cone (1068), Cone (1088), Cone (1108), Cone (1128), Cone (1148), Cone (1168), Cone (824), Cone (844), Cone (864), Cone (884), Cone (904), Cone (924), Cone (944), Cone (964), Cone (984), Cone (1004), Cone (1024), Cone (1044), Cone (1064), Cone (1084), Cone (1104), Cone (1124), Cone (1144), Cone (1164), Cone (820), Cone (840), Cone (860), Cone (880), Cone (900), Cone (920), Cone (940), Cone (960), Cone (980), Cone (1000), Cone (1020), Cone (1040), Cone (1060), Cone (1080), Cone (1100), Cone (1120), Cone (1140), Cone (1160), Cone (1193), Cone (1213), Cone (1233), Cone (1253), Cone (1273), Cone (1293), Cone (1313), Cone (1333), Cone (1353), Cone (1373), Cone (1393), Cone (1413), Cone (1433), Cone (1453), Cone (1473), Cone (1493), Cone (1513), Cone (1533), Cone (1189), Cone (1209), Cone (1229), Cone (1249), Cone (1269), Cone (1289), Cone (1309), Cone (1329), Cone (1349), Cone (1369), Cone (1389), Cone (1409), Cone (1429), Cone (1449), Cone (1469), Cone (1489), Cone (1509), Cone (1529), Cone (1185), Cone (1205), Cone (1225), Cone (1245), Cone (1265), Cone (1285), Cone (1305), Cone (1325), Cone (1345), Cone (1365), Cone (1385), Cone (1405), Cone (1425), Cone (1445), Cone (1465), Cone (1485), Cone (1505), Cone (1525), Cone (1181), Cone (1201), Cone (1221), Cone (1241), Cone (1261), Cone (1281), Cone (1301), Cone (1321), Cone (1341), Cone (1361), Cone (1381), Cone (1401), Cone (1421), Cone (1441), Cone (1461), Cone (1481), Cone (1501), Cone (1521)
+Segmento 116 · beats 464-467
+    Escenario: Mine Structure
+    Obstáculos: Cone (1177), Cone (1197), Cone (1217), Cone (1237), Cone (1257), Cone (1277), Cone (1297), Cone (1317), Cone (1337), Cone (1357), Cone (1377), Cone (1397), Cone (1417), Cone (1437), Cone (1457), Cone (1477), Cone (1497), Cone (1517), Cone (1194), Cone (1214), Cone (1234), Cone (1254), Cone (1274), Cone (1294), Cone (1314), Cone (1334), Cone (1354), Cone (1374), Cone (1394), Cone (1414), Cone (1434), Cone (1454), Cone (1474), Cone (1494), Cone (1514), Cone (1534), Cone (1190), Cone (1210), Cone (1230), Cone (1250), Cone (1270), Cone (1290), Cone (1310), Cone (1330), Cone (1350), Cone (1370), Cone (1390), Cone (1410), Cone (1430), Cone (1450), Cone (1470), Cone (1490), Cone (1510), Cone (1530), Cone (1186), Cone (1206), Cone (1226), Cone (1246), Cone (1266), Cone (1286), Cone (1306), Cone (1326), Cone (1346), Cone (1366), Cone (1386), Cone (1406), Cone (1426), Cone (1446), Cone (1466), Cone (1486), Cone (1506), Cone (1526), Cone (1182), Cone (1202), Cone (1222), Cone (1242), Cone (1262), Cone (1282), Cone (1302), Cone (1322), Cone (1342), Cone (1362), Cone (1382), Cone (1402), Cone (1422), Cone (1442), Cone (1462), Cone (1482), Cone (1502), Cone (1522), Cone (1178), Cone (1198), Cone (1218), Cone (1238), Cone (1258), Cone (1278), Cone (1298), Cone (1318), Cone (1338), Cone (1358), Cone (1378), Cone (1398), Cone (1418), Cone (1438), Cone (1458), Cone (1478), Cone (1498), Cone (1518), Cone (1195), Cone (1215), Cone (1235), Cone (1255), Cone (1275), Cone (1295), Cone (1315), Cone (1335), Cone (1355), Cone (1375), Cone (1395), Cone (1415), Cone (1435), Cone (1455), Cone (1475), Cone (1495), Cone (1515), Cone (1535), Cone (1191), Cone (1211), Cone (1231), Cone (1251), Cone (1271), Cone (1291), Cone (1311), Cone (1331), Cone (1351), Cone (1371), Cone (1391), Cone (1411), Cone (1431), Cone (1451), Cone (1471), Cone (1491), Cone (1511), Cone (1531), Cone (1187), Cone (1207), Cone (1227), Cone (1247), Cone (1267), Cone (1287), Cone (1307), Cone (1327), Cone (1347), Cone (1367), Cone (1387), Cone (1407), Cone (1427), Cone (1447), Cone (1467), Cone (1487), Cone (1507), Cone (1527), Cone (1183), Cone (1203), Cone (1223), Cone (1243), Cone (1263), Cone (1283), Cone (1303), Cone (1323), Cone (1343), Cone (1363), Cone (1383), Cone (1403), Cone (1423), Cone (1443), Cone (1463), Cone (1483), Cone (1503), Cone (1523), Cone (1179), Cone (1199), Cone (1219), Cone (1239), Cone (1259), Cone (1279), Cone (1299), Cone (1319), Cone (1339), Cone (1359), Cone (1379), Cone (1399), Cone (1419), Cone (1439), Cone (1459), Cone (1479), Cone (1499), Cone (1519), Cone (1196), Cone (1216), Cone (1236), Cone (1256), Cone (1276), Cone (1296), Cone (1316), Cone (1336), Cone (1356), Cone (1376), Cone (1396), Cone (1416), Cone (1436), Cone (1456), Cone (1476), Cone (1496), Cone (1516), Cone (1536), Cone (1192), Cone (1212), Cone (1232), Cone (1252), Cone (1272), Cone (1292), Cone (1312), Cone (1332), Cone (1352), Cone (1372), Cone (1392), Cone (1412), Cone (1432), Cone (1452), Cone (1472), Cone (1492), Cone (1512), Cone (1532), Cone (1188), Cone (1208), Cone (1228), Cone (1248), Cone (1268), Cone (1288), Cone (1308), Cone (1328), Cone (1348), Cone (1368), Cone (1388), Cone (1408), Cone (1428), Cone (1448), Cone (1468), Cone (1488), Cone (1508), Cone (1528), Cone (1184), Cone (1204), Cone (1224), Cone (1244), Cone (1264), Cone (1284), Cone (1304), Cone (1324), Cone (1344), Cone (1364), Cone (1384), Cone (1404), Cone (1424), Cone (1444), Cone (1464), Cone (1484), Cone (1504), Cone (1524), Cone (1180), Cone (1200), Cone (1220), Cone (1240), Cone (1260), Cone (1280), Cone (1300), Cone (1320), Cone (1340), Cone (1360), Cone (1380), Cone (1400), Cone (1420), Cone (1440), Cone (1460), Cone (1480), Cone (1500), Cone (1520)
+Segmento 117 · beats 468-471
+    Escenario: Mine Structure
+    Obstáculos: Cone (1553), Cone (1573), Cone (1593), Cone (1613), Cone (1633), Cone (1653), Cone (1673), Cone (1693), Cone (1713), Cone (1733), Cone (1753), Cone (1773), Cone (1793), Cone (1813), Cone (1833), Cone (1853), Cone (1873), Cone (1893), Cone (1549), Cone (1569), Cone (1589), Cone (1609), Cone (1629), Cone (1649), Cone (1669), Cone (1689), Cone (1709), Cone (1729), Cone (1749), Cone (1769), Cone (1789), Cone (1809), Cone (1829), Cone (1849), Cone (1869), Cone (1889), Cone (1545), Cone (1565), Cone (1585), Cone (1605), Cone (1625), Cone (1645), Cone (1665), Cone (1685), Cone (1705), Cone (1725), Cone (1745), Cone (1765), Cone (1785), Cone (1805), Cone (1825), Cone (1845), Cone (1865), Cone (1885), Cone (1541), Cone (1561), Cone (1581), Cone (1601), Cone (1621), Cone (1641), Cone (1661), Cone (1681), Cone (1701), Cone (1721), Cone (1741), Cone (1761), Cone (1781), Cone (1801), Cone (1821), Cone (1841), Cone (1861), Cone (1881), Cone (1537), Cone (1557), Cone (1577), Cone (1597), Cone (1617), Cone (1637), Cone (1657), Cone (1677), Cone (1697), Cone (1717), Cone (1737), Cone (1757), Cone (1777), Cone (1797), Cone (1817), Cone (1837), Cone (1857), Cone (1877), Cone (1554), Cone (1574), Cone (1594), Cone (1614), Cone (1634), Cone (1654), Cone (1674), Cone (1694), Cone (1714), Cone (1734), Cone (1754), Cone (1774), Cone (1794), Cone (1814), Cone (1834), Cone (1854), Cone (1874), Cone (1894), Cone (1550), Cone (1570), Cone (1590), Cone (1610), Cone (1630), Cone (1650), Cone (1670), Cone (1690), Cone (1710), Cone (1730), Cone (1750), Cone (1770), Cone (1790), Cone (1810), Cone (1830), Cone (1850), Cone (1870), Cone (1890), Cone (1546), Cone (1566), Cone (1586), Cone (1606), Cone (1626), Cone (1646), Cone (1666), Cone (1686), Cone (1706), Cone (1726), Cone (1746), Cone (1766), Cone (1786), Cone (1806), Cone (1826), Cone (1846), Cone (1866), Cone (1886), Cone (1542), Cone (1562), Cone (1582), Cone (1602), Cone (1622), Cone (1642), Cone (1662), Cone (1682), Cone (1702), Cone (1722), Cone (1742), Cone (1762), Cone (1782), Cone (1802), Cone (1822), Cone (1842), Cone (1862), Cone (1882), Cone (1538), Cone (1558), Cone (1578), Cone (1598), Cone (1618), Cone (1638), Cone (1658), Cone (1678), Cone (1698), Cone (1718), Cone (1738), Cone (1758), Cone (1778), Cone (1798), Cone (1818), Cone (1838), Cone (1858), Cone (1878), Cone (1555), Cone (1575), Cone (1595), Cone (1615), Cone (1635), Cone (1655), Cone (1675), Cone (1695), Cone (1715), Cone (1735), Cone (1755), Cone (1775), Cone (1795), Cone (1815), Cone (1835), Cone (1855), Cone (1875), Cone (1895), Cone (1551), Cone (1571), Cone (1591), Cone (1611), Cone (1631), Cone (1651), Cone (1671), Cone (1691), Cone (1711), Cone (1731), Cone (1751), Cone (1771), Cone (1791), Cone (1811), Cone (1831), Cone (1851), Cone (1871), Cone (1891), Cone (1547), Cone (1567), Cone (1587), Cone (1607), Cone (1627), Cone (1647), Cone (1667), Cone (1687), Cone (1707), Cone (1727), Cone (1747), Cone (1767), Cone (1787), Cone (1807), Cone (1827), Cone (1847), Cone (1867), Cone (1887), Cone (1543), Cone (1563), Cone (1583), Cone (1603), Cone (1623), Cone (1643), Cone (1663), Cone (1683), Cone (1703), Cone (1723), Cone (1743), Cone (1763), Cone (1783), Cone (1803), Cone (1823), Cone (1843), Cone (1863), Cone (1883), Cone (1539), Cone (1559), Cone (1579), Cone (1599), Cone (1619), Cone (1639), Cone (1659), Cone (1679), Cone (1699), Cone (1719), Cone (1739), Cone (1759), Cone (1779), Cone (1799), Cone (1819), Cone (1839), Cone (1859), Cone (1879), Cone (1556), Cone (1576), Cone (1596), Cone (1616), Cone (1636), Cone (1656), Cone (1676), Cone (1696), Cone (1716), Cone (1736), Cone (1756), Cone (1776), Cone (1796), Cone (1816), Cone (1836), Cone (1856), Cone (1876), Cone (1896)
+Segmento 118 · beats 472-475
+    Escenario: Mine Structure
+    Obstáculos: Cone (1552), Cone (1572), Cone (1592), Cone (1612), Cone (1632), Cone (1652), Cone (1672), Cone (1692), Cone (1712), Cone (1732), Cone (1752), Cone (1772), Cone (1792), Cone (1812), Cone (1832), Cone (1852), Cone (1872), Cone (1892), Cone (1548), Cone (1568), Cone (1588), Cone (1608), Cone (1628), Cone (1648), Cone (1668), Cone (1688), Cone (1708), Cone (1728), Cone (1748), Cone (1768), Cone (1788), Cone (1808), Cone (1828), Cone (1848), Cone (1868), Cone (1888), Cone (1544), Cone (1564), Cone (1584), Cone (1604), Cone (1624), Cone (1644), Cone (1664), Cone (1684), Cone (1704), Cone (1724), Cone (1744), Cone (1764), Cone (1784), Cone (1804), Cone (1824), Cone (1844), Cone (1864), Cone (1884), Cone (1540), Cone (1560), Cone (1580), Cone (1600), Cone (1620), Cone (1640), Cone (1660), Cone (1680), Cone (1700), Cone (1720), Cone (1740), Cone (1760), Cone (1780), Cone (1800), Cone (1820), Cone (1840), Cone (1860), Cone (1880), Cone (1913), Cone (1933), Cone (1953), Cone (1973), Cone (1993), Cone (2013), Cone (2033), Cone (2053), Cone (2073), Cone (2093), Cone (2113), Cone (2133), Cone (2153), Cone (2173), Cone (2193), Cone (2213), Cone (2233), Cone (2253), Cone (1909), Cone (1929), Cone (1949), Cone (1969), Cone (1989), Cone (2009), Cone (2029), Cone (2049), Cone (2069), Cone (2089), Cone (2109), Cone (2129), Cone (2149), Cone (2169), Cone (2189), Cone (2209), Cone (2229), Cone (2249), Cone (1905), Cone (1925), Cone (1945), Cone (1965), Cone (1985), Cone (2005), Cone (2025), Cone (2045), Cone (2065), Cone (2085), Cone (2105), Cone (2125), Cone (2145), Cone (2165), Cone (2185), Cone (2205), Cone (2225), Cone (2245), Cone (1901), Cone (1921), Cone (1941), Cone (1961), Cone (1981), Cone (2001), Cone (2021), Cone (2041), Cone (2061), Cone (2081), Cone (2101), Cone (2121), Cone (2141), Cone (2161), Cone (2181), Cone (2201), Cone (2221), Cone (2241), Cone (1897), Cone (1917), Cone (1937), Cone (1957), Cone (1977), Cone (1997), Cone (2017), Cone (2037), Cone (2057), Cone (2077), Cone (2097), Cone (2117), Cone (2137), Cone (2157), Cone (2177), Cone (2197), Cone (2217), Cone (2237), Cone (1914), Cone (1934), Cone (1954), Cone (1974), Cone (1994), Cone (2014), Cone (2034), Cone (2054), Cone (2074), Cone (2094), Cone (2114), Cone (2134), Cone (2154), Cone (2174), Cone (2194), Cone (2214), Cone (2234), Cone (2254), Cone (1910), Cone (1930), Cone (1950), Cone (1970), Cone (1990), Cone (2010), Cone (2030), Cone (2050), Cone (2070), Cone (2090), Cone (2110), Cone (2130), Cone (2150), Cone (2170), Cone (2190), Cone (2210), Cone (2230), Cone (2250), Cone (1906), Cone (1926), Cone (1946), Cone (1966), Cone (1986), Cone (2006), Cone (2026), Cone (2046), Cone (2066), Cone (2086), Cone (2106), Cone (2126), Cone (2146), Cone (2166), Cone (2186), Cone (2206), Cone (2226), Cone (2246), Cone (1902), Cone (2273), Cone (1922), Cone (2293), Cone (1942), Cone (2313), Cone (1962), Cone (2333), Cone (1982), Cone (2353), Cone (2002), Cone (2373), Cone (2022), Cone (2393), Cone (2042), Cone (2413), Cone (2062), Cone (2433), Cone (2082), Cone (2453), Cone (2102), Cone (2473), Cone (2122), Cone (2493), Cone (2142), Cone (2513), Cone (2162), Cone (2533), Cone (2182), Cone (2553), Cone (2202), Cone (2573), Cone (2222), Cone (2593), Cone (2242), Cone (2613), Cone (1898), Cone (2269), Cone (1918), Cone (2289), Cone (1938), Cone (2309), Cone (1958), Cone (2329), Cone (1978), Cone (2349), Cone (1998), Cone (2369), Cone (2018), Cone (2389), Cone (2038), Cone (2409), Cone (2058), Cone (2429), Cone (2078), Cone (2449), Cone (2098), Cone (2469), Cone (2118), Cone (2489), Cone (2138), Cone (2509), Cone (2158), Cone (2529), Cone (2178), Cone (2549), Cone (2198), Cone (2569), Cone (2218), Cone (2589), Cone (2238), Cone (2609), Cone (2265), Cone (1915), Cone (2285), Cone (1935), Cone (2305), Cone (1955), Cone (2325), Cone (1975), Cone (2345), Cone (1995), Cone (2365), Cone (2015), Cone (2385), Cone (2035), Cone (2405), Cone (2055), Cone (2425), Cone (2075), Cone (2445), Cone (2095), Cone (2465), Cone (2115), Cone (2485), Cone (2135), Cone (2505), Cone (2155), Cone (2525), Cone (2175), Cone (2545), Cone (2195), Cone (2565), Cone (2215), Cone (2585), Cone (2235), Cone (2605), Cone (2255), Cone (2261), Cone (1911), Cone (2281), Cone (1931), Cone (2301), Cone (1951), Cone (2321), Cone (1971), Cone (2341), Cone (1991), Cone (2361), Cone (2011), Cone (2381), Cone (2031), Cone (2401), Cone (2051), Cone (2421), Cone (2071), Cone (2441), Cone (2091), Cone (2461), Cone (2111), Cone (2481), Cone (2131), Cone (2501), Cone (2151), Cone (2521), Cone (2171), Cone (2541), Cone (2191), Cone (2561), Cone (2211), Cone (2581), Cone (2231), Cone (2601), Cone (2251)
+Segmento 119 · beats 476-479
+    Escenario: Mine Structure
+    Obstáculos: Cone (2257), Cone (1907), Cone (2277), Cone (1927), Cone (2297), Cone (1947), Cone (2317), Cone (1967), Cone (2337), Cone (1987), Cone (2357), Cone (2007), Cone (2377), Cone (2027), Cone (2397), Cone (2047), Cone (2417), Cone (2067), Cone (2437), Cone (2087), Cone (2457), Cone (2107), Cone (2477), Cone (2127), Cone (2497), Cone (2147), Cone (2517), Cone (2167), Cone (2537), Cone (2187), Cone (2557), Cone (2207), Cone (2577), Cone (2227), Cone (2597), Cone (2247), Cone (1903), Cone (2274), Cone (1923), Cone (2294), Cone (1943), Cone (2314), Cone (1963), Cone (2334), Cone (1983), Cone (2354), Cone (2003), Cone (2374), Cone (2023), Cone (2394), Cone (2043), Cone (2414), Cone (2063), Cone (2434), Cone (2083), Cone (2454), Cone (2103), Cone (2474), Cone (2123), Cone (2494), Cone (2143), Cone (2514), Cone (2163), Cone (2534), Cone (2183), Cone (2554), Cone (2203), Cone (2574), Cone (2223), Cone (2594), Cone (2243), Cone (2614), Cone (1899), Cone (2270), Cone (1919), Cone (2290), Cone (1939), Cone (2310), Cone (1959), Cone (2330), Cone (1979), Cone (2350), Cone (1999), Cone (2370), Cone (2019), Cone (2390), Cone (2039), Cone (2410), Cone (2059), Cone (2430), Cone (2079), Cone (2450), Cone (2099), Cone (2470), Cone (2119), Cone (2490), Cone (2139), Cone (2510), Cone (2159), Cone (2530), Cone (2179), Cone (2550), Cone (2199), Cone (2570), Cone (2219), Cone (2590), Cone (2239), Cone (2610), Cone (2266), Cone (1916), Cone (2286), Cone (1936), Cone (2306), Cone (1956), Cone (2326), Cone (1976), Cone (2346), Cone (1996), Cone (2366), Cone (2016), Cone (2386), Cone (2036), Cone (2406), Cone (2056), Cone (2426), Cone (2076), Cone (2446), Cone (2096), Cone (2466), Cone (2116), Cone (2486), Cone (2136), Cone (2506), Cone (2156), Cone (2526), Cone (2176), Cone (2546), Cone (2196), Cone (2566), Cone (2216), Cone (2586), Cone (2236), Cone (2606), Cone (2256), Cone (2262), Cone (1912), Cone (2282), Cone (1932), Cone (2302), Cone (1952), Cone (2322), Cone (1972), Cone (2342), Cone (1992), Cone (2362), Cone (2012), Cone (2382), Cone (2032), Cone (2402), Cone (2052), Cone (2422), Cone (2072), Cone (2442), Cone (2092), Cone (2462), Cone (2112), Cone (2482), Cone (2132), Cone (2502), Cone (2152), Cone (2522), Cone (2172), Cone (2542), Cone (2192), Cone (2562), Cone (2212), Cone (2582), Cone (2232), Cone (2602), Cone (2252), Cone (2258), Cone (1908), Cone (2278), Cone (1928), Cone (2298), Cone (1948), Cone (2318), Cone (1968), Cone (2338), Cone (1988), Cone (2358), Cone (2008), Cone (2378), Cone (2028), Cone (2398), Cone (2048), Cone (2418), Cone (2068), Cone (2438), Cone (2088), Cone (2458), Cone (2108), Cone (2478), Cone (2128), Cone (2498), Cone (2148), Cone (2518), Cone (2168), Cone (2538), Cone (2188), Cone (2558), Cone (2208), Cone (2578), Cone (2228), Cone (2598), Cone (2248), Cone (1904), Cone (2275), Cone (1924), Cone (2295), Cone (1944), Cone (2315), Cone (1964), Cone (2335), Cone (1984), Cone (2355), Cone (2004), Cone (2375), Cone (2024), Cone (2395), Cone (2044), Cone (2415), Cone (2064), Cone (2435), Cone (2084), Cone (2455), Cone (2104), Cone (2475), Cone (2124), Cone (2495), Cone (2144), Cone (2515), Cone (2164), Cone (2535), Cone (2184), Cone (2555), Cone (2204), Cone (2575), Cone (2224), Cone (2595), Cone (2244), Cone (2615), Cone (1900), Cone (2271), Cone (1920), Cone (2291), Cone (1940), Cone (2311), Cone (1960), Cone (2331), Cone (1980), Cone (2351), Cone (2000), Cone (2371), Cone (2020), Cone (2391), Cone (2040), Cone (2411), Cone (2060), Cone (2431), Cone (2080), Cone (2451), Cone (2100), Cone (2471), Cone (2120), Cone (2491), Cone (2140), Cone (2511), Cone (2160), Cone (2531), Cone (2180), Cone (2551), Cone (2200), Cone (2571), Cone (2220), Cone (2591), Cone (2240), Cone (2611), Cone (2267), Cone (2287), Cone (2307), Cone (2327), Cone (2347), Cone (2367), Cone (2387), Cone (2407), Cone (2427), Cone (2447), Cone (2467), Cone (2487), Cone (2507), Cone (2527), Cone (2547), Cone (2567), Cone (2587), Cone (2607), Cone (2263), Cone (2283), Cone (2303), Cone (2323), Cone (2343), Cone (2363), Cone (2383), Cone (2403), Cone (2423), Cone (2443), Cone (2463), Cone (2483), Cone (2503), Cone (2523), Cone (2543), Cone (2563), Cone (2583), Cone (2603), Cone (2259), Cone (2279), Cone (2299), Cone (2319), Cone (2339), Cone (2359), Cone (2379), Cone (2399), Cone (2419), Cone (2439), Cone (2459), Cone (2479), Cone (2499), Cone (2519), Cone (2539), Cone (2559), Cone (2579), Cone (2599), Cone (2276), Cone (2296), Cone (2316), Cone (2336), Cone (2356), Cone (2376), Cone (2396), Cone (2416), Cone (2436), Cone (2456), Cone (2476), Cone (2496), Cone (2516), Cone (2536), Cone (2556), Cone (2576), Cone (2596), Cone (2616), Cone (2272), Cone (2292), Cone (2312), Cone (2332), Cone (2352), Cone (2372), Cone (2392), Cone (2412), Cone (2432), Cone (2452), Cone (2472), Cone (2492), Cone (2512), Cone (2532), Cone (2552), Cone (2572), Cone (2592), Cone (2612), Cone (2268), Cone (2288), Cone (2308), Cone (2328), Cone (2348), Cone (2368), Cone (2388), Cone (2408), Cone (2428), Cone (2448), Cone (2468), Cone (2488), Cone (2508), Cone (2528), Cone (2548), Cone (2568), Cone (2588), Cone (2608), Cone (2264), Cone (2284), Cone (2304), Cone (2324), Cone (2344), Cone (2364), Cone (2384), Cone (2404), Cone (2424), Cone (2444), Cone (2464), Cone (2484), Cone (2504), Cone (2524), Cone (2544), Cone (2564), Cone (2584), Cone (2604), Cone (2260), Cone (2280), Cone (2300), Cone (2320), Cone (2340), Cone (2360), Cone (2380), Cone (2400), Cone (2420), Cone (2440), Cone (2460), Cone (2480), Cone (2500), Cone (2520), Cone (2540), Cone (2560), Cone (2580), Cone (2600)
+Segmento 120 · beats 480-483
+    Escenario: Mine Structure
+Segmento 121 · beats 484-487
+    Escenario: Mine Structure
+Segmento 122 · beats 488-491
+    Escenario: Mine Structure
+Segmento 123 · beats 492-495
+    Escenario: Mine Structure
+Segmento 124 · beats 496-499
+    Escenario: Mine Structure
+Segmento 125 · beats 500-503
+    Escenario: Mine Structure
+Segmento 126 · beats 504-507
+    Escenario: Mine Structure
+Segmento 127 · beats 508-511
+    Escenario: Mine Structure
+Contenedor de monedas «Coins»: 1609 monedas sueltas → se agrupan por segmento dentro de él.

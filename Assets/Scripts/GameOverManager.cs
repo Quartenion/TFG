@@ -126,7 +126,6 @@ public class GameOverManager : MonoBehaviour
     private bool     _reviving;        // gastando una vida extra (hasta el siguiente beat)
     private bool     _isObstacleDeath;
     private float    _baseAudioVolume          = 1f;
-    private float    _musicSourceOriginalVolume = 1f;
 
     private Material _visionMatInst;   // instancia del material del vineteo
     private Material _irisMatInst;     // instancia del material del cierre de iris
@@ -172,8 +171,6 @@ public class GameOverManager : MonoBehaviour
         }
 
         _baseAudioVolume = AudioListener.volume;
-        if (_musicSourceToRestart != null)
-            _musicSourceOriginalVolume = _musicSourceToRestart.volume;
 
         // Muerte por agua: cachear el layer del agua y las referencias del jugador.
         int w = LayerMask.NameToLayer(_waterLayerName);
@@ -200,6 +197,7 @@ public class GameOverManager : MonoBehaviour
     private void Update()
     {
         if (_isDead) return;
+        if (LevelEndManager.Finished) return;   // (nivel terminado: la música sigue, pero ya no se puede morir)
 
         // Muerte por caer al agua (río de sangre): se comprueba siempre, viva o no la energía.
         if (CheckWaterDeath())
@@ -285,11 +283,13 @@ public class GameOverManager : MonoBehaviour
     private void HandleDeath(bool isObstacle)
     {
         if (_isDead) return;
+        if (LevelEndManager.Finished) return;   // (ya en la meta)
 
         // Muerte por SANGRE con vida extra comprada → no hay game over: se vuelve en el siguiente beat.
         if (!isObstacle && TryRevive()) return;
         _isDead          = true;
         _isObstacleDeath = isObstacle;
+        StudyTelemetry.EndAttempt(isObstacle ? "muerte_obstaculo" : "muerte_energia");   // (modo prueba)
 
         if (_verbose)
             Debug.Log($"[GameOver] Muerte por {(isObstacle ? "obstaculo" : "energia")}.");
@@ -316,7 +316,7 @@ public class GameOverManager : MonoBehaviour
         StopLevelMusic();
         int left = PlayerProgress.GetCount(ShopIds.Checkpoint);
         if (_verbose) Debug.Log($"[GameOver] Checkpoint: volviendo al último (quedan {left}).");
-        ReviveFX.ShowMessage("CHECKPOINT", left > 0 ? $"Te quedan {left}" : "Era el último", new Color(0.25f, 0.7f, 0.35f, 0.55f));
+        ReviveFX.ShowMessage("CHECKPOINT", left > 0 ? Loc.T($"Te quedan {left}", $"{left} left") : Loc.T("Era el último", "That was the last one"), new Color(0.25f, 0.7f, 0.35f, 0.55f));
 
         // La escena se empieza a cargar YA, en segundo plano, mientras se cierra el iris (antes: primero el iris y
         // luego una carga de golpe que congelaba el juego unos segundos).
@@ -450,6 +450,7 @@ public class GameOverManager : MonoBehaviour
         if (wait > 0f)
             yield return new WaitForSecondsRealtime(wait);
 
+        HudHider.Hide(_gameOverPanel);   // fuera mirilla, barra, monedas, avisos…
         if (_gameOverPanel != null) _gameOverPanel.SetActive(true);
 
         if (_gameOverPanelGroup != null)
@@ -491,6 +492,7 @@ public class GameOverManager : MonoBehaviour
     public bool TryKillByObstacle(GameObject source)
     {
         if (_isDead) return true;
+        if (LevelEndManager.Finished) return false;
         if (TimeRewinder.IsRewinding) return false;   // (volviendo atrás en el tiempo: nada mata)
 
         // REBOBINADO (tienda): chocar contra un obstáculo → el tiempo vuelve 4 beats atrás, a un momento seguro.
@@ -510,8 +512,10 @@ public class GameOverManager : MonoBehaviour
     public void ForceGameOver(string title = null, string subtitle = null)
     {
         if (_isDead) return;
+        if (LevelEndManager.Finished) return;
         _isDead          = true;
         _isObstacleDeath = true;
+        StudyTelemetry.EndAttempt("game_over_forzado");   // (modo prueba)
         if (_verbose) Debug.Log($"[GameOver] Game over forzado: {title} {subtitle}");
 
         if (_playerMovement   != null) _playerMovement.enabled   = false;
@@ -545,7 +549,7 @@ public class GameOverManager : MonoBehaviour
         {
             _lastStandUsed = true;
             RunStats.HelpUsed();
-            StartCoroutine(ReviveRoutine(0.3f, "¡ADRENALINA!", "Vuelves con un 30 %"));
+            StartCoroutine(ReviveRoutine(0.3f, Loc.T("¡ADRENALINA!", "ADRENALINE!"), Loc.T("Vuelves con un 30 %", "You come back with 30 %")));
             return true;
         }
 
@@ -564,7 +568,7 @@ public class GameOverManager : MonoBehaviour
         _parachuteUsed = true;
         RunStats.HelpUsed();
         _playerMovement.Bounce(24f);
-        ReviveFX.ShowMessage("¡PARACAÍDAS!", "Solo una vez por nivel");
+        ReviveFX.ShowMessage(Loc.T("¡PARACAÍDAS!", "PARACHUTE!"), Loc.T("Solo una vez por nivel", "Only once per level"));
         if (_verbose) Debug.Log("[GameOver] ¡Paracaídas! Rebote en vez de caer.");
         return true;
     }
@@ -610,6 +614,7 @@ public class GameOverManager : MonoBehaviour
     public void Restart()
     {
         if (_restarting) return;   // (doble clic)
+        if (StudySession.OnRestartRequested()) return;   // (modo prueba: sin intentos → siguiente parte)
         _restarting = true;
         CheckpointSystem.Clear();   // reinicio manual: desde el principio
         if (_verbose) Debug.Log("[GameOver] Restart.");
@@ -636,17 +641,19 @@ public class GameOverManager : MonoBehaviour
 
         Time.timeScale       = 1f;
         AudioListener.pause  = false;
-        AudioListener.volume = 1f;
+        AudioListener.volume = GameSettings.Volume;   // (el volumen elegido en Ajustes)
         op.allowSceneActivation = true;
     }
 
     public void Quit()
     {
+        // Modo prueba: salir a mitad descalifica. Mismo aviso que al volver al menú desde la pausa.
+        if (StudySession.InLevel) { AbandonDialog.Show(Loc.T("Volver", "Back")); return; }
         if (_gameOverMusicSource != null) _gameOverMusicSource.Stop();
         if (_verbose) Debug.Log("[GameOver] Quit.");
         Time.timeScale       = 1f;
         AudioListener.pause  = false;
-        AudioListener.volume = 1f;
+        AudioListener.volume = GameSettings.Volume;   // (el volumen elegido en Ajustes)
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else

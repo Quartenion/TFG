@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>Identificadores de los objetos de la tienda (los usan los sistemas del juego para consultar el progreso).</summary>
@@ -22,7 +21,6 @@ public static class ShopIds
     public const string HalfBeat    = "half_beat";      // se puede acertar también en los medios beats
     public const string PerfectCoin = "perfect_coin";   // +1 moneda por cada Perfect
     public const string BloodGold   = "blood_gold";     // +1 moneda por cada % de energía al acabar el nivel
-    public const string MissGuard   = "miss_guard";     // un % de los fallos no quita sangre
     public const string Efficient   = "efficient";      // las acciones (saltar, dash…) gastan un 5 % menos por nivel
     // Corazón
     public const string SecondWind  = "second_wind";    // bajo el 20 % de energía, los aciertos devuelven el doble
@@ -37,7 +35,6 @@ public static class ShopIds
     public const string Streak      = "streak";         // desde 8 aciertos seguidos, +25 % de sangre por acierto
     public const string Perfectionist = "perfectionist";// un Perfect da ×2 de sangre (en vez de ×1.5)
     public const string BarFlash    = "bar_flash";      // el corazón del punto de mira marca el 1er beat de cada compás
-    public const string CleanPulse  = "clean_pulse";    // los clics repetidos en el mismo beat no cuentan como fallo
     // Dinero
     public const string LuckyCoin   = "lucky_coin";     // 10 % de que una moneda valga doble
     public const string Interest    = "interest";       // al acabar el nivel, +5 % de tu monedero (máx. 100)
@@ -46,71 +43,6 @@ public static class ShopIds
 }
 
 public enum ShopItemKind { Upgrade, Consumable }
-
-/// <summary>Categorías de la tienda. «Auto» = se deduce del id del objeto (ver ShopCategories.FromId).</summary>
-public enum ShopCategory { Auto, Heart, Survival, Rhythm, Money }
-
-/// <summary>Nombre, descripción, color y orden de cada categoría de la tienda.</summary>
-public static class ShopCategories
-{
-    public static readonly ShopCategory[] Order = { ShopCategory.Heart, ShopCategory.Survival, ShopCategory.Rhythm, ShopCategory.Money };
-
-    public static ShopCategory Of(ShopItem it) => it.category != ShopCategory.Auto ? it.category : FromId(it.id);
-
-    public static ShopCategory FromId(string id)
-    {
-        switch (id)
-        {
-            case ShopIds.SteadyHeart: case ShopIds.BigSyringe: case ShopIds.StrongPulse: case ShopIds.AutoBeater:
-            case ShopIds.Efficient: case ShopIds.SecondWind: case ShopIds.BlueBoost: case ShopIds.StartBoost:
-                return ShopCategory.Heart;
-            case ShopIds.ExtraLife: case ShopIds.Checkpoint: case ShopIds.Shield: case ShopIds.MissGuard:
-            case ShopIds.Parachute: case ShopIds.DrainGuard: case ShopIds.LastStand: case ShopIds.SlowBleed:
-                return ShopCategory.Survival;
-            case ShopIds.Metronome: case ShopIds.WideWindow: case ShopIds.RhythmSight: case ShopIds.HalfBeat:
-            case ShopIds.Streak: case ShopIds.Perfectionist: case ShopIds.BarFlash: case ShopIds.CleanPulse:
-                return ShopCategory.Rhythm;
-            case ShopIds.CoinMagnet: case ShopIds.CoinBonus: case ShopIds.PerfectCoin: case ShopIds.BloodGold:
-            case ShopIds.LuckyCoin: case ShopIds.Interest: case ShopIds.ComboCoins: case ShopIds.AccuracyPay:
-                return ShopCategory.Money;
-            default:
-                return ShopCategory.Heart;
-        }
-    }
-
-    public static string Name(ShopCategory c)
-    {
-        switch (c)
-        {
-            case ShopCategory.Survival: return "Supervivencia";
-            case ShopCategory.Rhythm:   return "Ritmo";
-            case ShopCategory.Money:    return "Dinero";
-            default:                    return "Corazón";
-        }
-    }
-
-    public static string Description(ShopCategory c)
-    {
-        switch (c)
-        {
-            case ShopCategory.Survival: return "Segundas oportunidades: vidas extra, checkpoints y escudos.";
-            case ShopCategory.Rhythm:   return "Ayudas para no perder el compás.";
-            case ShopCategory.Money:    return "Consigue más monedas en cada nivel.";
-            default:                    return "Mejoras del corazón y de la sangre.";
-        }
-    }
-
-    public static Color Tint(ShopCategory c)
-    {
-        switch (c)
-        {
-            case ShopCategory.Survival: return new Color(0.25f, 0.7f, 0.35f);
-            case ShopCategory.Rhythm:   return new Color(0.2f, 0.5f, 0.9f);
-            case ShopCategory.Money:    return new Color(0.95f, 0.72f, 0.15f);
-            default:                    return new Color(0.78f, 0.1f, 0.16f);
-        }
-    }
-}
 
 /// <summary>
 /// Un objeto de la tienda. Créalo con clic derecho → Create → Tienda → Objeto (o usa el catálogo por defecto:
@@ -131,8 +63,6 @@ public class ShopItem : ScriptableObject
     [Tooltip("Color de la tarjeta en la tienda.")]
     public Color color = new Color(0.8f, 0.15f, 0.2f);
     public ShopItemKind kind = ShopItemKind.Upgrade;
-    [Tooltip("Categoría en la tienda. Auto = según el id (Corazón, Supervivencia, Ritmo, Dinero).")]
-    public ShopCategory category = ShopCategory.Auto;
     [Tooltip("Mejora: precio de cada nivel. Consumible: [0] = precio por unidad.")]
     public int[] prices = { 100 };
     [Tooltip("Consumible: cuántas unidades se pueden tener como máximo.")]
@@ -154,7 +84,7 @@ public class ShopItem : ScriptableObject
 
     public bool CanAfford => NextPrice >= 0 && PlayerProgress.Coins >= NextPrice;
 
-    /// <summary>¿Bloqueada? (le faltan compras previas: ver ShopUnlocks)</summary>
+    /// <summary>¿Bloqueada? (aún no has llegado al nivel en el que se desbloquea: ver ShopUnlocks)</summary>
     public bool IsLocked => !ShopUnlocks.IsUnlocked(id);
 
     /// <summary>Compra (siguiente nivel / una unidad) si hay monedas. Devuelve si se ha comprado.</summary>
@@ -163,25 +93,54 @@ public class ShopItem : ScriptableObject
         if (IsLocked) return false;
         int price = NextPrice;
         if (price < 0 || !PlayerProgress.TrySpendCoins(price)) return false;
-        if (kind == ShopItemKind.Upgrade) PlayerProgress.SetLevel(id, Owned + 1);
-        else                              PlayerProgress.AddCount(id, 1);
+        if (kind == ShopItemKind.Upgrade)
+        {
+            bool first = Owned == 0;
+            PlayerProgress.SetLevel(id, Owned + 1);
+            // Al comprarla por primera vez se EQUIPA sola si caben sus muescas.
+            if (first && Notches.CanEquip(id)) PlayerProgress.SetUpgradeEnabled(id, true);
+        }
+        else PlayerProgress.AddCount(id, 1);
+        StudyTelemetry.ShopEvent("compra", id, price);   // (modo prueba)
         return true;
+    }
+
+    // ── Textos (según el idioma: español en el asset, inglés en ShopTextsEn) ──
+
+    private bool En(out ShopTextsEn.Entry e)
+    {
+        e = default;
+        return Loc.English && id != null && ShopTextsEn.Items.TryGetValue(id, out e);
+    }
+
+    /// <summary>Nombre en el idioma actual.</summary>
+    public string Name => En(out var e) && !string.IsNullOrEmpty(e.name) ? e.name : displayName;
+
+    /// <summary>Descripción general en el idioma actual.</summary>
+    public string Description => En(out var e) && !string.IsNullOrEmpty(e.desc) ? e.desc : description;
+
+    private string LevelDescription(int i)
+    {
+        if (En(out var e) && e.levels != null && i < e.levels.Length) return e.levels[i];
+        return levelDescriptions != null && i < levelDescriptions.Length ? levelDescriptions[i] : null;
     }
 
     /// <summary>Texto del estado actual («Nivel 2/4», «Tienes 3»…).</summary>
     public string OwnedLabel => kind == ShopItemKind.Upgrade
-        ? (Owned == 0 ? "No comprado" : $"Nivel {Owned}/{MaxLevel}")
-        : $"Tienes {Owned}/{MaxLevel}";
+        ? (Owned == 0 ? Loc.T("No comprado", "Not bought") : Loc.T($"Nivel {Owned}/{MaxLevel}", $"Level {Owned}/{MaxLevel}"))
+        : Loc.T($"Tienes {Owned}/{MaxLevel}", $"You have {Owned}/{MaxLevel}");
 
     /// <summary>Descripción de lo que da el SIGUIENTE nivel (si la hay), o la general.</summary>
     public string NextDescription
     {
         get
         {
-            if (kind == ShopItemKind.Upgrade && levelDescriptions != null && Owned < levelDescriptions.Length &&
-                !string.IsNullOrEmpty(levelDescriptions[Owned]))
-                return description + "\n<i>Siguiente: " + levelDescriptions[Owned] + "</i>";
-            return description;
+            if (kind == ShopItemKind.Upgrade)
+            {
+                string next = LevelDescription(Owned);
+                if (!string.IsNullOrEmpty(next)) return Description + "\n<i>" + Loc.T("Siguiente: ", "Next: ") + next + "</i>";
+            }
+            return Description;
         }
     }
 

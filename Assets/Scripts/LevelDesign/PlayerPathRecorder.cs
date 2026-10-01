@@ -29,7 +29,6 @@ public class PlayerPathRecorder : MonoBehaviour
 
     [Header("Estado (solo lectura)")]
     [SerializeField] private bool _isRecording;
-    public bool IsRecording => _isRecording;
 
     // ── Privado ───────────────────────────────────────────────────────────────
 

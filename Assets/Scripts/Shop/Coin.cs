@@ -27,6 +27,9 @@ public class Coin : MonoBehaviour, IRewindable
     [SerializeField] private float _beatPulse = 0.18f;
     [Tooltip("Sonido al recogerla (opcional).")]
     [SerializeField] private AudioClip _pickupSound;
+    [Tooltip("Sonidos de recogida (p. ej. 2). Se alternan y, además, el TONO va subiendo si coges monedas seguidas\n" +
+             "(como una escala) y varía un poco al azar: así parecen muchos sonidos distintos. Vacío = 'Pickup Sound'.")]
+    [SerializeField] private AudioClip[] _pickupSounds;
     [Range(0f, 1f)][SerializeField] private float _pickupVolume = 0.6f;
     [Tooltip("Color de la moneda generada por código.")]
     [SerializeField] private Color _color = new Color(1f, 0.78f, 0.15f);
@@ -69,7 +72,10 @@ public class Coin : MonoBehaviour, IRewindable
         }
     }
 
-    private Vector3 _basePos;
+    // Sitio de la moneda guardado RESPECTO A SU PADRE: si es hija de algo que se mueve (p. ej. un bloque con
+    // BeatOscillator), su sitio se mueve con él (antes se guardaba en coordenadas de mundo y se quedaba atrás).
+    private Vector3 _baseLocal;
+    private Vector3 _basePos => transform.parent != null ? transform.parent.TransformPoint(_baseLocal) : _baseLocal;
     private string  _uid;
     private bool    _rising, _risen;
     private float   _riseT;
@@ -94,7 +100,7 @@ public class Coin : MonoBehaviour, IRewindable
         if (s_pm != null) { _player = s_pm.transform; _cc = s_pm.GetComponent<CharacterController>(); }
         _grid = s_grid;
 
-        _basePos = transform.position;
+        _baseLocal = transform.localPosition;
         _rot0    = transform.rotation;
         _uid = $"{Mathf.RoundToInt(_basePos.x * 20)}:{Mathf.RoundToInt(_basePos.y * 20)}:{Mathf.RoundToInt(_basePos.z * 20)}";
 
@@ -176,7 +182,7 @@ public class Coin : MonoBehaviour, IRewindable
             float e = 1f + c3 * Mathf.Pow(u - 1f, 3f) + c1 * Mathf.Pow(u - 1f, 2f);
             transform.position = Vector3.LerpUnclamped(_basePos + Vector3.down * _riseDepth, _basePos, e);
             _visual.localScale = _visualScale0 * Mathf.Clamp01(u * 2f);
-            if (u >= 1f) { _risen = true; transform.position = _basePos; }
+            if (u >= 1f) { _risen = true; transform.localPosition = _baseLocal; }
         }
 
         // 2) Giro A GOLPES (X grados en cada beat) + latido al ritmo.
@@ -227,7 +233,7 @@ public class Coin : MonoBehaviour, IRewindable
         _gotValue = lucky ? _value * 2 : _value;
         LevelCoins.Collect(_gotValue, _uid);
         if (lucky) _visualScale0 = _visualScaleBase * 1.6f;   // (se ve más grande al recogerla)
-        if (_pickupSound != null) AudioSource.PlayClipAtPoint(_pickupSound, transform.position, _pickupVolume);
+        CoinPickupAudio.Play(_pickupSounds, _pickupSound, _pickupVolume);
     }
 
     /// <summary>Animación de recogida: salta hacia el jugador encogiéndose y desaparece.</summary>
@@ -265,7 +271,7 @@ public class Coin : MonoBehaviour, IRewindable
     private void OnDrawGizmos()
     {
         Gizmos.color = new Color(1f, 0.8f, 0.1f, 0.8f);
-        Gizmos.DrawWireSphere(Application.isPlaying ? _basePos : transform.position, 0.55f);
+        Gizmos.DrawWireSphere(Application.isPlaying && _visual != null ? _basePos : transform.position, 0.55f);
     }
 
     private void OnDrawGizmosSelected()
@@ -308,13 +314,6 @@ public static class LevelCoins
     {
         RunCoins = Mathf.Max(0, RunCoins - Mathf.Max(0, value));
         if (uid != null) _collected.Remove(uid);
-        OnRunCoinsChanged?.Invoke(RunCoins);
-    }
-
-    /// <summary>Fija las monedas de la partida.</summary>
-    public static void SetRun(int value)
-    {
-        RunCoins = Mathf.Max(0, value);
         OnRunCoinsChanged?.Invoke(RunCoins);
     }
 
@@ -361,5 +360,64 @@ public static class LevelCoins
         RunCoins = 0;                                   // escena nueva (o reinicio): se empieza de cero
         _collected.Clear();
         OnRunCoinsChanged?.Invoke(0);
+    }
+}
+
+/// <summary>
+/// Sonido de recogida de monedas con VARIEDAD: alterna entre los clips que le pases y cambia el tono:
+///   • Monedas seguidas (menos de 'ComboWindow' s entre una y otra) → cada una un pelín más aguda, siguiendo una
+///     escala (do-re-mi…), y al llegar arriba vuelve a empezar. Suena a "racha".
+///   • Un poco de variación aleatoria en cada una.
+/// Usa unas pocas fuentes 2D propias (PlayClipAtPoint no permite cambiar el tono).
+/// </summary>
+public static class CoinPickupAudio
+{
+    private const float ComboWindow = 0.9f;                          // s máx. entre monedas para seguir la escala
+    private static readonly float[] Scale = { 0, 2, 4, 5, 7, 9, 11, 12 };   // semitonos (escala mayor)
+    private const float RandomSemitones = 0.35f;
+
+    private static AudioSource[] _sources;
+    private static int _next, _combo, _clipIdx;
+    private static float _lastTime = -10f;
+
+    public static void Play(AudioClip[] clips, AudioClip fallback, float volume)
+    {
+        AudioClip clip = null;
+        if (clips != null && clips.Length > 0)
+        {
+            for (int tries = 0; tries < clips.Length && clip == null; tries++)
+            {
+                clip = clips[_clipIdx % clips.Length];
+                _clipIdx++;
+            }
+        }
+        if (clip == null) clip = fallback;
+        if (clip == null) return;
+
+        EnsureSources();
+        float now = Time.time;
+        _combo = now - _lastTime <= ComboWindow ? _combo + 1 : 0;
+        _lastTime = now;
+
+        float semis = Scale[_combo % Scale.Length] + UnityEngine.Random.Range(-RandomSemitones, RandomSemitones);
+        AudioSource src = _sources[_next];
+        _next = (_next + 1) % _sources.Length;
+        src.pitch = Mathf.Pow(2f, semis / 12f);
+        src.PlayOneShot(clip, volume);
+    }
+
+    private static void EnsureSources()
+    {
+        if (_sources != null && _sources[0] != null) return;
+        var go = new GameObject("CoinPickupAudio");
+        _sources = new AudioSource[6];
+        for (int i = 0; i < _sources.Length; i++)
+        {
+            var s = go.AddComponent<AudioSource>();
+            s.playOnAwake = false;
+            s.spatialBlend = 0f;
+            s.priority = 64;
+            _sources[i] = s;
+        }
     }
 }

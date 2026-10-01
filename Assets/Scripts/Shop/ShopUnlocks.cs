@@ -1,68 +1,76 @@
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
-/// ÁRBOL DE DESBLOQUEOS de la tienda: las mejoras más potentes («OP») están BLOQUEADAS hasta que compras otras.
-/// Cada requisito es (id de la mejora, nivel mínimo COMPRADO). Cuenta lo comprado aunque esté apagado.
-/// Lo que no aparece aquí está disponible desde el principio. Ajusta la tabla a tu gusto.
+/// DESBLOQUEOS POR NIVEL: cada objeto de la tienda se puede comprar a partir de un nivel (9 mejoras por nivel).
+///   • Consumibles: siempre (nivel 1).
+///   • Nivel 1: lo básico.
+///   • Nivel 2: más corazón, supervivencia y ritmo.
+///   • Nivel 3: lo avanzado (golpes del jefe, BloodSuckers, Auto-latido, Doble tempo…).
+/// El nivel alcanzado se guarda (PlayerProgress.LevelReached) al cargar una escena «LevelN».
+/// Los objetos que no aparecen en la tabla están disponibles desde el nivel 1. Cambia la tabla a tu gusto.
 /// </summary>
 public static class ShopUnlocks
 {
-    public struct Req
+    private static readonly Dictionary<string, int> UnlockLevel = new Dictionary<string, int>
     {
-        public string id; public int level;
-        public Req(string id, int level = 1) { this.id = id; this.level = level; }
-    }
+        // ── Consumibles: siempre desde el nivel 1 ──
+        { ShopIds.ExtraLife,     1 },
+        { ShopIds.Checkpoint,    1 },
+        { ShopIds.Shield,        1 },   // Rebobinado
 
-    private static readonly Dictionary<string, Req[]> Table = new Dictionary<string, Req[]>
-    {
-        // ── Corazón ── (libres: Pulso fuerte, Jeringuilla grande, Metabolismo eficiente, Sangre azul)
-        { ShopIds.SecondWind,  new[] { new Req(ShopIds.StrongPulse) } },
-        { ShopIds.StartBoost,  new[] { new Req(ShopIds.BlueBoost) } },
-        { ShopIds.SteadyHeart, new[] { new Req(ShopIds.BigSyringe), new Req(ShopIds.Efficient) } },
-        { ShopIds.AutoBeater,  new[] { new Req(ShopIds.SteadyHeart), new Req(ShopIds.StrongPulse, 2) } },   // OP
+        // ── Mejoras · nivel 1 (básicas) ──
+        { ShopIds.BigSyringe,    1 },
+        { ShopIds.StrongPulse,   1 },
+        { ShopIds.Efficient,     1 },
+        { ShopIds.WideWindow,    1 },
+        { ShopIds.Metronome,     1 },
+        { ShopIds.RhythmSight,   1 },
+        { ShopIds.BarFlash,      1 },
+        { ShopIds.CoinMagnet,    1 },
+        { ShopIds.LuckyCoin,     1 },
 
-        // ── Supervivencia ── (libres: Vida extra, Checkpoint, Coágulo, Piel gruesa, Coagulante)
-        { ShopIds.Parachute,   new[] { new Req(ShopIds.SlowBleed) } },
-        { ShopIds.Shield,      new[] { new Req(ShopIds.DrainGuard) } },                                      // OP (Rebobinado)
-        { ShopIds.LastStand,   new[] { new Req(ShopIds.Parachute), new Req(ShopIds.MissGuard) } },          // OP
+        // ── Mejoras · nivel 2 ──
+        { ShopIds.BlueBoost,     2 },
+        { ShopIds.StartBoost,    2 },
+        { ShopIds.SlowBleed,     2 },
+        { ShopIds.Parachute,     2 },   // agua (nivel 2) y lava
+        { ShopIds.Streak,        2 },
+        { ShopIds.Perfectionist, 2 },
+        { ShopIds.ComboCoins,    2 },
+        { ShopIds.AccuracyPay,   2 },
+        { ShopIds.BloodGold,     2 },
 
-        // ── Ritmo ── (libres: Metrónomo, Marca de compás, Crosshair rítmico)
-        { ShopIds.WideWindow,  new[] { new Req(ShopIds.Metronome) } },
-        { ShopIds.CleanPulse,  new[] { new Req(ShopIds.BarFlash) } },
-        { ShopIds.Streak,      new[] { new Req(ShopIds.WideWindow) } },
-        { ShopIds.Perfectionist, new[] { new Req(ShopIds.Streak) } },
-        { ShopIds.HalfBeat,    new[] { new Req(ShopIds.Perfectionist), new Req(ShopIds.CleanPulse) } },     // OP
-
-        // ── Dinero ── (libres: Imán de monedas, Moneda de la suerte, Sangre de oro)
-        { ShopIds.AccuracyPay, new[] { new Req(ShopIds.BloodGold) } },
-        { ShopIds.ComboCoins,  new[] { new Req(ShopIds.LuckyCoin) } },
-        { ShopIds.PerfectCoin, new[] { new Req(ShopIds.ComboCoins) } },
-        { ShopIds.CoinBonus,   new[] { new Req(ShopIds.AccuracyPay) } },
-        { ShopIds.Interest,    new[] { new Req(ShopIds.CoinBonus), new Req(ShopIds.PerfectCoin) } },        // OP
+        // ── Mejoras · nivel 3 (avanzadas) ──
+        { ShopIds.DrainGuard,    3 },   // golpes del jefe y BloodSuckers
+        { ShopIds.LastStand,     3 },
+        { ShopIds.SecondWind,    3 },
+        { ShopIds.SteadyHeart,   3 },
+        { ShopIds.AutoBeater,    3 },
+        { ShopIds.HalfBeat,      3 },
+        { ShopIds.PerfectCoin,   3 },
+        { ShopIds.Interest,      3 },
+        { ShopIds.CoinBonus,     3 },
     };
 
-    public static Req[] RequirementsOf(string id) => Table.TryGetValue(id, out var r) ? r : System.Array.Empty<Req>();
+    public static int LevelOf(string id) => UnlockLevel.TryGetValue(id, out int l) ? l : 1;
 
-    /// <summary>¿Se puede comprar ya? (todos los requisitos comprados al nivel pedido)</summary>
-    public static bool IsUnlocked(string id)
+    public static bool IsUnlocked(string id) => LevelOf(id) <= Mathf.Max(1, PlayerProgress.LevelReached);
+
+    public static string MissingText(string id) => Loc.T($"Se desbloquea en el nivel {LevelOf(id)}", $"Unlocks at level {LevelOf(id)}");
+
+    // Al cargar «Level1», «Level2»… se guarda el nivel alcanzado.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void Boot()
     {
-        foreach (Req r in RequirementsOf(id))
-            if (PlayerProgress.GetOwnedLevel(r.id) < r.level) return false;
-        return true;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
     }
 
-    /// <summary>Texto con lo que falta, p. ej. «Requiere: Pulso fuerte (nv. 2), Corazón firme».</summary>
-    public static string MissingText(string id)
+    private static void OnSceneLoaded(Scene s, LoadSceneMode m)
     {
-        var parts = new List<string>();
-        ShopCatalog cat = ShopCatalog.Load();
-        foreach (Req r in RequirementsOf(id))
-        {
-            if (PlayerProgress.GetOwnedLevel(r.id) >= r.level) continue;
-            ShopItem it = cat.Find(r.id);
-            string name = it != null ? it.displayName : r.id;
-            parts.Add(r.level > 1 ? $"{name} (nv. {r.level})" : name);
-        }
-        return parts.Count == 0 ? "" : "Requiere: " + string.Join(", ", parts);
+        if (s.name.StartsWith("Level") && int.TryParse(s.name.Substring(5), out int n)) PlayerProgress.ReachLevel(n);
     }
 }

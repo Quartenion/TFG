@@ -4,24 +4,44 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using static SimpleUI;
 
 /// <summary>
-/// PUESTO DE CONTRATOS (pantalla, se construye sola por código). Se abre con ContractUI.Open() — normalmente desde el
+/// PUESTO DE CONTRATOS (versión simple, mismo estilo que la tienda). Se abre con ContractUI.Open() desde el
 /// puesto físico del freeroam (ContractStand).
-/// Lista todos los contratos por dificultad (Encargo / Contrato / Gran contrato) con su pago:
-///   • ELEGIR     → lo añades a la hoja de firma (abajo). Cuando tengas los que quieras, FIRMA con el ratón en el
-///                  recuadro y pulsa FIRMAR: quedan activos (máx. ContractCatalog.MaxActive a la vez).
-///   • RESCINDIR  → quitas uno ya firmado (gratis) para dejar hueco a otro.
-///   • COBRAR     → cumplido: pulsa para llevarte las monedas (no se cobran solos).
-///   • COBRADO    → ya lo cobraste.
-/// Esc o «Salir» la cierran.
+///
+///   CONTRATOS                               Monedas · Firmados · Por cobrar
+///   [Contratos][Cobrados]                  ┌──────── ficha ────────┐
+///   ┌───── rejilla (casillas) ─────┐       │ Nombre / Descripción  │
+///   │ [ ] [ ] [ ] [ ] [ ] [ ]      │       │ [Elegir / Cobrar…]    │
+///   │ ...                          │       │ Hoja de firma         │
+///   └──────────────────────────────┘       │ [Firmar] [Borrar]     │
+///               [Salir (Esc)]              └───────────────────────┘
+///
+///   • ELEGIR → va a la hoja de firma. Firma con el ratón en el recuadro y pulsa FIRMAR: quedan activos
+///              (máx. ContractCatalog.MaxActive a la vez).
+///   • RESCINDIR → quitas uno firmado.   • COBRAR → cumplido: te llevas las monedas.
+/// Tamaños en «LAYOUT»; colores y letra en SimpleUI.cs.
 /// </summary>
 public class ContractUI : MonoBehaviour
 {
+    // ── LAYOUT (cámbialo aquí) ────────────────────────────────────────────────
+    private const float PanelW = 1800f, PanelH = 900f;
+    private const float Pad = 30f;
+    private const float HeaderH = 80f;
+    private const float TabH = 50f;
+    private const float FooterH = 90f;
+    private const float DetailW = 460f;
+    private const float Gap = 10f;
+    private const int   Columns = 6;          // cada pestaña ocupa la mitad (3 columnas)
+    private const float PadH = 150f;          // alto del recuadro de firma
+    private const float MinInk = 120f;        // trazo mínimo para que cuente como firma
+
+    // ── Abrir / cerrar ────────────────────────────────────────────────────────
     public static bool IsOpen => _instance != null;
     private static ContractUI _instance;
-    private static int _closedFrame = -10;
-    private static float _closedTime = -10f;
+    private static int   _closedFrame = -10;
+    private static float _closedTime  = -10f;
 
     /// <summary>¿Se acaba de cerrar? (para que el Esc de cerrar no abra la pausa).</summary>
     public static bool ClosedRecently => Time.frameCount - _closedFrame <= 5 || Time.unscaledTime - _closedTime < 0.6f;
@@ -30,47 +50,16 @@ public class ContractUI : MonoBehaviour
     private CursorLockMode _prevLock;
     private bool _prevVisible;
 
-    private TextMeshProUGUI _coinsText, _slotsText, _toast;
-    private RectTransform _content;
-    private float _toastT;
-    private readonly List<Card> _cards = new List<Card>();
-
-    // Hoja de firma
-    private readonly List<string> _selected = new List<string>();   // elegidos, pendientes de firmar
-    private SignaturePad _pad;
-    private TextMeshProUGUI _summary, _padHint, _stamp, _signLabel;
-    private Button _signButton;
-    private float _stampT;
-    private const float MinInk = 120f;   // trazo mínimo (px de textura) para que cuente como firma
-
-    private class Card
-    {
-        public ContractDef def;
-        public Image bg, band;
-        public TextMeshProUGUI state, buttonLabel;
-        public Button button;
-    }
-
-    private static readonly Color BgDim   = new Color(0f, 0f, 0f, 0.82f);
-    private static readonly Color PanelBg = new Color(0.06f, 0.06f, 0.09f, 0.97f);
-    private static readonly Color CardBg  = new Color(0.13f, 0.12f, 0.16f, 1f);
-    private static readonly Color CardOn  = new Color(0.2f, 0.17f, 0.1f, 1f);
-    private static readonly Color CardDone = new Color(0.09f, 0.12f, 0.09f, 1f);
-    private static readonly Color Gold    = new Color(1f, 0.78f, 0.15f);
-    private static readonly Color Paper   = new Color(0.93f, 0.86f, 0.7f);
-
     public static ContractUI Open(Action onClosed = null)
     {
         if (_instance != null) return _instance;
-        var go = new GameObject("ContractUI");
-        _instance = go.AddComponent<ContractUI>();
+        _instance = new GameObject("ContractUI").AddComponent<ContractUI>();
         _instance._onClosed = onClosed;
         return _instance;
     }
 
     public void Close()
     {
-        // (Se reaplica unos frames: si se cerró con Esc, el editor desbloquearía el ratón justo después.)
         CursorRestorer.Restore(_prevLock, _prevVisible);
         if (_instance == this) _instance = null;
         _closedFrame = Time.frameCount;
@@ -80,6 +69,24 @@ public class ContractUI : MonoBehaviour
         _onClosed = null;
         cb?.Invoke();
     }
+
+    // ── Estado ────────────────────────────────────────────────────────────────
+
+    private class Entry { public ContractDef def; public Image bg; public TextMeshProUGUI state; }
+
+    private const int ClaimedTab = 1;         // 0 = Contratos (por hacer / firmados / por cobrar), 1 = Cobrados
+    private float _cell;
+    private Entry _sel;
+    private readonly List<Entry> _entries = new List<Entry>();
+    private readonly List<Image> _tabs = new List<Image>();
+    private readonly List<string> _chosen = new List<string>();   // elegidos, pendientes de firmar
+
+    private TextMeshProUGUI _wallet, _toast;
+    private RectTransform _grid;
+    private TextMeshProUGUI _dName, _dInfo, _dDesc, _dState, _dActionLabel, _sheet, _signLabel;
+    private Button _dAction, _sign;
+    private SignaturePad _pad;
+    private float _toastT;
 
     private void Awake()
     {
@@ -91,7 +98,7 @@ public class ContractUI : MonoBehaviour
         UIKit.EnsureEventSystem();
         Build();
         PlayerProgress.OnChanged += Refresh;
-        Refresh();
+        ShowTab(0);
     }
 
     private void OnDestroy()
@@ -103,21 +110,7 @@ public class ContractUI : MonoBehaviour
     private void Update()
     {
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) { Close(); return; }
-        if (_toastT > 0f)
-        {
-            _toastT -= Time.unscaledDeltaTime;
-            Color c = _toast.color; c.a = Mathf.Clamp01(_toastT / 0.4f); _toast.color = c;
-        }
-        if (_stampT > 0f)
-        {
-            // Sello «FIRMADO»: entra grande y se asienta; luego se desvanece y la hoja queda limpia.
-            _stampT -= Time.unscaledDeltaTime;
-            float age = 1.6f - _stampT;
-            float s = Mathf.Lerp(1.8f, 1f, Mathf.Clamp01(age / 0.18f));
-            _stamp.rectTransform.localScale = Vector3.one * s;
-            Color c = _stamp.color; c.a = Mathf.Clamp01(_stampT / 0.5f); _stamp.color = c;
-            if (_stampT <= 0f) { _stamp.gameObject.SetActive(false); _pad.Clear(); }
-        }
+        if (_toastT > 0f) { _toastT -= Time.unscaledDeltaTime; if (_toastT <= 0f) _toast.text = ""; }
     }
 
     // ── Construcción ──────────────────────────────────────────────────────────
@@ -125,338 +118,236 @@ public class ContractUI : MonoBehaviour
     private void Build()
     {
         Canvas canvas = UIKit.CreateCanvas("ContractCanvas", 1000, transform);
+        Stretch(Box("Back", canvas.transform, Back).rectTransform, 0f, 0f, 0f, 0f);
 
-        var dim = UIKit.Panel("Dim", canvas.transform, BgDim, false);
-        UIKit.Stretch(dim.rectTransform);
-        dim.raycastTarget = true;
-
-        var panel = UIKit.Panel("Panel", canvas.transform, PanelBg);
-        UIKit.Place(panel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1640f, 960f));
+        var panel = Box("Panel", canvas.transform, PanelCol);
+        Place(panel.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(PanelW, PanelH));
         Transform p = panel.transform;
 
-        var title = UIKit.Label("Title", p, "CONTRATOS", 64f, Paper, TextAlignmentOptions.Left, true);
-        UIKit.Place(title.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(50f, -26f), new Vector2(800f, 80f));
+        var title = Lbl("Title", p, Loc.T("CONTRATOS", "CONTRACTS"), FontBig, TextAlignmentOptions.Left);
+        PlaceTopLeft(title.rectTransform, Pad, Pad, 400f, 50f);
+        _wallet = Lbl("Wallet", p, "", FontMid, TextAlignmentOptions.Right);
+        PlaceTopRight(_wallet.rectTransform, Pad, Pad, 1000f, 50f);
 
-        var sub = UIKit.Label("Sub", p,
-            "Elige retos, fírmalos abajo y cúmplelos al completar un nivel para cobrarlos. Cada contrato se paga una sola vez. " +
-            "No cuentan en la pelea del jefe.", 22f, new Color(1f, 1f, 1f, 0.7f), TextAlignmentOptions.TopLeft);
-        UIKit.Place(sub.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(52f, -104f), new Vector2(1100f, 60f));
-
-        var coinIcon = UIKit.CoinIcon(p, 48f);
-        UIKit.Place(coinIcon.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-50f, -40f), new Vector2(48f, 48f));
-        _coinsText = UIKit.Label("Coins", p, "0", 50f, Gold, TextAlignmentOptions.Right, true);
-        UIKit.Place(_coinsText.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-112f, -30f), new Vector2(400f, 70f));
-
-        _slotsText = UIKit.Label("Slots", p, "", 26f, Paper, TextAlignmentOptions.Right, true);
-        UIKit.Place(_slotsText.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-50f, -104f), new Vector2(500f, 40f));
-
-        // Zona con scroll
-        var viewport = UIKit.Node("Viewport", p);
-        UIKit.Stretch(viewport, 40, 40, 160, 290);
-        viewport.gameObject.AddComponent<RectMask2D>();
-        var vpImg = viewport.gameObject.AddComponent<Image>();
-        vpImg.color = new Color(0, 0, 0, 0.001f);
-
-        var content = UIKit.Node("Content", viewport);
-        content.anchorMin = new Vector2(0f, 1f); content.anchorMax = new Vector2(1f, 1f);
-        content.pivot = new Vector2(0.5f, 1f);
-        content.offsetMin = content.offsetMax = Vector2.zero;
-        _content = content;
-        var vl = content.gameObject.AddComponent<VerticalLayoutGroup>();
-        vl.spacing = 14f; vl.padding = new RectOffset(8, 8, 8, 8);
-        vl.childControlWidth = true; vl.childControlHeight = true;
-        vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
-        content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-        var scroll = viewport.gameObject.AddComponent<ScrollRect>();
-        scroll.content = content; scroll.viewport = viewport;
-        scroll.horizontal = false; scroll.vertical = true;
-        scroll.scrollSensitivity = 40f;
-        scroll.movementType = ScrollRect.MovementType.Clamped;
-
-        // Secciones por dificultad
-        for (int tier = 1; tier <= 3; tier++)
+        // Pestañas + rejilla (izquierda)
+        float leftW = PanelW - Pad * 3f - DetailW;
+        float top = Pad + HeaderH;
+        _cell = (leftW - Gap * (Columns - 1)) / Columns;
+        string[] names = { Loc.T("Contratos", "Contracts"), Loc.T("Cobrados", "Claimed") };
+        int perTab = Columns / names.Length;
+        float tabW = _cell * perTab + Gap * (perTab - 1);
+        for (int i = 0; i < names.Length; i++)
         {
-            BuildHeader(tier);
-            var gridRt = UIKit.Node("Grid" + tier, content);
-            var grid = gridRt.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(500f, 250f);
-            grid.spacing  = new Vector2(20f, 20f);
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 3;
-            grid.childAlignment = TextAnchor.UpperLeft;
-            foreach (ContractDef d in ContractCatalog.All)
-                if (d.tier == tier) _cards.Add(BuildCard(gridRt, d));
+            int tab = i;
+            var b = Btn("Tab" + i, p, names[i], out _);
+            PlaceTopLeft((RectTransform)b.transform, Pad + i * (tabW + Gap), top, tabW, TabH);
+            b.onClick.AddListener(() => ShowTab(tab));
+            _tabs.Add(b.image);
         }
+        var gridBox = UIKit.Node("GridBox", p);
+        float gridTop = top + TabH + Gap;
+        PlaceTopLeft(gridBox, Pad, gridTop, leftW, PanelH - gridTop - FooterH);
+        _grid = MakeGrid(gridBox, _cell, Gap, Columns);
 
-        BuildSignSheet(p);
+        // Ficha + hoja de firma (derecha)
+        var detail = Box("Detail", p, BoxCol);
+        PlaceTopRight(detail.rectTransform, Pad, top, DetailW, PanelH - top - FooterH);
+        BuildDetail(detail.transform);
 
-        _toast = UIKit.Label("Toast", p, "", 26f, Color.white, TextAlignmentOptions.Center, true);
-        UIKit.Place(_toast.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 246f), new Vector2(1300f, 38f));
+        // Pie
+        var exit = Btn("Exit", p, Loc.T("Salir (Esc)", "Exit (Esc)"), out _);
+        Place((RectTransform)exit.transform, new Vector2(0.5f, 0f), new Vector2(0f, 20f), new Vector2(300f, 50f), new Vector2(0.5f, 0f));
+        exit.onClick.AddListener(Close);
+        _toast = Lbl("Toast", p, "", FontMid, TextAlignmentOptions.Left);
+        PlaceBottomLeft(_toast.rectTransform, Pad, 20f, 650f, 50f);
     }
 
-    /// <summary>Hoja de firma (abajo): resumen de lo elegido, recuadro para firmar con el ratón y botones.</summary>
-    private void BuildSignSheet(Transform p)
+    private void BuildDetail(Transform d)
     {
-        var sheet = UIKit.Panel("SignSheet", p, new Color(0.16f, 0.14f, 0.12f, 1f));
-        UIKit.Place(sheet.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 24f), new Vector2(1560f, 214f));
-        Transform t = sheet.transform;
+        float w = DetailW - 40f;
+        _dName = Lbl("Name", d, "", FontBig, TextAlignmentOptions.TopLeft);
+        PlaceTopLeft(_dName.rectTransform, 20f, 20f, w, 50f);
+        _dInfo = Lbl("Info", d, "", FontSmall, TextAlignmentOptions.TopLeft);
+        _dInfo.color = DimText;
+        PlaceTopLeft(_dInfo.rectTransform, 20f, 75f, w, 50f);
+        _dDesc = Lbl("Desc", d, "", FontMid, TextAlignmentOptions.TopLeft);
+        Stretch(_dDesc.rectTransform, 20f, 20f, 130f, 400f);
+        _dState = Lbl("State", d, "", FontMid, TextAlignmentOptions.Left);
+        PlaceBottomLeft(_dState.rectTransform, 20f, 355f, w, 40f);
+        _dAction = Btn("Action", d, "", out _dActionLabel);
+        PlaceBottomLeft((RectTransform)_dAction.transform, 20f, 295f, w, 55f);
+        _dAction.onClick.AddListener(OnAction);
 
-        var head = UIKit.Label("Head", t, "HOJA DE FIRMA", 24f, Paper, TextAlignmentOptions.TopLeft, true);
-        UIKit.Place(head.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(24f, -14f), new Vector2(540f, 32f));
-
-        _summary = UIKit.Label("Summary", t, "", 20f, new Color(1f, 1f, 1f, 0.85f), TextAlignmentOptions.TopLeft);
-        _summary.richText = true;
-        UIKit.Place(_summary.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(24f, -50f), new Vector2(560f, 96f));
-
-        var back = UIKit.MakeButton("Back", t, "SALIR  (Esc)", 24f, new Color(0.3f, 0.3f, 0.35f), Color.white, out _);
-        UIKit.Place((RectTransform)back.transform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(24f, 14f), new Vector2(240f, 50f));
-        back.onClick.AddListener(Close);
-
-        // Recuadro de firma (papel) con marco
-        var frame = UIKit.Panel("PadFrame", t, new Color(0.55f, 0.45f, 0.3f, 1f));
-        UIKit.Place(frame.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(610f, 0f), new Vector2(660f, 186f));
-        _pad = SignaturePad.Create(frame.transform, new Vector2(648f, 174f));
-        UIKit.Place((RectTransform)_pad.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(648f, 174f));
+        // Hoja de firma
+        _sheet = Lbl("Sheet", d, "", FontSmall, TextAlignmentOptions.BottomLeft);
+        PlaceBottomLeft(_sheet.rectTransform, 20f, 90f + PadH + 10f, w, 40f);
+        _pad = SignaturePad.Create(d, new Vector2(w, PadH));
+        _pad.paperColor = new Color(0.85f, 0.85f, 0.85f, 1f);
+        _pad.inkColor   = Color.black;
+        _pad.Clear();
+        PlaceBottomLeft((RectTransform)_pad.transform, 20f, 90f, w, PadH);
         _pad.OnChanged += Refresh;
 
-        _padHint = UIKit.Label("Hint", _pad.transform, "Firma aquí con el ratón", 22f, new Color(0.3f, 0.25f, 0.2f, 0.55f),
-                               TextAlignmentOptions.Center, false);
-        UIKit.Place(_padHint.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 6f), new Vector2(600f, 32f));
-
-        _stamp = UIKit.Label("Stamp", frame.transform, "FIRMADO", 72f, new Color(0.8f, 0.15f, 0.15f, 0.9f), TextAlignmentOptions.Center, true);
-        UIKit.Place(_stamp.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(600f, 120f));
-        _stamp.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 12f);
-        _stamp.gameObject.SetActive(false);
-
-        // Botones: firmar / borrar
-        _signButton = UIKit.MakeButton("Sign", t, "FIRMAR", 30f, new Color(0.2f, 0.55f, 0.3f), Color.white, out _signLabel);
-        UIKit.Place((RectTransform)_signButton.transform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-24f, -20f), new Vector2(250f, 96f));
-        _signButton.onClick.AddListener(Sign);
-
-        var clear = UIKit.MakeButton("Clear", t, "BORRAR FIRMA", 22f, new Color(0.35f, 0.3f, 0.28f), Color.white, out _);
-        UIKit.Place((RectTransform)clear.transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-24f, 14f), new Vector2(250f, 56f));
-        clear.onClick.AddListener(() => { if (_stampT <= 0f) _pad.Clear(); });
+        float half = (w - Gap) / 2f;
+        _sign = Btn("Sign", d, Loc.T("Firmar", "Sign"), out _signLabel);
+        PlaceBottomLeft((RectTransform)_sign.transform, 20f, 20f, half, 60f);
+        _sign.onClick.AddListener(Sign);
+        var clear = Btn("Clear", d, Loc.T("Borrar firma", "Clear signature"), out _);
+        PlaceBottomLeft((RectTransform)clear.transform, 20f + half + Gap, 20f, half, 60f);
+        clear.onClick.AddListener(() => _pad.Clear());
     }
 
-    private void BuildHeader(int tier)
+    // ── Pestañas y rejilla ────────────────────────────────────────────────────
+
+    private void ShowTab(int tab)
     {
-        Color col = ContractDef.TierColor(tier);
-        var h = UIKit.Label("Header" + tier, _content, ContractDef.TierName(tier).ToUpper() +
-                            (tier == 1 ? "  ·  fáciles" : tier == 2 ? "  ·  medios" : "  ·  difíciles"),
-                            34f, col, TextAlignmentOptions.Left, true);
-        var le = h.gameObject.AddComponent<LayoutElement>();
-        le.preferredHeight = 52f;
+        for (int i = 0; i < _tabs.Count; i++) _tabs[i].color = i == tab ? SelCol : BtnCol;
+        foreach (Transform c in _grid) Destroy(c.gameObject);
+        _entries.Clear();
+
+        // «Contratos»: los de ESTE nivel + los cumplidos de otros niveles que falten por cobrar.
+        // «Cobrados»: todos los ya cobrados (de cualquier nivel).
+        int lv = ContractCatalog.CurrentLevel;
+        for (int tier = 1; tier <= 3; tier++)
+            foreach (ContractDef d in ContractCatalog.All)
+            {
+                if (d.tier != tier) continue;
+                bool claimable = PlayerProgress.IsContractClaimable(d.id);
+                bool claimed = PlayerProgress.IsContractDone(d.id) && !claimable;
+                bool show = tab == ClaimedTab ? claimed : !claimed && (d.level == lv || claimable);
+                if (show) AddEntry(d);
+            }
+
+        _sel = _entries.Count > 0 ? _entries[0] : null;
+        Refresh();
     }
 
-    private Card BuildCard(Transform parent, ContractDef d)
+    private void AddEntry(ContractDef d)
     {
-        var card = new Card { def = d };
-        Color col = ContractDef.TierColor(d.tier);
-        card.bg = UIKit.Panel(d.id, parent, CardBg);
-        Transform t = card.bg.transform;
+        var e = new Entry { def = d, bg = Box("Item", _grid, ItemCol) };
+        e.bg.gameObject.AddComponent<Button>().onClick.AddListener(() => { _sel = e; Refresh(); });
+        string title = d.level == ContractCatalog.CurrentLevel ? d.title : Loc.T($"{d.title}\n(nivel {d.level})", $"{d.title}\n(level {d.level})");
+        var label = Lbl("Name", e.bg.transform, title, FontSmall + 2f, TextAlignmentOptions.Center);
+        Stretch(label.rectTransform, 10f, 10f, 10f, 45f);
+        e.state = Lbl("State", e.bg.transform, "", FontSmall, TextAlignmentOptions.Center);
+        e.state.color = DimText;
+        Stretch(e.state.rectTransform, 6f, 6f, _cell - 45f, 8f);
+        _entries.Add(e);
+    }
 
-        card.band = UIKit.Panel("Band", t, col);
-        UIKit.Place(card.band.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(8f, 0f), new Vector2(10f, 226f));
+    // ── Refresco ──────────────────────────────────────────────────────────────
 
-        var nameTxt = UIKit.Label("Name", t, d.title, 30f, Color.white, TextAlignmentOptions.TopLeft, true);
-        UIKit.Place(nameTxt.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(32f, -16f), new Vector2(310f, 44f));
+    /// <summary>Firmados de este nivel (el máximo es por nivel).</summary>
+    private static int ActiveCount => ContractCatalog.ActiveHere().Count;
 
-        // Pago
-        var coin = UIKit.CoinIcon(t, 28f);
-        UIKit.Place(coin.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-18f, -22f), new Vector2(28f, 28f));
-        var pay = UIKit.Label("Reward", t, "+" + d.reward, 28f, Gold, TextAlignmentOptions.Right, true);
-        UIKit.Place(pay.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-54f, -16f), new Vector2(140f, 40f));
+    private static string State(ContractDef d, bool chosen)
+    {
+        if (PlayerProgress.IsContractClaimable(d.id)) return Loc.T("¡Cumplido! Cobrar", "Done! Claim");
+        if (PlayerProgress.IsContractDone(d.id))      return Loc.T("Cobrado", "Claimed");
+        if (PlayerProgress.IsContractActive(d.id))    return Loc.T("Firmado", "Signed");
+        if (chosen)                                   return Loc.T("Elegido", "Chosen");
+        return "+" + d.reward;
+    }
 
-        string ruleTxt = d.rules != ContractRule.None ? "  ·  <color=#FF9B6B>CAMBIA LAS REGLAS</color>" : "";
-        var kind = UIKit.Label("Kind", t, ContractDef.TierName(d.tier).ToUpper() + ruleTxt, 16f, col, TextAlignmentOptions.TopLeft, true);
-        kind.richText = true;
-        UIKit.Place(kind.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(32f, -60f), new Vector2(460f, 22f));
+    private void Refresh()
+    {
+        _chosen.RemoveAll(id => PlayerProgress.IsContractActive(id) || PlayerProgress.IsContractDone(id));
+        int active = ActiveCount, toClaim = 0;
+        foreach (ContractDef d in ContractCatalog.All) if (PlayerProgress.IsContractClaimable(d.id)) toClaim++;
+        _wallet.text = Loc.T($"Nivel {ContractCatalog.CurrentLevel}     Monedas: {PlayerProgress.Coins}     Firmados: {active}/{ContractCatalog.MaxActive}     Por cobrar: {toClaim}",
+                             $"Level {ContractCatalog.CurrentLevel}     Coins: {PlayerProgress.Coins}     Signed: {active}/{ContractCatalog.MaxActive}     To claim: {toClaim}");
 
-        var desc = UIKit.Label("Desc", t, d.description, 21f, new Color(1f, 1f, 1f, 0.85f), TextAlignmentOptions.TopLeft);
-        UIKit.Place(desc.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(32f, -88f), new Vector2(460f, 90f));
+        foreach (Entry e in _entries)
+        {
+            bool claimed = PlayerProgress.IsContractDone(e.def.id) && !PlayerProgress.IsContractClaimable(e.def.id);
+            e.bg.color = e == _sel ? SelCol : claimed ? LockCol : ItemCol;
+            e.state.text = State(e.def, _chosen.Contains(e.def.id));
+        }
+        RefreshDetail(active);
+        RefreshSheet();
+    }
 
-        card.state = UIKit.Label("State", t, "", 22f, Paper, TextAlignmentOptions.Left, true);
-        UIKit.Place(card.state.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(32f, 22f), new Vector2(230f, 40f));
+    private void RefreshDetail(int active)
+    {
+        _dAction.gameObject.SetActive(_sel != null);
+        if (_sel == null) { _dName.text = _dInfo.text = _dDesc.text = _dState.text = ""; return; }
 
-        card.button = UIKit.MakeButton("Action", t, "", 24f, col * 0.85f + new Color(0f, 0f, 0f, 0.15f), Color.white, out card.buttonLabel);
-        UIKit.Place((RectTransform)card.button.transform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-18f, 16f), new Vector2(230f, 54f));
-        card.button.onClick.AddListener(() => OnAction(card));
-        return card;
+        ContractDef d = _sel.def;
+        bool chosen = _chosen.Contains(d.id);
+        _dName.text = d.title;
+        _dInfo.text = Loc.T($"Nivel {d.level} · {ContractDef.TierName(d.tier)} · paga {d.reward} monedas", $"Level {d.level} · {ContractDef.TierName(d.tier)} · pays {d.reward} coins")
+                      + (d.rules != ContractRule.None ? Loc.T(" · cambia las reglas", " · changes the rules") : "");
+        _dDesc.text = StripTags(d.description) + (d.midLevel ? Loc.T("\n\nSe cumple en cuanto lo consigas, a mitad de nivel.", "\n\nIt is completed as soon as you achieve it, mid-level.") : "");
+        _dState.text = State(d, chosen);
+
+        if (PlayerProgress.IsContractClaimable(d.id)) { _dActionLabel.text = Loc.T($"Cobrar (+{d.reward})", $"Claim (+{d.reward})"); _dAction.interactable = true; }
+        else if (PlayerProgress.IsContractDone(d.id)) { _dActionLabel.text = Loc.T("Cobrado", "Claimed");   _dAction.interactable = false; }
+        else if (PlayerProgress.IsContractActive(d.id)) { _dActionLabel.text = Loc.T("Rescindir", "Cancel"); _dAction.interactable = true; }
+        else if (chosen)                              { _dActionLabel.text = Loc.T("Quitar de la hoja", "Remove from sheet"); _dAction.interactable = true; }
+        else
+        {
+            _dActionLabel.text = Loc.T("Elegir", "Choose");
+            _dAction.interactable = d.level == ContractCatalog.CurrentLevel && active + _chosen.Count < ContractCatalog.MaxActive;
+        }
+    }
+
+    private void RefreshSheet()
+    {
+        int total = 0;
+        foreach (string id in _chosen) { ContractDef d = ContractCatalog.Get(id); if (d != null) total += d.reward; }
+        _sheet.text = _chosen.Count == 0
+            ? Loc.T("Hoja de firma: elige contratos y firma aquí.", "Signature sheet: choose contracts and sign here.")
+            : Loc.T($"Hoja de firma: {_chosen.Count} elegido(s), {total} monedas en total.", $"Signature sheet: {_chosen.Count} chosen, {total} coins in total.");
+        _sign.interactable = _chosen.Count > 0 && _pad.Ink >= MinInk;
+        _signLabel.text = _chosen.Count > 0 ? Loc.T($"Firmar ({_chosen.Count})", $"Sign ({_chosen.Count})") : Loc.T("Firmar", "Sign");
     }
 
     // ── Acciones ──────────────────────────────────────────────────────────────
 
-    private static int ActiveCount
+    private void OnAction()
     {
-        get
-        {
-            int n = 0;
-            foreach (string id in PlayerProgress.ActiveContracts) if (ContractCatalog.Get(id) != null) n++;
-            return n;
-        }
-    }
+        if (_sel == null) return;
+        ContractDef d = _sel.def;
+        string id = d.id;
 
-    private void OnAction(Card c)
-    {
-        string id = c.def.id;
         if (PlayerProgress.IsContractClaimable(id))
         {
-            if (PlayerProgress.ClaimContract(id, c.def.reward))
-                ShowToast($"¡Cobrado «{c.def.title}»!  +{c.def.reward} monedas", new Color(1f, 0.85f, 0.3f));
+            if (PlayerProgress.ClaimContract(id, d.reward)) { Toast(Loc.T($"Cobrado «{d.title}»: +{d.reward} monedas.", $"Claimed «{d.title}»: +{d.reward} coins.")); ShowTab(0); }
             return;
         }
         if (PlayerProgress.IsContractDone(id)) return;
-
-        if (PlayerProgress.IsContractActive(id))
+        if (PlayerProgress.IsContractActive(id)) { PlayerProgress.SetContractActive(id, false); Toast(Loc.T($"Has rescindido «{d.title}».", $"You cancelled «{d.title}».")); return; }
+        if (_chosen.Contains(id)) { _chosen.Remove(id); Refresh(); return; }
+        if (ActiveCount + _chosen.Count >= ContractCatalog.MaxActive)
         {
-            PlayerProgress.SetContractActive(id, false);
-            ShowToast($"Has rescindido «{c.def.title}».", Color.white);
+            Toast(Loc.T($"Solo puedes tener {ContractCatalog.MaxActive} contratos a la vez.", $"You can only have {ContractCatalog.MaxActive} contracts at a time."));
             return;
         }
-        if (_selected.Contains(id))
-        {
-            _selected.Remove(id);
-            Refresh();
-            return;
-        }
-        if (ActiveCount + _selected.Count >= ContractCatalog.MaxActive)
-        {
-            ShowToast($"Solo puedes tener {ContractCatalog.MaxActive} contratos a la vez (firmados + elegidos).", new Color(1f, 0.5f, 0.5f));
-            return;
-        }
-        _selected.Add(id);
+        _chosen.Add(id);
         Refresh();
     }
 
     /// <summary>Firma la hoja: todos los elegidos pasan a estar activos.</summary>
     private void Sign()
     {
-        if (_stampT > 0f) return;
-        if (_selected.Count == 0)
-        {
-            ShowToast("Elige primero algún contrato (botón ELEGIR).", new Color(1f, 0.5f, 0.5f));
-            return;
-        }
-        if (_pad.Ink < MinInk)
-        {
-            ShowToast("Tienes que firmar en el recuadro con el ratón.", new Color(1f, 0.5f, 0.5f));
-            return;
-        }
+        if (_chosen.Count == 0) { Toast(Loc.T("Elige primero algún contrato.", "Choose a contract first.")); return; }
+        if (_pad.Ink < MinInk)  { Toast(Loc.T("Firma en el recuadro con el ratón.", "Sign in the box with the mouse.")); return; }
 
-        // (Copia: al activar cada uno salta PlayerProgress.OnChanged → Refresh, que limpia _selected.)
-        var toSign = new List<string>(_selected);
-        _selected.Clear();
-        var names = new List<string>();
+        // (Copia: al activar cada uno salta PlayerProgress.OnChanged → Refresh, que limpia _chosen.)
+        var toSign = new List<string>(_chosen);
+        _chosen.Clear();
+        int n = 0;
         foreach (string id in toSign)
         {
             if (ActiveCount >= ContractCatalog.MaxActive) break;
             PlayerProgress.SetContractActive(id, true);
-            ContractDef d = ContractCatalog.Get(id);
-            if (d != null) names.Add("«" + d.title + "»");
+            n++;
         }
-        _selected.Clear();
-
-        _stamp.gameObject.SetActive(true);
-        _stampT = 1.6f;
-        ShowToast($"¡Firmado! {string.Join(", ", names)}. Cúmplelo en el próximo nivel.", new Color(0.5f, 1f, 0.5f));
+        _pad.Clear();
+        Toast(Loc.T($"Firmado{(n == 1 ? "" : "s")} {n} contrato{(n == 1 ? "" : "s")}. Cúmplelo{(n == 1 ? "" : "s")} en el próximo nivel.",
+                    $"Signed {n} contract{(n == 1 ? "" : "s")}. Complete {(n == 1 ? "it" : "them")} in the next level."));
         Refresh();
     }
 
-    private void Refresh()
-    {
-        if (_coinsText != null) _coinsText.text = PlayerProgress.Coins.ToString();
-        int active = ActiveCount, done = 0;
-        foreach (ContractDef d in ContractCatalog.All) if (PlayerProgress.IsContractDone(d.id)) done++;
-        if (_slotsText != null)
-        {
-            int toClaim = 0;
-            foreach (ContractDef d in ContractCatalog.All) if (PlayerProgress.IsContractClaimable(d.id)) toClaim++;
-            _slotsText.text = $"Firmados {active}/{ContractCatalog.MaxActive}   ·   Cumplidos {done}/{ContractCatalog.All.Count}" +
-                              (toClaim > 0 ? $"   ·   <color=#FFC83A>{toClaim} por cobrar</color>" : "");
-            _slotsText.richText = true;
-        }
-
-        _selected.RemoveAll(id => PlayerProgress.IsContractActive(id) || PlayerProgress.IsContractDone(id));
-        bool full = active + _selected.Count >= ContractCatalog.MaxActive;
-
-        // Hoja de firma
-        if (_summary != null)
-        {
-            if (_selected.Count == 0)
-                _summary.text = "Elige uno o varios contratos con <b>ELEGIR</b>, firma en el recuadro y pulsa <b>FIRMAR</b>.";
-            else
-            {
-                int total = 0;
-                var sb = new System.Text.StringBuilder();
-                foreach (string id in _selected)
-                {
-                    ContractDef d = ContractCatalog.Get(id);
-                    if (d == null) continue;
-                    total += d.reward;
-                    sb.Append($"• {d.title}  <color=#FFC83A>+{d.reward}</color>\n");
-                }
-                sb.Append($"<b>Total: <color=#FFC83A>{total}</color> monedas</b>");
-                _summary.text = sb.ToString();
-            }
-            bool signed = _pad.Ink >= MinInk;
-            _padHint.gameObject.SetActive(_pad.IsEmpty);
-            _signButton.interactable = _selected.Count > 0 && signed && _stampT <= 0f;
-            _signLabel.text = _selected.Count > 0 ? $"FIRMAR ({_selected.Count})" : "FIRMAR";
-        }
-
-        foreach (Card c in _cards)
-        {
-            Color col = ContractDef.TierColor(c.def.tier);
-            if (PlayerProgress.IsContractClaimable(c.def.id))
-            {
-                // Cumplido y SIN cobrar: hay que pulsar para llevarse el dinero.
-                c.bg.color = new Color(0.22f, 0.18f, 0.06f, 1f);
-                c.state.text = "<color=#FFC83A>¡CUMPLIDO!</color>";
-                c.buttonLabel.text = $"COBRAR  +{c.def.reward}";
-                c.button.interactable = true;
-                c.button.image.color = new Color(0.85f, 0.65f, 0.1f);
-            }
-            else if (PlayerProgress.IsContractDone(c.def.id))
-            {
-                c.bg.color = CardDone;
-                c.state.text = "<color=#7CFF7C>CUMPLIDO</color>";
-                c.buttonLabel.text = "COBRADO";
-                c.button.interactable = false;
-                c.button.image.color = new Color(0.3f, 0.3f, 0.32f);
-            }
-            else if (PlayerProgress.IsContractActive(c.def.id))
-            {
-                c.bg.color = CardOn;
-                c.state.text = "<color=#FFC83A>FIRMADO</color>";
-                c.buttonLabel.text = "RESCINDIR";
-                c.button.interactable = true;
-                c.button.image.color = new Color(0.45f, 0.2f, 0.2f);
-            }
-            else if (_selected.Contains(c.def.id))
-            {
-                c.bg.color = new Color(0.14f, 0.2f, 0.26f, 1f);
-                c.state.text = "<color=#8FD3FF>ELEGIDO</color>";
-                c.buttonLabel.text = "QUITAR";
-                c.button.interactable = true;
-                c.button.image.color = new Color(0.3f, 0.35f, 0.45f);
-            }
-            else
-            {
-                c.bg.color = CardBg;
-                c.state.text = "";
-                c.buttonLabel.text = "ELEGIR";
-                c.button.interactable = !full;
-                c.button.image.color = col * 0.85f + new Color(0f, 0f, 0f, 0.15f);
-            }
-            c.state.richText = true;
-        }
-    }
-
-    private void ShowToast(string msg, Color color)
-    {
-        _toast.text  = msg;
-        _toast.color = color;
-        _toastT = 2f;
-    }
+    private void Toast(string msg) { _toast.text = msg; _toastT = 2.5f; }
 }

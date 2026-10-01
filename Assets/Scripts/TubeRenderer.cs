@@ -43,13 +43,6 @@ public class TubeRenderer : MonoBehaviour
     private int[]       _triangles;
     private bool        _initialized;
 
-    // Modo "externo": el tubo se dibuja entre dos puntos arbitrarios que fija otro script
-    // (p. ej. WaterDiveController para la cuerda del corazón). Tiene prioridad sobre la zipline.
-    private bool    _extDriven;
-    private Vector3 _extStart;
-    private Vector3 _extEnd;
-    private float   _extSag;    // comba (cuánto cae la cuerda por el centro, m). 0 = recta.
-
     private void Awake()
     {
         _filter      = GetComponent<MeshFilter>();
@@ -61,13 +54,6 @@ public class TubeRenderer : MonoBehaviour
     private void LateUpdate()
     {
         if (!_initialized) return;
-
-        // Prioridad: si otro script fija los extremos (modo externo), dibujar entre ellos.
-        if (_extDriven)
-        {
-            BuildTube(_extStart, _extEnd, _extSag);
-            return;
-        }
 
         if (_zipline != null)
         {
@@ -82,30 +68,6 @@ public class TubeRenderer : MonoBehaviour
         {
             _mesh.Clear();
         }
-    }
-
-    // -------------------------------------------------------------------------
-    // API externa: renderizar el tubo entre dos puntos arbitrarios en world space
-    // (p. ej. la cuerda del corazón del buceo: mano -> corazón).
-    // -------------------------------------------------------------------------
-
-    /// <summary>Fija los dos extremos del tubo (world space) y lo hace visible. Prioritario sobre la zipline.</summary>
-    public void SetEndpoints(Vector3 startWorld, Vector3 endWorld) => SetEndpoints(startWorld, endWorld, 0f);
-
-    /// <summary>Como SetEndpoints pero con COMBA (cuerda floja): 'sag' = cuánto cae por el centro (m).</summary>
-    public void SetEndpoints(Vector3 startWorld, Vector3 endWorld, float sag)
-    {
-        _extStart  = startWorld;
-        _extEnd    = endWorld;
-        _extSag    = sag;
-        _extDriven = true;   // el LateUpdate reconstruye el mesh con estos puntos
-    }
-
-    /// <summary>Oculta el tubo (limpia el mesh) hasta el próximo SetEndpoints.</summary>
-    public void Hide()
-    {
-        _extDriven = false;
-        if (_mesh != null) _mesh.Clear();
     }
 
     private void OnDisable()

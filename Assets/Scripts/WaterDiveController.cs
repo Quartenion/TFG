@@ -4,12 +4,9 @@ using UnityEngine;
 /// Muerte por AGUA. Va en el jugador. Cuando el jugador cae al agua (layer <see cref="waterLayerName"/>,
 /// el mismo agua sólida del kayak), MUERE al instante (game over). No hay buceo ni oxígeno.
 ///
-/// Detecta el agua de TRES formas (con que salte una, muere), para que funcione con cualquier setup:
-///   1. Raycast HACIA ABAJO: busca la superficie del agua (su cara superior, la misma que usa el kayak
-///      para flotar) y mata en cuanto los PIES del jugador llegan a esa altura. Funciona tanto si el
-///      jugador se queda encima del agua como si la atraviesa.
-///   2. OnControllerColliderHit: si el CharacterController choca físicamente con el agua.
-///   3. OnTriggerEnter: si el agua es un trigger y el jugador entra dentro.
+/// Detecta el agua con un raycast HACIA ABAJO (solo contra el layer del agua, así que atraviesa el suelo):
+/// busca la superficie y mata en cuanto los PIES del jugador llegan a esa altura. El agua debe tener un
+/// collider SÓLIDO (no trigger) en ese layer.
 /// En kayak / tirolina no aplica (esos gestionan el agua aparte).
 ///
 /// SETUP:
@@ -39,10 +36,6 @@ public class WaterDiveController : MonoBehaviour
     [Tooltip("Segundos tras los que se destruye el splash instanciado.")]
     public float splashLifetime = 3f;
 
-    [Header("Debug")]
-    [Tooltip("Escribe en la consola cuándo detecta el agua y por qué método.")]
-    public bool debugLogs = false;
-
     private CharacterController _cc;
     private PlayerMovement      _pm;
     private int  _waterMask = 0;
@@ -58,8 +51,6 @@ public class WaterDiveController : MonoBehaviour
         _waterMask = w == -1 ? 0 : (1 << w);
         if (w == -1)
             Debug.LogError($"[WaterDiveController] El layer \"{waterLayerName}\" no existe. Créalo en Project Settings > Tags and Layers.", this);
-        else if (debugLogs)
-            Debug.Log($"[WaterDiveController] Activo. Layer '{waterLayerName}' (mask {_waterMask}).", this);
     }
 
     private void Update()
@@ -78,32 +69,7 @@ public class WaterDiveController : MonoBehaviour
             float feetY  = _cc != null ? _cc.bounds.min.y : transform.position.y;
 
             if (feetY <= waterY + surfaceThreshold)
-            {
-                if (debugLogs) Debug.Log($"[WaterDiveController] Muerte por raycast. feetY={feetY:F2} waterY={waterY:F2}", this);
                 Die(new Vector3(transform.position.x, waterY, transform.position.z));
-            }
-        }
-    }
-
-    // Respaldo 1: el CharacterController choca con el agua sólida.
-    private void OnControllerColliderHit(ControllerColliderHit hit)
-    {
-        if (!Active() || hit.collider == null) return;
-        if (((1 << hit.collider.gameObject.layer) & _waterMask) != 0)
-        {
-            if (debugLogs) Debug.Log("[WaterDiveController] Muerte por colisión del CharacterController.", this);
-            Die(hit.point);
-        }
-    }
-
-    // Respaldo 2: el agua es un trigger y el jugador entra.
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!Active() || other == null) return;
-        if (((1 << other.gameObject.layer) & _waterMask) != 0)
-        {
-            if (debugLogs) Debug.Log("[WaterDiveController] Muerte por trigger de agua.", this);
-            Die(transform.position);
         }
     }
 

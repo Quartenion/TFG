@@ -120,8 +120,6 @@ public class BossTailSweep : MonoBehaviour
     public UnityEvent OnThrowRelease;   // lo suelta (empieza a volar por el arco)
     public UnityEvent OnThrowCaught;    // la otra mano lo coge al final del arco
 
-    /// <summary>¿Está ocupado (barriendo, lanzado o volviendo)? Si no, está flotando en reposo.</summary>
-    public bool IsBusy => _phase != Phase.Idle;
 
     /// <summary>¿Hay un lanzamiento/recuperación EN CURSO? (Sujetándolo a la espera del siguiente lanzamiento = no.)</summary>
     public bool IsThrowInProgress => _phase == Phase.WindUp || _phase == Phase.Sweeping || _phase == Phase.Recover;
@@ -470,9 +468,6 @@ public class BossTailSweep : MonoBehaviour
     /// <summary>¿Son la misma mano? (el mismo objeto o uno dentro del otro).</summary>
     public static bool SameHand(Transform a, Transform b) =>
         a != null && b != null && (a == b || a.IsChildOf(b) || b.IsChildOf(a));
-
-    /// <summary>Mano asignada en el Inspector para el barrido (Grip Hand).</summary>
-    public Transform GripHand => _defGripHand != null ? _defGripHand : _gripHand;
 
     private Transform _defGripHand, _defGripParent;
     private Vector3   _defGripRestLocal;
