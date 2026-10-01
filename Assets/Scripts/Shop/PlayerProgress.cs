@@ -104,8 +104,13 @@ public static class PlayerProgress
     /// Nivel EFECTIVO de una mejora (el que usan los sistemas del juego): 0 si está suspendida (jefe / contrato
     /// «A pelo») o si el jugador la ha APAGADO en la tienda.
     /// </summary>
-    public static int GetLevel(string id) =>
-        _suspended || !Data.equippedUpgrades.Contains(id) ? 0 : Get(Data.upgrades, id);
+    public static int GetLevel(string id)
+    {
+        // Modo prueba: el CROSSHAIR RÍTMICO va siempre puesto, en todas las partes (los demás perks como siempre).
+        if (id == ShopIds.RhythmSight && StudySession.Active) return Mathf.Max(1, Get(Data.upgrades, id));
+        return _suspended || !Data.equippedUpgrades.Contains(id) ? 0 : Get(Data.upgrades, id);
+    }
+
 
     /// <summary>Nivel COMPRADO de una mejora (aunque esté apagada o suspendida). Para la tienda y los desbloqueos.</summary>
     public static int GetOwnedLevel(string id) => Get(Data.upgrades, id);
@@ -160,7 +165,10 @@ public static class PlayerProgress
 
     // ── Consumibles (se gastan) ───────────────────────────────────────────────
 
-    public static int GetCount(string id) => _suspended ? 0 : Get(Data.consumables, id);
+    public static int GetCount(string id)
+    {
+        return _suspended ? 0 : Get(Data.consumables, id);
+    }
 
     public static void AddCount(string id, int amount)
     {

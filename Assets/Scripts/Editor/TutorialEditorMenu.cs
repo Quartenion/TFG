@@ -55,6 +55,73 @@ public static class TutorialEditorMenu
         Debug.Log("[Tutorial] Avisos creados en «Tutorial». Revisa su posición (gizmo azul) y su texto en el Inspector.");
     }
 
+    // ── Nivel 2: kayak ────────────────────────────────────────────────────────
+
+    [MenuItem("Tools/Tutorial/Crear avisos (Nivel 2: kayak)")]
+    private static void CreateLevel2()
+    {
+        var kayak = Object.FindObjectsByType<KayakController>(FindObjectsInactive.Include)
+                          .OrderBy(k => k.transform.position.z).FirstOrDefault();
+        if (kayak == null) { EditorUtility.DisplayDialog("Tutorial", "No hay ningún kayak (KayakController) en la escena abierta.", "OK"); return; }
+
+        var root = NewRoot("Tutorial (kayak)");
+        if (root == null) return;
+        Vector3 p = kayak.transform.position;
+        Add(root, "Kayak · remar", p.z, "← CLIC DCHO     CLIC IZQ →", "remar al ritmo", false, p.x);
+        Finish(root, "Aviso del kayak creado sobre el primer kayak: «clic derecho → izquierda, clic izquierdo → derecha».");
+    }
+
+    // ── Nivel 3: mirar (GazeSwitch y BloodSuckers) ────────────────────────────
+
+    [MenuItem("Tools/Tutorial/Crear avisos (Nivel 3: mirar)")]
+    private static void CreateLevel3()
+    {
+        var root = NewRoot("Tutorial (mirar)");
+        if (root == null) return;
+        int n = 0;
+
+        // Primer interruptor de mirada que NO es un BloodSucker.
+        var gaze = Object.FindObjectsByType<GazeSwitch>(FindObjectsInactive.Include)
+                         .Where(g => g.GetComponentInParent<BloodSucker>(true) == null)
+                         .OrderBy(g => g.transform.position.z).FirstOrDefault();
+        if (gaze != null) { AddOn(gaze.transform, "MÍRALO", "mantén la mirada"); n++; }
+
+        // Primer BloodSucker.
+        var sucker = Object.FindObjectsByType<BloodSucker>(FindObjectsInactive.Include)
+                           .OrderBy(b => b.transform.position.z).FirstOrDefault();
+        if (sucker != null) { AddOn(sucker.transform, "MÍRALO", "para quitártelo"); n++; }
+
+        if (n == 0) { Object.DestroyImmediate(root); EditorUtility.DisplayDialog("Tutorial", "No hay GazeSwitch ni BloodSucker en la escena abierta.", "OK"); return; }
+        Finish(root, $"{n} avisos de «mirar» creados (pegados al primer interruptor de mirada y al primer BloodSucker).");
+    }
+
+    private static GameObject NewRoot(string name)
+    {
+        if (GameObject.Find(name) != null && !EditorUtility.DisplayDialog("Tutorial", $"Ya hay un objeto «{name}». ¿Crear otro igualmente?", "Crear", "Cancelar"))
+            return null;
+        var root = new GameObject(name);
+        Undo.RegisterCreatedObjectUndo(root, "Crear avisos del tutorial");
+        return root;
+    }
+
+    private static void Finish(GameObject root, string msg)
+    {
+        EditorSceneManager.MarkSceneDirty(root.scene);
+        Selection.activeGameObject = root;
+        Debug.Log("[Tutorial] " + msg + " Revisa su posición y guarda la escena.");
+    }
+
+    /// <summary>Cartel pegado a un objeto que se mueve (lo sigue sin girar ni escalarse con él).</summary>
+    private static void AddOn(Transform target, string key, string msg)
+    {
+        var go = new GameObject("Cartel · " + key);
+        Undo.RegisterCreatedObjectUndo(go, "Cartel");
+        go.transform.SetParent(target, false);
+        var h = go.AddComponent<TutorialHint>();
+        h.key = key; h.message = msg; h.follow = true; h.height = 0.6f; h.textSize = 8f;
+        h.color = Color.white; h.outlineColor = new Color(0f, 0f, 0f, 0.9f);
+    }
+
     private static void Add(GameObject root, string name, float z, string key, string msg, bool freeroam = false, float x = 0f)
     {
         var go = new GameObject("Cartel · " + name);

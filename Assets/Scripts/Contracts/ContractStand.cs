@@ -25,6 +25,8 @@ public class ContractStand : MonoBehaviour
     [SerializeField] private string _promptTextEn = "[ E ]  Contracts";
     [Tooltip("Solo se puede usar en freeroam (entre niveles, antes de abrir la puerta).")]
     [SerializeField] private bool _onlyInFreeroam = true;
+    [Tooltip("Rótulo flotante encima del puesto («CONTRATOS · mira y pulsa E»).")]
+    [SerializeField] private bool _showLabel = true;
 
     [Header("Bloque por defecto (solo si el objeto está vacío, sin prefab)")]
     [SerializeField] private Color   _blockColor = new Color(0.75f, 0.15f, 0.15f);   // rojo
@@ -41,6 +43,7 @@ public class ContractStand : MonoBehaviour
         _pm = FindAnyObjectByType<PlayerMovement>();
         if (GetComponentInChildren<Renderer>() == null && GetComponentInChildren<Collider>() == null) BuildPlaceholder();
         if (_colliders == null || _colliders.Length == 0) _colliders = GetComponentsInChildren<Collider>();
+        if (_showLabel) StandLabel.Create(transform, "CONTRATOS", "CONTRACTS", new Color(1f, 0.45f, 0.4f), _onlyInFreeroam);
     }
 
     private void Update()

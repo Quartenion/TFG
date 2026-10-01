@@ -51481,6 +51481,62 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &91453297
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 91453298}
+  - component: {fileID: 91453299}
+  m_Layer: 0
+  m_Name: "Cartel \xB7 Bloquear"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &91453298
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 91453297}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 10, z: 623.55}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 574605237}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &91453299
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 91453297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97ce45f7f15f5c44eaf20578292d52f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialHint
+  key: Q
+  message: ROMPER
+  keyEnglish: 
+  messageEnglish: 
+  height: 3
+  textSize: 14
+  showDistance: 40
+  beatPulse: 0.3
+  inFreeroam: 0
+  color: {r: 0, g: 0, b: 0, a: 1}
+  follow: 0
+  debugAlwaysVisible: 0
 --- !u!43 &91932253
 Mesh:
   m_ObjectHideFlags: 0
@@ -239885,7 +239941,9 @@ MonoBehaviour:
   _colliders: []
   _maxDistance: 4
   _promptText: '[ E ]  Contratos'
+  _promptTextEn: '[ E ]  Contracts'
   _onlyInFreeroam: 1
+  _showLabel: 1
   _blockColor: {r: 0.75, g: 0.15, b: 0.15, a: 1}
   _blockSize: {x: 2, y: 2, z: 2}
 --- !u!4 &458058052
@@ -289934,8 +289992,8 @@ Mesh:
     firstVertex: 0
     vertexCount: 24
     localAABB:
-      m_Center: {x: 0, y: 7.5, z: 0}
-      m_Extent: {x: 10, y: 17.5, z: 0.5}
+      m_Center: {x: 0, y: 0, z: 0}
+      m_Extent: {x: 10, y: 25, z: 0.5}
   m_Shapes:
     vertices: []
     shapes: []
@@ -290014,7 +290072,7 @@ Mesh:
       format: 0
       dimension: 0
     m_DataSize: 1152
-    _typelessdata: 000020c1000020c10000003f00000000000000000000803f000080bf0000000000000000000080bf0000a041000008c200002041000020c10000003f00000000000000000000803f000080bf0000000000000000000080bf00000000000008c2000020c10000c8410000003f00000000000000000000803f000080bf0000000000000000000080bf0000a0410000803f000020410000c8410000003f00000000000000000000803f000080bf0000000000000000000080bf000000000000803f00002041000020c10000003f0000803f000000000000000000000000000000000000803f000080bf0000803f000008c200002041000020c1000000bf0000803f000000000000000000000000000000000000803f000080bf00000000000008c2000020410000c8410000003f0000803f000000000000000000000000000000000000803f000080bf0000803f0000803f000020410000c841000000bf0000803f000000000000000000000000000000000000803f000080bf000000000000803f00002041000020c1000000bf0000000000000000000080bf0000803f0000000000000000000080bf0000a041000008c2000020c1000020c1000000bf0000000000000000000080bf0000803f0000000000000000000080bf00000000000008c2000020410000c841000000bf0000000000000000000080bf0000803f0000000000000000000080bf0000a0410000803f000020c10000c841000000bf0000000000000000000080bf0000803f0000000000000000000080bf000000000000803f000020c1000020c1000000bf000080bf00000000000000000000000000000000000080bf000080bf0000803f000008c2000020c1000020c10000003f000080bf00000000000000000000000000000000000080bf000080bf00000000000008c2000020c10000c841000000bf000080bf00000000000000000000000000000000000080bf000080bf0000803f0000803f000020c10000c8410000003f000080bf00000000000000000000000000000000000080bf000080bf000000000000803f000020c10000c8410000003f000000000000803f000000000000803f0000000000000000000080bf000000000000803f000020410000c8410000003f000000000000803f000000000000803f0000000000000000000080bf0000a0410000803f000020c10000c841000000bf000000000000803f000000000000803f0000000000000000000080bf0000000000000000000020410000c841000000bf000000000000803f000000000000803f0000000000000000000080bf0000a04100000000000020c1000020c1000000bf00000000000080bf00000000000080bf0000000000000000000080bf0000a0410000000000002041000020c1000000bf00000000000080bf00000000000080bf0000000000000000000080bf0000000000000000000020c1000020c10000003f00000000000080bf00000000000080bf0000000000000000000080bf0000a0410000803f00002041000020c10000003f00000000000080bf00000000000080bf0000000000000000000080bf000000000000803f
+    _typelessdata: 000020c10000c8c10000003f00000000000000000000803f000080bf0000000000000000000080bf0000a041000044c2000020410000c8c10000003f00000000000000000000803f000080bf0000000000000000000080bf00000000000044c2000020c10000c8410000003f00000000000000000000803f000080bf0000000000000000000080bf0000a0410000803f000020410000c8410000003f00000000000000000000803f000080bf0000000000000000000080bf000000000000803f000020410000c8c10000003f0000803f000000000000000000000000000000000000803f000080bf0000803f000044c2000020410000c8c1000000bf0000803f000000000000000000000000000000000000803f000080bf00000000000044c2000020410000c8410000003f0000803f000000000000000000000000000000000000803f000080bf0000803f0000803f000020410000c841000000bf0000803f000000000000000000000000000000000000803f000080bf000000000000803f000020410000c8c1000000bf0000000000000000000080bf0000803f0000000000000000000080bf0000a041000044c2000020c10000c8c1000000bf0000000000000000000080bf0000803f0000000000000000000080bf00000000000044c2000020410000c841000000bf0000000000000000000080bf0000803f0000000000000000000080bf0000a0410000803f000020c10000c841000000bf0000000000000000000080bf0000803f0000000000000000000080bf000000000000803f000020c10000c8c1000000bf000080bf00000000000000000000000000000000000080bf000080bf0000803f000044c2000020c10000c8c10000003f000080bf00000000000000000000000000000000000080bf000080bf00000000000044c2000020c10000c841000000bf000080bf00000000000000000000000000000000000080bf000080bf0000803f0000803f000020c10000c8410000003f000080bf00000000000000000000000000000000000080bf000080bf000000000000803f000020c10000c8410000003f000000000000803f000000000000803f0000000000000000000080bf000000000000803f000020410000c8410000003f000000000000803f000000000000803f0000000000000000000080bf0000a0410000803f000020c10000c841000000bf000000000000803f000000000000803f0000000000000000000080bf0000000000000000000020410000c841000000bf000000000000803f000000000000803f0000000000000000000080bf0000a04100000000000020c10000c8c1000000bf00000000000080bf00000000000080bf0000000000000000000080bf0000a04100000000000020410000c8c1000000bf00000000000080bf00000000000080bf0000000000000000000080bf0000000000000000000020c10000c8c10000003f00000000000080bf00000000000080bf0000000000000000000080bf0000a0410000803f000020410000c8c10000003f00000000000080bf00000000000080bf0000000000000000000080bf000000000000803f
   m_CompressedMesh:
     m_Vertices:
       m_NumItems: 0
@@ -290068,8 +290126,8 @@ Mesh:
       m_BitSize: 0
     m_UVInfo: 0
   m_LocalAABB:
-    m_Center: {x: 0, y: 7.5, z: 0}
-    m_Extent: {x: 10, y: 17.5, z: 0.5}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 10, y: 25, z: 0.5}
   m_MeshUsageFlags: 0
   m_CookingOptions: 30
   m_BakedConvexCollisionMesh: 
@@ -304568,6 +304626,39 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7034708355963976405, guid: 1f5efa853f5b9264f81ee1c50a72dd26, type: 3}
   m_PrefabInstance: {fileID: 2091283992}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &574605236
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 574605237}
+  m_Layer: 0
+  m_Name: Tutorial (kayak)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &574605237
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 574605236}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1513686367}
+  - {fileID: 91453298}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &574761838
 GameObject:
   m_ObjectHideFlags: 0
@@ -791792,6 +791883,62 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1f5efa853f5b9264f81ee1c50a72dd26, type: 3}
+--- !u!1 &1513686366
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1513686367}
+  - component: {fileID: 1513686368}
+  m_Layer: 0
+  m_Name: "Cartel \xB7 Kayak \xB7 remar"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1513686367
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513686366}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 4, z: 671.52997}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 574605237}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1513686368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513686366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97ce45f7f15f5c44eaf20578292d52f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialHint
+  key: "\u2190 CLIC DCHO     CLIC IZQ \u2192"
+  message: remar al ritmo
+  keyEnglish: 
+  messageEnglish: 
+  height: 3
+  textSize: 14
+  showDistance: 40
+  beatPulse: 0.3
+  inFreeroam: 0
+  color: {r: 1, g: 1, b: 1, a: 1}
+  follow: 0
+  debugAlwaysVisible: 0
 --- !u!4 &1514602993 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7034708355963976405, guid: 1f5efa853f5b9264f81ee1c50a72dd26, type: 3}
@@ -851233,7 +851380,9 @@ MonoBehaviour:
   _colliders: []
   _maxDistance: 4
   _promptText: '[ E ]  Tienda'
+  _promptTextEn: '[ E ]  Shop'
   _onlyInFreeroam: 1
+  _showLabel: 1
   _blockColor: {r: 0.2, g: 0.7, b: 0.25, a: 1}
   _blockSize: {x: 2, y: 2, z: 2}
 --- !u!4 &1648406544
@@ -892736,9 +892885,9 @@ MonoBehaviour:
   m_Shape:
     rid: 7056819817191047179
   m_ShapeRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_UnmodifiedMeshVersion: 1290
-  m_Size: {x: 20, y: 35, z: 1}
-  m_LocalCenter: {x: 0, y: 7.5, z: 0}
+  m_UnmodifiedMeshVersion: 2082
+  m_Size: {x: 20, y: 50, z: 1}
+  m_LocalCenter: {x: 0, y: 0, z: 0}
   references:
     version: 2
     RefIds:
@@ -892872,45 +893021,45 @@ MonoBehaviour:
   - m_Vertices: 0b0000000e00000012000000
   m_SharedTextures: []
   m_Positions:
-  - {x: -10, y: -10, z: 0.5}
-  - {x: 10, y: -10, z: 0.5}
+  - {x: -10, y: -25, z: 0.5}
+  - {x: 10, y: -25, z: 0.5}
   - {x: -10, y: 25, z: 0.5}
   - {x: 10, y: 25, z: 0.5}
-  - {x: 10, y: -10, z: 0.5}
-  - {x: 10, y: -10, z: -0.5}
+  - {x: 10, y: -25, z: 0.5}
+  - {x: 10, y: -25, z: -0.5}
   - {x: 10, y: 25, z: 0.5}
   - {x: 10, y: 25, z: -0.5}
-  - {x: 10, y: -10, z: -0.5}
-  - {x: -10, y: -10, z: -0.5}
+  - {x: 10, y: -25, z: -0.5}
+  - {x: -10, y: -25, z: -0.5}
   - {x: 10, y: 25, z: -0.5}
   - {x: -10, y: 25, z: -0.5}
-  - {x: -10, y: -10, z: -0.5}
-  - {x: -10, y: -10, z: 0.5}
+  - {x: -10, y: -25, z: -0.5}
+  - {x: -10, y: -25, z: 0.5}
   - {x: -10, y: 25, z: -0.5}
   - {x: -10, y: 25, z: 0.5}
   - {x: -10, y: 25, z: 0.5}
   - {x: 10, y: 25, z: 0.5}
   - {x: -10, y: 25, z: -0.5}
   - {x: 10, y: 25, z: -0.5}
-  - {x: -10, y: -10, z: -0.5}
-  - {x: 10, y: -10, z: -0.5}
-  - {x: -10, y: -10, z: 0.5}
-  - {x: 10, y: -10, z: 0.5}
+  - {x: -10, y: -25, z: -0.5}
+  - {x: 10, y: -25, z: -0.5}
+  - {x: -10, y: -25, z: 0.5}
+  - {x: 10, y: -25, z: 0.5}
   m_Textures0:
-  - {x: 20, y: -34}
-  - {x: 0, y: -34}
+  - {x: 20, y: -49}
+  - {x: 0, y: -49}
   - {x: 20, y: 1}
   - {x: 0, y: 1}
-  - {x: 1, y: -34}
-  - {x: 0, y: -34}
+  - {x: 1, y: -49}
+  - {x: 0, y: -49}
   - {x: 1, y: 1}
   - {x: 0, y: 1}
-  - {x: 20, y: -34}
-  - {x: 0, y: -34}
+  - {x: 20, y: -49}
+  - {x: 0, y: -49}
   - {x: 20, y: 1}
   - {x: 0, y: 1}
-  - {x: 1, y: -34}
-  - {x: 0, y: -34}
+  - {x: 1, y: -49}
+  - {x: 0, y: -49}
   - {x: 1, y: 1}
   - {x: 0, y: 1}
   - {x: 0, y: 1}
@@ -892957,7 +893106,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 549188606}
-  m_VersionIndex: 1290
+  m_VersionIndex: 2082
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -1056242,6 +1056391,7 @@ MonoBehaviour:
   _travelDuration: 2.5
   _maxDistance: 10
   _promptText: '[ E ]  Abrir'
+  _promptTextEn: '[ E ]  Open'
 --- !u!1 &2058064334
 GameObject:
   m_ObjectHideFlags: 0
@@ -1104414,3 +1104564,4 @@ SceneRoots:
   - {fileID: 2111568578}
   - {fileID: 531605850}
   - {fileID: 1082386562}
+  - {fileID: 574605237}

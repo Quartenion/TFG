@@ -26,6 +26,8 @@ public class ShopStand : MonoBehaviour
     [SerializeField] private string _promptTextEn = "[ E ]  Shop";
     [Tooltip("Solo se puede usar en freeroam (entre niveles, antes de abrir la puerta).")]
     [SerializeField] private bool _onlyInFreeroam = true;
+    [Tooltip("Rótulo flotante encima del puesto («TIENDA · mira y pulsa E»).")]
+    [SerializeField] private bool _showLabel = true;
 
     [Header("Bloque por defecto (solo si el objeto está vacío, sin prefab)")]
     [SerializeField] private Color   _blockColor = new Color(0.2f, 0.7f, 0.25f);   // verde
@@ -43,6 +45,7 @@ public class ShopStand : MonoBehaviour
         _pm = FindAnyObjectByType<PlayerMovement>();
         if (GetComponentInChildren<Renderer>() == null && GetComponentInChildren<Collider>() == null) BuildPlaceholder();
         if (_colliders == null || _colliders.Length == 0) _colliders = GetComponentsInChildren<Collider>();
+        if (_showLabel) StandLabel.Create(transform, "TIENDA", "SHOP", new Color(0.45f, 1f, 0.5f), _onlyInFreeroam);
     }
 
     private void Update()

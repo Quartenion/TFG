@@ -120,7 +120,8 @@ public class StudyHub : MonoBehaviour
             "• Everything is ANONYMOUS: you will be given a code; your name, email or any identifying data are not collected. " +
             "The data will only be used for this thesis.\n" +
             "• Taking part is voluntary and you can stop whenever you want (close the game). You must be 18 or older.\n\n" +
-            "Before you start: use WIRED HEADPHONES (Bluetooth delays the sound) and play somewhere quiet. " +
+            "Before you start: you need a MOUSE with left and right buttons (it cannot be played with a touchpad), " +
+            "use WIRED HEADPHONES (Bluetooth delays the sound) and play somewhere quiet. " +
             "During the game, F1 shows the controls." :
             "Gracias por participar. Vas a probar un juego rítmico en primera persona que forma parte de un Trabajo Fin de Grado " +
             "de la Universidad de Granada.\n\n" +
@@ -132,7 +133,8 @@ public class StudyHub : MonoBehaviour
             "• Todo es ANÓNIMO: se te asignará un código; no se recoge tu nombre, correo ni ningún dato que te identifique. " +
             "Los datos se usarán solo para este TFG.\n" +
             "• Participar es voluntario y puedes dejarlo cuando quieras (cierra el juego). Debes tener 18 años o más.\n\n" +
-            "Antes de empezar: usa AURICULARES CON CABLE (los Bluetooth retrasan el sonido) y juega en un sitio tranquilo. " +
+            "Antes de empezar: necesitas un RATÓN con clic izquierdo y derecho (no se puede jugar con el touchpad), " +
+            "usa AURICULARES CON CABLE (los Bluetooth retrasan el sonido) y juega en un sitio tranquilo. " +
             "Durante la partida, F1 muestra los controles.",
             100f, 620f);
         Bottom(p, Loc.T("Acepto y quiero participar", "I agree and want to take part"), 40f, () => { StudySession.Begin(); ShowPartIntro(); });

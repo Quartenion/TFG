@@ -278,6 +278,8 @@ public class EnergyManager : MonoBehaviour
             OnRedHit?.Invoke(redAvailable);
         }
 
+        if (BlueBroken) return redAvailable;   // (jeringuilla azul rota tras un golpe del jefe: no se llena)
+
         _isBlueMode = true;
         ChangeSyringe(overflow);
         OnBlueModeEntered?.Invoke(overflow);
@@ -414,6 +416,39 @@ public class EnergyManager : MonoBehaviour
         }
         ChangeSyringe(amount);                                           // …y el resto, sangre roja
     }
+
+    /// <summary>
+    /// Golpe del JEFE: si estás en modo azul, se pierde TODA la sangre azul (y nada más); si no, la jeringuilla se
+    /// llena 'redFraction' de la roja (0.5 = media jeringuilla; dos golpes seguidos sin azul = muerte).
+    /// </summary>
+    public void TakeBossHit(float redFraction)
+    {
+        if (godMode) return;
+        _lastDrainTime = Time.time;
+        // Tras un golpe del jefe la jeringuilla azul queda ROTA unos segundos: no se puede volver a llenar.
+        _blueBrokenUntil = Time.time + _blueBrokenSeconds;
+        if (_isBlueMode)
+        {
+            // El azul hace de ESCUDO: se rompe (sonido de cristal) y absorbe el golpe entero.
+            _isBlueMode = false;
+            ChangeSyringe(-_syringe);
+            OnBlueDepleted?.Invoke();
+            GlassShatterSfx.Play(_shieldBreakSound, _shieldBreakVolume);
+            return;
+        }
+        ChangeSyringe(_maxSyringe * Mathf.Clamp01(redFraction) * DrainMultiplier);
+    }
+
+    [Header("Escudo azul (golpes del jefe)")]
+    [Tooltip("Segundos que la jeringuilla azul queda ROTA tras un golpe del jefe (no se puede volver a llenar).")]
+    [SerializeField] private float _blueBrokenSeconds = 3f;
+    [Tooltip("(Opcional) Sonido de cristal al romperse el escudo azul. Vacío = uno generado por código.")]
+    [SerializeField] private AudioClip _shieldBreakSound;
+    [Range(0f, 1f)] [SerializeField] private float _shieldBreakVolume = 0.9f;
+    private float _blueBrokenUntil = -10f;
+
+    /// <summary>¿La jeringuilla azul está rota (golpe reciente del jefe)? Mientras, los aciertos no dan azul.</summary>
+    public bool BlueBroken => Time.time < _blueBrokenUntil;
 
     public void DrainBlood(float amount)
     {

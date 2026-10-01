@@ -185,3 +185,71 @@ El enlace del formulario oculto va dentro del juego: cualquiera que lo extraiga 
 4. El juego **solo envía por HTTPS a docs.google.com**, no lee ni interpreta las respuestas, no ejecuta nada descargado y solo envía datos tras aceptar el consentimiento.
 5. **Si publicas la versión web (WebGL)**: Google Forms no permite leer la respuesta desde el navegador (CORS). Los datos llegan igualmente, pero el juego no reintenta en la web para no duplicar filas (si alguna se repite, se quita con la columna `fila`). La versión descargable (Windows) no tiene este problema.
 6. Exporta con **Development Build desactivado**.
+
+## 6. Borrar las pruebas y ver los datos en columnas
+
+### Borrar los registros de prueba (justo antes de publicar)
+1. **Formulario oculto de datos** → pestaña *Respuestas* → ⋮ → **Eliminar todas las respuestas**.
+2. **Cuestionario final** → lo mismo (*Respuestas* → ⋮ → *Eliminar todas las respuestas*).
+3. Eso NO borra la hoja de cálculo vinculada: abre cada hoja, selecciona las filas de datos (desde la 2 hasta la última: clic en el número «2», Mayús + clic en el último), clic derecho → **Eliminar filas**. No borres la fila 1 (cabeceras) ni la pestaña.
+
+### Hoja legible: una hoja por tipo de fila
+La hoja de respuestas guarda cada fila del juego en una sola celda («intento;P-XXXXX;…»). No la toques: crea hojas nuevas que la separan en columnas solas y se actualizan con cada respuesta.
+
+1. La hoja se queda en **configuración española** (Archivo → Configuración → Configuración regional: España). El juego escribe los decimales con punto; la fórmula los cambia a coma al separar, así que salen como números normales. Por eso las fórmulas usan «;» entre argumentos.
+2. Crea 5 hojas nuevas (botón «+» abajo a la izquierda, «Añadir hoja»; luego doble clic en el nombre para renombrarla): `intentos`, `cuestionarios`, `tienda`, `contratos`, `abandonos`.
+3. En cada hoja pega sus dos fórmulas, en **A1** y en **A2** (si tu pestaña de respuestas no se llama «Respuestas de formulario 1», cambia el nombre en la fórmula):
+
+**intentos**
+A1 (cabeceras):
+```
+=SPLIT("tipo;participante;fecha_utc;version;parte;nivel;config;orden;intento;resultado;duracion_s;beats_alcanzados;precision_sync;latidos;aciertos;perfect;good;fallos;mejor_racha;desfase_medio_ms;desfase_abs_medio_ms;desfase_sd_ms;energia_gastada_acciones;energia_perdida_fallos;energia_perdida_azul;energia_recuperada;energia_media;energia_min;tiempo_azul_s;entradas_azul;saltos;dashes;slides;wallruns;monedas;mejoras_equipadas;monedas_recogidas;monedas_nivel_total;contratos_activos;contratos_fallados;fila;verificacion"; ";")
+```
+A2 (datos):
+```
+=IFERROR(ARRAYFORMULA(SPLIT(SUBSTITUTE(FILTER('Respuestas de formulario 1'!B:B; REGEXMATCH('Respuestas de formulario 1'!B:B; "^intento;")); "."; ","); ";"; 0; 0)); "")
+```
+
+**cuestionarios**
+A1 (cabeceras):
+```
+=SPLIT("tipo;participante;fecha_utc;version;parte;nivel;config;orden;p1;p2;p3;p4;p5;p6;p7;p8;preferencia;fila;verificacion"; ";")
+```
+A2 (datos):
+```
+=IFERROR(ARRAYFORMULA(SPLIT(SUBSTITUTE(FILTER('Respuestas de formulario 1'!B:B; REGEXMATCH('Respuestas de formulario 1'!B:B; "^cuestionario;")); "."; ","); ";"; 0; 0)); "")
+```
+
+**tienda**
+A1 (cabeceras):
+```
+=SPLIT("tipo;participante;fecha_utc;version;parte;nivel;evento;objeto;precio;monedas_restantes;muescas_usadas;muescas_total;duracion_s;fila;verificacion"; ";")
+```
+A2 (datos):
+```
+=IFERROR(ARRAYFORMULA(SPLIT(SUBSTITUTE(FILTER('Respuestas de formulario 1'!B:B; REGEXMATCH('Respuestas de formulario 1'!B:B; "^tienda;")); "."; ","); ";"; 0; 0)); "")
+```
+
+**contratos**
+A1 (cabeceras):
+```
+=SPLIT("tipo;participante;fecha_utc;version;parte;nivel;evento;contrato;dificultad;recompensa;monedas;fila;verificacion"; ";")
+```
+A2 (datos):
+```
+=IFERROR(ARRAYFORMULA(SPLIT(SUBSTITUTE(FILTER('Respuestas de formulario 1'!B:B; REGEXMATCH('Respuestas de formulario 1'!B:B; "^contrato;")); "."; ","); ";"; 0; 0)); "")
+```
+
+**abandonos**
+A1 (cabeceras):
+```
+=SPLIT("tipo;participante;fecha_utc;version;parte;nivel;intentos;fila;verificacion"; ";")
+```
+A2 (datos):
+```
+=IFERROR(ARRAYFORMULA(SPLIT(SUBSTITUTE(FILTER('Respuestas de formulario 1'!B:B; REGEXMATCH('Respuestas de formulario 1'!B:B; "^abandono;")); "."; ","); ";"; 0; 0)); "")
+```
+
+4. Opcional: **Ver → Inmovilizar → 1 fila** en cada hoja, y **Datos → Crear un filtro** para filtrar por participante, parte o configuración.
+
+Si antes de borrar las pruebas ves `#REF!` o columnas descuadradas, es por las filas antiguas (de antes de añadir `fila;verificacion`, tienen 2 columnas menos): al borrarlas se arregla.

@@ -85,7 +85,11 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     [Tooltip("Parte de TODA la sangre posible (roja + azul) que quita cada golpe del jefe. 0.25 = un cuarto.\n" +
              "(Si la jeringuilla se llena, mueres por sangre.)")]
     [Range(0.05f, 1f)]
-    [SerializeField] private float _hitFractionOfTotal = 0.25f;
+    [SerializeField] private float _hitFractionOfTotal = 0.25f;   // (ya no se usa: ver Boss Hit Red Fraction)
+    [Tooltip("Golpe del jefe: con sangre AZUL la quita toda; sin azul, llena esta parte de la jeringuilla roja\n" +
+             "(0.5 = media jeringuilla → dos golpes seguidos sin azul = muerte).")]
+    [Range(0.05f, 1f)]
+    [SerializeField] private float _bossHitRedFraction = 0.5f;
     [Tooltip("Segundos de invulnerabilidad tras recibir un golpe fuerte (para que un mismo ataque no te pegue varias veces).")]
     [SerializeField] private float _hitInvulnerability = 1f;
 
@@ -761,7 +765,16 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         double landDSP  = spawnDSP + _projectileFlightBeats * BeatDuration;
         p.Init(this, _laneX[laneIndex], landDSP, deflectable);
         if (life) p.MakeLifeBarrel();
+
+        // Tutorial: «Q» encima de los primeros barriles que se pueden devolver.
+        if (deflectable && _qHintsShown < TutorialHintsPerAttack &&
+            TutorialHint.Attach(p.transform, "Q", life ? "vida extra" : "devuélvelo", 0.5f) != null)
+            _qHintsShown++;
     }
+
+    // Tutorial del jefe (solo con los consejos activados): carteles en las primeras veces de cada ataque.
+    private const int TutorialHintsPerAttack = 3;
+    private int _qHintsShown, _slamHintsShown;
 
     private void TriggerTailAt(double contactDSP, float sweepBeats)
     {
@@ -1343,6 +1356,14 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         _headFlyFromWorld = _head.position;
         _headLaneX        = (_laneX != null && _laneX.Length > 0) ? _laneX[Random.Range(0, _laneX.Length)] : 0f;
         _headCrushDone    = false;
+        // Tutorial: «SALTA + S» encima de la cabeza desde que sale volando y mientras está en el suelo (las primeras veces).
+        _slamHintsShown++;
+        if (_head.GetComponent<TutorialHint>() == null)
+        {
+            TutorialHint h = TutorialHint.Attach(_head, "SALTA + S", "sobre la cabeza", 0.8f, 8f,
+                () => (_p2sub == Phase2Sub.HeadFlying || _p2sub == Phase2Sub.Vulnerable) && _slamHintsShown <= TutorialHintsPerAttack);
+            if (h != null) { h.color = Color.black; h.outlineColor = new Color(1f, 1f, 1f, 0.85f); }   // (este, en negro)
+        }
         if (_headRenderer == null) _headRenderer = _head.GetComponentInChildren<Renderer>();
         OnFaceplant?.Invoke();
         if (_verbose) Debug.Log($"[Boss] La cabeza sale volando hacia el carril X={_headLaneX}.");
@@ -1371,6 +1392,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
 
             _p2sub = Phase2Sub.Vulnerable;
             _vulnEndDSP = now + _vulnBeats * BeatDuration;
+
         }
     }
 
@@ -1485,8 +1507,8 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         if (Time.time < _invulnerableUntil) return;
         if (_gameOver != null && _gameOver.IsDead) return;
         _invulnerableUntil = Time.time + _hitInvulnerability;
-        if (EnergyManager.Instance != null) EnergyManager.Instance.TakeHitFraction(_hitFractionOfTotal);
+        if (EnergyManager.Instance != null) EnergyManager.Instance.TakeBossHit(_bossHitRedFraction);
         CameraShaker.Instance?.Shake(0.55f);
-        if (_verbose) Debug.Log($"[Boss] Golpe al jugador: -{_hitFractionOfTotal * 100f:0}% de la sangre total.");
+        if (_verbose) Debug.Log($"[Boss] Golpe al jugador: fuera el azul, o +{_bossHitRedFraction * 100f:0}% de jeringuilla roja.");
     }
 }

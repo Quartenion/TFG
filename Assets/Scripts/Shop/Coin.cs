@@ -233,7 +233,8 @@ public class Coin : MonoBehaviour, IRewindable
         _gotValue = lucky ? _value * 2 : _value;
         LevelCoins.Collect(_gotValue, _uid);
         if (lucky) _visualScale0 = _visualScaleBase * 1.6f;   // (se ve más grande al recogerla)
-        CoinPickupAudio.Play(_pickupSounds, _pickupSound, _pickupVolume);
+        // (Sonido de recoger desactivado: estaba mal implementado. Para recuperarlo:
+        //  CoinPickupAudio.Play(_pickupSounds, _pickupSound, _pickupVolume);)
     }
 
     /// <summary>Animación de recogida: salta hacia el jugador encogiéndose y desaparece.</summary>

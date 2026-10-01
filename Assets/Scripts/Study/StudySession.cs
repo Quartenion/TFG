@@ -21,7 +21,7 @@ public static class StudySession
         public string title       => Loc.T(titleEs, titleEn);
         public string description => Loc.T(descEs, descEn);
         public StudyConfig.Profile config;
-        public bool tutorial, questionnaire, preference, shop;
+        public bool tutorial, questionnaire, preference, shop;   // tutorial = carteles de consejos (práctica y mecánicas nuevas de los niveles 2 y 3)
     }
 
     public const string MenuScene = "MainMenu";
@@ -69,7 +69,7 @@ public static class StudySession
             new Part { scene = "Level1", config = second, questionnaire = true, preference = true, titleEs = "Nivel 1 · partida 2", titleEn = "Level 1 · run 2",
                        descEs = "Una última vez el Nivel 1. Puede que notes que la energía funciona algo distinto: juega con normalidad.",
                        descEn = "Level 1 one last time. You may notice that energy works a bit differently: just play normally." },
-            new Part { scene = "Level2", config = StudyConfig.Profile.Normal, questionnaire = true, shop = true, titleEs = "Nivel 2", titleEn = "Level 2",
+            new Part { scene = "Level2", config = StudyConfig.Profile.Normal, tutorial = true, questionnaire = true, shop = true, titleEs = "Nivel 2", titleEn = "Level 2",
                        descEn = "A new level with kayak sections: left or right click on the beat to paddle to each side.\n\n" +
                                 "NEW: in the start area there is a SHOP (green block; look at it and press E). Spend the coins you " +
                                 "have earned on upgrades and equip them (each upgrade uses «notches»). Buy whatever you want, or nothing.\n" +
@@ -80,7 +80,7 @@ public static class StudySession
                                      "ganado en mejoras y equípalas (cada mejora ocupa «muescas»). Compra lo que quieras, o nada.\n" +
                                      "También hay un puesto de CONTRATOS (bloque rojo): retos opcionales que dan monedas si los cumples " +
                                      "(se cobran luego en el puesto)." },
-            new Part { scene = "Level3", config = StudyConfig.Profile.Normal, questionnaire = true, shop = true, titleEs = "Nivel 3", titleEn = "Level 3",
+            new Part { scene = "Level3", config = StudyConfig.Profile.Normal, tutorial = true, questionnaire = true, shop = true, titleEs = "Nivel 3", titleEn = "Level 3",
                        descEn = "The last level: there are enemies that you disable by LOOKING AT THEM for a moment, and a final boss.\n\n" +
                                 "The shop and contracts are back in the start area, with new upgrades and challenges. " +
                                 "If you completed any contract in Level 2, claim it here.",
