@@ -89,7 +89,8 @@ public class LevelEndManager : MonoBehaviour
     // Beat accuracy
     private int   _totalBeats  = 0;
     private int   _syncedBeats = 0;
-    private float _accuracy    = 0f;
+    private float _accuracy    = 0f;    // PRECISIÓN AL RITMO: % de latidos (clics / remadas) acertados
+    private float _syncAccuracy = -1f;  // sincronía del MOVIMIENTO con la rejilla de beats (telemetría; −1 = no medible)
 
     // Componentes
     private CharacterController _cc;
@@ -195,10 +196,12 @@ public class LevelEndManager : MonoBehaviour
         if (PlayerProgress.GetLevel(ShopIds.BloodGold) > 0 && EnergyManager.Instance != null)
             LevelCoins.Collect(Mathf.RoundToInt(Mathf.Clamp01(EnergyManager.Instance.EnergyPercent) * 100f));
 
-        _accuracy = _totalBeats > 0
-            ? (float)_syncedBeats / _totalBeats * 100f
-            : 0f;
-        StudyTelemetry.EndAttempt("completado", _accuracy);   // (modo prueba)
+        // Precisión al ritmo = latidos acertados (Perfect + Good) / latidos pulsados. Es lo que el jugador entiende por
+        // «precisión»: la usan la nota, los contratos y las mejoras. (Antes se mostraba la sincronía de la POSICIÓN con la
+        // rejilla, que no mide los clics, salía 0 % en los niveles sin rejilla y se reiniciaba al volver a un checkpoint.)
+        _accuracy = RunStats.HeartPresses > 0 ? 100f * RunStats.Hits / RunStats.HeartPresses : 0f;
+        _syncAccuracy = _totalBeats > 0 ? (float)_syncedBeats / _totalBeats * 100f : -1f;
+        StudyTelemetry.EndAttempt("completado", _syncAccuracy);   // (modo prueba: columna precision_sync)
 
         // Contratos firmados: los cumplidos se cobran ahora (van directos al monedero).
         _contractsDone = ContractRunner.EvaluateLevelEnd(new LevelResult
@@ -439,7 +442,7 @@ public class LevelEndManager : MonoBehaviour
         InitStyles();
 
         const float pw = 480f;
-        float ph = 320f + (_contractsDone.Count > 0 ? 30f + 26f * _contractsDone.Count : 0f);
+        float ph = 384f + (_contractsDone.Count > 0 ? 30f + 26f * _contractsDone.Count : 0f);
         float px = (Screen.width  - pw) * 0.5f;
         float py = (Screen.height - ph) * 0.5f;
 
@@ -459,7 +462,7 @@ public class LevelEndManager : MonoBehaviour
         y += 50f;
 
         // Nota
-        string grade = GetGrade(_accuracy);
+        string grade = RunStats.HeartPresses > 0 ? GetGrade(_accuracy) : "—";
         _gradeStyle.normal.textColor = GetGradeColor(_accuracy);
         GUI.Label(new Rect(px + pw - 110f, py + 15f, 90f, 70f), grade, _gradeStyle);
 
@@ -468,8 +471,11 @@ public class LevelEndManager : MonoBehaviour
         y += 12f;
 
         // Precisión
-        DrawStat(ref y, x, pw, Loc.T("Precisión de beats", "Beat accuracy"),
-            $"{_accuracy:F1}%  ({_syncedBeats}/{_totalBeats} beats)");
+        DrawStat(ref y, x, pw, Loc.T("Precisión al ritmo", "Rhythm accuracy"),
+            Loc.T($"{_accuracy:F1}%  ({RunStats.Hits}/{RunStats.HeartPresses} latidos)", $"{_accuracy:F1}%  ({RunStats.Hits}/{RunStats.HeartPresses} beats)"));
+        DrawStat(ref y, x, pw, "Perfect / Good / " + Loc.T("Fallos", "Misses"),
+            $"{RunStats.Perfects} / {RunStats.Hits - RunStats.Perfects} / {RunStats.Misses}");
+        DrawStat(ref y, x, pw, Loc.T("Mejor racha", "Best streak"), RunStats.BestStreak.ToString());
 
         // Monedas cobradas
         DrawStat(ref y, x, pw, Loc.T("Monedas", "Coins"), Loc.T($"+{_coinsBanked}  (monedero: {PlayerProgress.Coins})", $"+{_coinsBanked}  (wallet: {PlayerProgress.Coins})"));

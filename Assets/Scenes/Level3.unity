@@ -58115,7 +58115,7 @@ PrefabInstance:
       objectReference: {fileID: 1623093831}
     - target: {fileID: 2811555813022406750, guid: 1eefea9d57a94c24e9abf87b5d1950e5, type: 3}
       propertyPath: _testMode
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2811555813022406750, guid: 1eefea9d57a94c24e9abf87b5d1950e5, type: 3}
       propertyPath: _skipIntro
@@ -58135,7 +58135,7 @@ PrefabInstance:
       objectReference: {fileID: 1623093817}
     - target: {fileID: 2811555813022406750, guid: 1eefea9d57a94c24e9abf87b5d1950e5, type: 3}
       propertyPath: _debugSkipIntro
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2811555813022406750, guid: 1eefea9d57a94c24e9abf87b5d1950e5, type: 3}
       propertyPath: _playerMovement
@@ -58143,11 +58143,11 @@ PrefabInstance:
       objectReference: {fileID: 1192587858}
     - target: {fileID: 2811555813022406750, guid: 1eefea9d57a94c24e9abf87b5d1950e5, type: 3}
       propertyPath: _testOverrideXY
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2811555813022406750, guid: 1eefea9d57a94c24e9abf87b5d1950e5, type: 3}
       propertyPath: _waitForInteraction
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2811555813022406750, guid: 1eefea9d57a94c24e9abf87b5d1950e5, type: 3}
       propertyPath: '_circleRoots.Array.data[0]'

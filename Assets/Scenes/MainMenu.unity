@@ -397,8 +397,8 @@ MonoBehaviour:
   _playButton: {fileID: 1873583312}
   _menuMusic: {fileID: 8300000, guid: 56156e391ddbf284bb1feb7030ef9b3b, type: 3}
   _menuMusicVolume: 0.6
-  _menuMusicBpm: 60
-  _menuMusicFirstBeat: 0.967
+  _menuMusicBpm: 120
+  _menuMusicFirstBeat: 0
   _menuMusicFadeIn: 2
   _mainPanel: {fileID: 1677549837}
   _settingsPanel: {fileID: 1376973644}

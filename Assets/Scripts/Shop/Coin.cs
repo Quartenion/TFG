@@ -25,12 +25,6 @@ public class Coin : MonoBehaviour, IRewindable
     [Range(0.05f, 1f)] [SerializeField] private float _turnFraction = 0.2f;
     [Tooltip("Latido de escala en cada beat (0 = nada).")]
     [SerializeField] private float _beatPulse = 0.18f;
-    [Tooltip("Sonido al recogerla (opcional).")]
-    [SerializeField] private AudioClip _pickupSound;
-    [Tooltip("Sonidos de recogida (p. ej. 2). Se alternan y, además, el TONO va subiendo si coges monedas seguidas\n" +
-             "(como una escala) y varía un poco al azar: así parecen muchos sonidos distintos. Vacío = 'Pickup Sound'.")]
-    [SerializeField] private AudioClip[] _pickupSounds;
-    [Range(0f, 1f)][SerializeField] private float _pickupVolume = 0.6f;
     [Tooltip("Color de la moneda generada por código.")]
     [SerializeField] private Color _color = new Color(1f, 0.78f, 0.15f);
 
@@ -233,8 +227,7 @@ public class Coin : MonoBehaviour, IRewindable
         _gotValue = lucky ? _value * 2 : _value;
         LevelCoins.Collect(_gotValue, _uid);
         if (lucky) _visualScale0 = _visualScaleBase * 1.6f;   // (se ve más grande al recogerla)
-        // (Sonido de recoger desactivado: estaba mal implementado. Para recuperarlo:
-        //  CoinPickupAudio.Play(_pickupSounds, _pickupSound, _pickupVolume);)
+        // (Sin sonido al recoger: se quitó porque estaba mal implementado. CoinPickupAudio, abajo, sigue disponible.)
     }
 
     /// <summary>Animación de recogida: salta hacia el jugador encogiéndose y desaparece.</summary>

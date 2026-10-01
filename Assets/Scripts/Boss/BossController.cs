@@ -82,10 +82,6 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     [Header("Daño")]
     [SerializeField] private int _maxHp = 9;
     [SerializeField] private int _hitsPerPhase = 3;
-    [Tooltip("Parte de TODA la sangre posible (roja + azul) que quita cada golpe del jefe. 0.25 = un cuarto.\n" +
-             "(Si la jeringuilla se llena, mueres por sangre.)")]
-    [Range(0.05f, 1f)]
-    [SerializeField] private float _hitFractionOfTotal = 0.25f;   // (ya no se usa: ver Boss Hit Red Fraction)
     [Tooltip("Golpe del jefe: con sangre AZUL la quita toda; sin azul, llena esta parte de la jeringuilla roja\n" +
              "(0.5 = media jeringuilla → dos golpes seguidos sin azul = muerte).")]
     [Range(0.05f, 1f)]

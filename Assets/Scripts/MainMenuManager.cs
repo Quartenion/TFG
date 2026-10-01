@@ -29,10 +29,10 @@ public class MainMenuManager : MonoBehaviour
     [Tooltip("Canción que suena en bucle en el menú (por defecto, la de Game Over).")]
     [SerializeField] private AudioClip _menuMusic;
     [Range(0f, 1f)] [SerializeField] private float _menuMusicVolume = 0.6f;
-    [Tooltip("BPM de la canción del menú (el metrónomo del volumen suena a este tempo y en sus beats). GameOver.wav ≈ 60.")]
-    [SerializeField] private float _menuMusicBpm = 60f;
+    [Tooltip("BPM de la canción del menú (el metrónomo del volumen suena a este tempo y en sus beats). GameOver.wav = 120.")]
+    [SerializeField] private float _menuMusicBpm = 120f;
     [Tooltip("Segundos desde el inicio de la canción hasta su primer beat (para cuadrar los tics con la música).")]
-    [SerializeField] private float _menuMusicFirstBeat = 0.967f;
+    [SerializeField] private float _menuMusicFirstBeat = 0f;
     [Tooltip("Segundos de fundido al entrar.")]
     [SerializeField] private float _menuMusicFadeIn = 2f;
     private AudioSource _musicSource;
