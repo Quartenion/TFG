@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: last_stand
   displayName: Adrenalina
-  description: Una vez por nivel, al quedarte sin sangre vuelves en el siguiente
-    beat con un 30 % (gratis, antes de gastar vidas extra).
+  description: "Una vez por nivel, revives con un 30 % de sangre."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.25, g: 0.7, b: 0.35, a: 1}

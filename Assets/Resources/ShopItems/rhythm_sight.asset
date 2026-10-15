@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: rhythm_sight
   displayName: "Crosshair r\xEDtmico"
-  description: "Las notas (spikes) entran hacia el punto de mira al ritmo de la m\xFAsica
-    y marcan cu\xE1ndo pulsar."
+  description: "El punto de mira marca cu\xE1ndo pulsar."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.2, g: 0.5, b: 0.9, a: 1}

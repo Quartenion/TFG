@@ -1,6 +1,6 @@
 # Beat tracking: detección automática del tempo
 
-Herramienta: **Tools → Beat Tracking → Analizador de tempo** (`Assets/Scripts/Editor/BeatTracker.cs` + `BeatTrackingWindow.cs`).
+Herramienta: **Tools → Beat Tracking → Analizador de tempo** (`Assets/Scripts/Editor/BeatTracking/BeatTracker.cs` + `BeatTrackingWindow.cs`).
 
 ## Qué hace
 1. Analiza una canción y da su **BPM** y el **desfase del primer beat** (si la canción empieza justo en un beat, ≈ 0 ms).

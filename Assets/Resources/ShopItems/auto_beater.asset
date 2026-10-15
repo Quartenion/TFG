@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: auto_beater
   displayName: Auto-latido
-  description: "Un latido autom\xE1tico acertado cada cierto n\xFAmero de beats."
+  description: "El coraz\xF3n late solo cada cierto n\xFAmero de beats."
   levelDescriptions:
   - cada 8 beats
   - cada 4 beats

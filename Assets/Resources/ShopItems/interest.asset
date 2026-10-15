@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: interest
   displayName: "Inter\xE9s"
-  description: "Al terminar cada nivel, +5 % de lo que tengas en el monedero (m\xE1x.
-    100)."
+  description: "Al acabar el nivel, +5 % de tu monedero (m\xE1x. 100)."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.95, g: 0.72, b: 0.15, a: 1}

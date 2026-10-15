@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: blue_boost
   displayName: Sangre azul
-  description: "La sangre azul del modo bonus se gasta m\xE1s despacio."
+  description: "La sangre azul se gasta m\xE1s despacio."
   levelDescriptions:
   - "\u221225 % de gasto azul"
   - "\u221250 % de gasto azul"

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: efficient
   displayName: Metabolismo eficiente
-  description: "Las acciones (saltar, dash, deslizarse\u2026) gastan menos energ\xEDa."
+  description: "Las acciones gastan menos energ\xEDa."
   levelDescriptions:
   - "\u22125 % de gasto"
   - "\u221210 % de gasto"

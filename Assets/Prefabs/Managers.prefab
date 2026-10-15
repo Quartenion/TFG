@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3985842517761265329}
   - component: {fileID: 2034860168964401477}
   m_Layer: 0
-  m_Name: GameManager
+  m_Name: "Energ\xEDa y Latido"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -31,7 +31,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3755639575630465976}
+  m_Father: {fileID: 7692226947006736593}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3985842517761265329
 MonoBehaviour:
@@ -46,16 +46,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnergyManager
   _maxSyringe: 100
-  _startingSyringe: 30
   _passiveFillPerSecond: 4
   _blueDecayPerSecond: 6
   _hitInjectAmount: 14
   _missAbsorbAmount: 10
   _bluePerHit: 12
   _blueBoostMultiplier: 1.5
-  _antispamWindow: 10
-  _antispamThreshold: 0.5
-  _antispamMaxMult: 3
   godMode: 1
   OnSyringeChanged:
     m_PersistentCalls:
@@ -96,6 +92,10 @@ MonoBehaviour:
   OnBlueModeEntered:
     m_PersistentCalls:
       m_Calls: []
+  _steadyHoldDelay: 0.25
+  _blueBrokenSeconds: 3
+  _shieldBreakSound: {fileID: 0}
+  _shieldBreakVolume: 0.9
 --- !u!114 &2034860168964401477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -111,7 +111,6 @@ MonoBehaviour:
   _beatManager: {fileID: 4544748994858963328}
   _crosshair: {fileID: 0}
   _player: {fileID: 0}
-  _hitWindow: 0.15
   _trackCombo: 1
   OnBeatHit:
     m_PersistentCalls:
@@ -305,7 +304,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3755639575630465976}
+  m_Father: {fileID: 4775156842886147040}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8429653609292360159
 MonoBehaviour:
@@ -350,6 +349,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  _visionFadeToBlack: 1
+  _visionFadePower: 2.2
+  _visionFadeColor: {r: 0.1, g: 0, b: 0, a: 1}
   _irisWipeImage: {fileID: 0}
   _gameOverPanel: {fileID: 0}
   _gameOverPanelGroup: {fileID: 0}
@@ -403,16 +405,32 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  _energyFadeToBlack: 1
+  _crashBlink: 1
   _crashSound: {fileID: 8300000, guid: 3f239c2140ff22042842ca5088c97667, type: 3}
   _sfxSource: {fileID: 0}
   _attenuateAudio: 1
   _finalAudioVolume: 0
+  _gameOverMusic: {fileID: 8300000, guid: 56156e391ddbf284bb1feb7030ef9b3b, type: 3}
+  _gameOverMusicVolume: 0.8
+  _gameOverMusicLoop: 1
+  _silenceBeforeGameOver: 0
+  _gameOverMusicFadeIn: 2
   _musicSourceToRestart: {fileID: 3557718952585878434}
   _musicLowPassToReset: {fileID: 8829071993602911626}
   _resetLowPassCutoff: 22000
   _panelAppearDelay: 1.5
   _panelFadeInTime: 0.7
   _showCursorOnDeath: 1
+  _waterLayerName: Water
+  _waterCheckDistance: 200
+  _waterSurfaceThreshold: 0.2
+  _kayakLandingTolerance: 1
+  _splashAudio: {fileID: 0}
+  _splashSound: {fileID: 0}
+  _splashPrefab: {fileID: 0}
+  _splashLifetime: 3
+  _reviveSound: {fileID: 0}
   _verbose: 1
 --- !u!1 &2058611655144412969
 GameObject:
@@ -444,7 +462,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3755639575630465976}
+  m_Father: {fileID: 4775156842886147040}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4136938410757289547
 MonoBehaviour:
@@ -472,6 +490,39 @@ MonoBehaviour:
   _gameOverManager: {fileID: 8429653609292360159}
   _detectEscViaCursorChange: 1
   _verbose: 1
+--- !u!1 &2304908513776165994
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7692226947006736593}
+  m_Layer: 0
+  m_Name: Ritmo
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7692226947006736593
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2304908513776165994}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3959894998867862751}
+  - {fileID: 9156190573227229441}
+  m_Father: {fileID: 3755639575630465976}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2324992977965336388
 GameObject:
   m_ObjectHideFlags: 0
@@ -506,7 +557,7 @@ Transform:
   m_Children:
   - {fileID: 4213257542841652280}
   - {fileID: 4037134678689123314}
-  m_Father: {fileID: 3755639575630465976}
+  m_Father: {fileID: 4775156842886147040}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2811555813022406750
 MonoBehaviour:
@@ -521,7 +572,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StartSequenceManager
   _introSource: {fileID: 332056263017983597}
-  _metroSource: {fileID: 1477329438470179923}
+  _clickVolume: 0.7
   _sfxSource: {fileID: 0}
   _hitOkSound: {fileID: 0}
   _hitErrorSound: {fileID: 0}
@@ -544,6 +595,7 @@ MonoBehaviour:
   _shakeWaves: 5
   _idlePulseScale: 1.08
   _idlePulseDuration: 0.15
+  _highBeatPulseScale: 1.2
   _fadeDuration: 0.4
   _colorIdle: {r: 0.65, g: 0.65, b: 0.65, a: 1}
   _colorGood: {r: 0.25, g: 0.9, b: 0.35, a: 1}
@@ -551,7 +603,7 @@ MonoBehaviour:
   _colorYaIdle: {r: 1, g: 0.85, b: 0.2, a: 1}
   _waitForInteraction: 1
   _energyBarRoot: {fileID: 0}
-  _skipIntro: 0
+  _debugSkipIntro: 0
   _testMode: 0
   _testStartZ: 600
   _testOverrideXY: 0
@@ -959,6 +1011,41 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!1 &5688235770348917835
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4775156842886147040}
+  m_Layer: 0
+  m_Name: Flujo del nivel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4775156842886147040
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5688235770348917835}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1951752671052882294}
+  - {fileID: 2782989775272547433}
+  - {fileID: 8645015837063923217}
+  - {fileID: 7541062761600892827}
+  m_Father: {fileID: 3755639575630465976}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5881822107952433160
 GameObject:
   m_ObjectHideFlags: 0
@@ -991,7 +1078,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3755639575630465976}
+  m_Father: {fileID: 7692226947006736593}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!82 &3557718952585878434
 AudioSource:
@@ -1238,7 +1325,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3755639575630465976}
+  m_Father: {fileID: 4775156842886147040}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8547550047233581605
 MonoBehaviour:
@@ -1300,12 +1387,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 9156190573227229441}
-  - {fileID: 3959894998867862751}
-  - {fileID: 8645015837063923217}
-  - {fileID: 2782989775272547433}
+  - {fileID: 7692226947006736593}
+  - {fileID: 4775156842886147040}
   - {fileID: 9027570943580373037}
-  - {fileID: 7541062761600892827}
-  - {fileID: 1951752671052882294}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

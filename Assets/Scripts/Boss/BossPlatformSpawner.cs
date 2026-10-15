@@ -216,7 +216,7 @@ public class BossPlatformSpawner : MonoBehaviour
 
         if (!instant)
         {
-            double beatDur = _beatManager != null ? _beatManager.BeatDuration : (60f / 120f);
+            double beatDur = BeatManager.BeatDurationOf(_beatManager);
             double now = AudioSettings.dspTime;
             _rising.Add(new Rising { t = go.transform, y0 = startPos.y, y1 = finalPos.y,
                                      dsp0 = now, dsp1 = now + _riseBeats * beatDur });
@@ -319,12 +319,7 @@ public class BossPlatformSpawner : MonoBehaviour
 
     // ── Bloques del derrumbe (visual) ─────────────────────────────────────────
 
-    private struct Shard
-    {
-        public Transform t; public Vector3 vel, spinAxis, scale0;
-        public float spin, delay, life, age;
-    }
-    private readonly List<Shard> _shards = new List<Shard>();
+    private readonly List<CrumbleFX.Shard> _shards = new List<CrumbleFX.Shard>();
     private float _shardGravity = 28f;
 
     /// <summary>Gravedad de los bloques (el jefe pone la MISMA que la del jugador al caer, para que caigan juntos).</summary>
@@ -356,7 +351,7 @@ public class BossPlatformSpawner : MonoBehaviour
                     for (int z = 0; z < nz && budget > 0; z++)
                     {
                         budget--;
-                        GameObject c = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        GameObject c = RuntimeMaterials.Primitive(PrimitiveType.Cube);
                         Destroy(c.GetComponent<Collider>());                       // solo visual: no hace daño
                         c.name = "PlatformShard";
                         var cr = c.GetComponent<Renderer>();
@@ -370,7 +365,7 @@ public class BossPlatformSpawner : MonoBehaviour
                         c.transform.localScale = sc;
 
                         Vector3 outDir = c.transform.position - b.center; outDir.y = 0f;
-                        _shards.Add(new Shard
+                        _shards.Add(new CrumbleFX.Shard
                         {
                             t        = c.transform,
                             vel      = outDir.normalized * Random.Range(0.5f, 2f),   // sin impulso hacia arriba: caen con el jugador
@@ -386,36 +381,12 @@ public class BossPlatformSpawner : MonoBehaviour
         }
     }
 
-    /// <summary>Los bloques se sueltan, caen girando y se desintegran (se encogen hasta desaparecer).</summary>
     /// <summary>Los bloques se sueltan, caen girando (más rápido que el jugador) y se desintegran.</summary>
     private void UpdateShards()
     {
         if (_shards.Count == 0) return;
-        float dt = Time.deltaTime;
-        float g  = _shardGravity * Mathf.Max(0.1f, _shatterGravityMultiplier);
-        for (int i = _shards.Count - 1; i >= 0; i--)
-        {
-            Shard sh = _shards[i];
-            if (sh.t == null) { _shards.RemoveAt(i); continue; }
-            sh.age += dt;
-            float live = sh.age - sh.delay;
-            if (live > 0f)
-            {
-                sh.vel += Vector3.down * g * dt;
-                sh.t.position += sh.vel * dt;
-                sh.t.rotation  = Quaternion.AngleAxis(sh.spin * dt, sh.spinAxis) * sh.t.rotation;
-                float k = Mathf.Clamp01(live / sh.life);
-                float shrink = k < 0.4f ? 1f : 1f - (k - 0.4f) / 0.6f;     // se desintegra en el último 60 %
-                sh.t.localScale = sh.scale0 * Mathf.Max(0f, shrink);
-                if (k >= 1f) { Destroy(sh.t.gameObject); _shards.RemoveAt(i); continue; }
-            }
-            else
-            {
-                // Aún aguanta: tiembla un poco antes de soltarse.
-                sh.t.position += Random.insideUnitSphere * 0.03f;
-            }
-            _shards[i] = sh;
-        }
+        float g = _shardGravity * Mathf.Max(0.1f, _shatterGravityMultiplier);
+        CrumbleFX.StepShards(_shards, g, Time.deltaTime, 0.03f);
     }
 
 #if UNITY_EDITOR

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: big_syringe
   displayName: Jeringuilla grande
-  description: "M\xE1s capacidad de sangre antes de quedarte seco."
+  description: "M\xE1s capacidad de sangre."
   levelDescriptions:
   - +10 % de capacidad
   - +20 % de capacidad

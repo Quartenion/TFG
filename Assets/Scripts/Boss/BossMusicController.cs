@@ -68,7 +68,7 @@ public class BossMusicController : MonoBehaviour
 
     private void Update()
     {
-        if (_beatManager == null || _beatManager.ScheduledStartDSP <= 0.0) return;
+        if (_beatManager == null || !_beatManager.HasClock) return;
         double now = AudioSettings.dspTime;
 
         // Capturar la duración de la pista del nivel UNA vez (antes de relevar la fuente).

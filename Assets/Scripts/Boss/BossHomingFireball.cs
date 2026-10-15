@@ -69,7 +69,7 @@ public class BossHomingFireball : MonoBehaviour
         }
 
         // Además, un HALO verde brillante alrededor y una luz verde: imposible confundirla con las de fuego.
-        GameObject halo = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        GameObject halo = RuntimeMaterials.Primitive(PrimitiveType.Sphere);
         Destroy(halo.GetComponent<Collider>());
         halo.name = "LifeHalo";
         halo.transform.SetParent(transform, false);

@@ -155,7 +155,7 @@ public class BossProjectile : MonoBehaviour
         transform.position = new Vector3(x, y, z);
 
         // Deflect: [Q] dentro de la ventana alrededor de la llegada.
-        if (_deflectable && Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
+        if (_deflectable && Keybinds.Pressed(Keybinds.Bind.Block))
         {
             // Ventana generosa: durante TODO el último beat de aproximación + un pelín tras la llegada.
             if (now >= _landDSP - beatDur && now <= _landDSP + _deflectWindow)

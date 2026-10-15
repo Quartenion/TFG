@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: streak
   displayName: Racha
-  description: "A partir de 8 aciertos seguidos, cada acierto da un 25 % m\xE1s de
-    sangre hasta que falles."
+  description: "Con 8 aciertos seguidos, +25 % de sangre por acierto."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.2, g: 0.5, b: 0.9, a: 1}

@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: extra_life
   displayName: Vida extra
-  description: Si te quedas sin sangre, en vez de morir vuelves a la carga en el
-    siguiente beat.
+  description: "Al quedarte sin sangre, revives en vez de morir."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.78, g: 0.1, b: 0.16, a: 1}

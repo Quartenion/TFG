@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: slow_bleed
   displayName: Coagulante
-  description: "Pierdes sangre pasivamente m\xE1s despacio."
+  description: "Pierdes sangre m\xE1s despacio."
   levelDescriptions:
   - "\u221215 % de p\xE9rdida pasiva"
   - "\u221230 % de p\xE9rdida pasiva"

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: blood_gold
   displayName: Sangre de oro
-  description: "Al terminar el nivel, +1 moneda por cada % de energ\xEDa que te quede."
+  description: "Al acabar el nivel, +1 moneda por cada % de energ\xEDa restante."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.95, g: 0.72, b: 0.15, a: 1}

@@ -8,9 +8,10 @@ using static SimpleUI;
 
 /// <summary>
 /// PANTALLAS DEL MODO PRUEBA en el menú principal (se crea sola en «MainMenu»):
-///   • Botón «Participar en la prueba» → consentimiento informado.
+///   • Botón «JUGAR» → consentimiento informado.
 ///   • Antes de cada parte: qué se va a jugar.  • Después: cuestionario corto (1-7).
-///   • Tras la parte 3: seguir con los niveles 2 y 3 o terminar.  • Final: código + cuestionario de Google Forms.
+///   • Tras la parte 3 (y la 4 y la 5): seguir al siguiente nivel, repetir el nivel en PRÁCTICA LIBRE (todo
+///     desbloqueado, sin registrar datos) o terminar.  • Final: código + cuestionario de Google Forms.
 /// </summary>
 public class StudyHub : MonoBehaviour
 {
@@ -33,9 +34,7 @@ public class StudyHub : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-        SceneManager.sceneLoaded += OnSceneLoaded;
-        OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
+        AutoSpawn.Register(OnSceneLoaded);
     }
 
     private static void OnSceneLoaded(Scene s, LoadSceneMode m)
@@ -54,6 +53,9 @@ public class StudyHub : MonoBehaviour
         // Sin sesión: no se enseña nada. La prueba se empieza con el botón Play del menú cuando el MainMenuManager
         // tiene marcado «Playtest» (versión que se reparte a los jugadores).
         if (!StudySession.Active) return;
+
+        // Vuelta de la práctica libre: todo como estaba y otra vez a elegir.
+        if (StudySession.FreePlay) { StudySession.EndFreePlay(); ShowContinueChoice(); return; }
 
         if (StudySession.AwaitingReturn)
         {
@@ -122,7 +124,7 @@ public class StudyHub : MonoBehaviour
             "• Taking part is voluntary and you can stop whenever you want (close the game). You must be 18 or older.\n\n" +
             "Before you start: you need a MOUSE with left and right buttons (it cannot be played with a touchpad), " +
             "use WIRED HEADPHONES (Bluetooth delays the sound) and play somewhere quiet. " +
-            "During the game, F1 shows the controls." :
+            "During the game, TAB shows the controls." :
             "Gracias por participar. Vas a probar un juego rítmico en primera persona que forma parte de un Trabajo Fin de Grado " +
             "de la Universidad de Granada.\n\n" +
             "IMPORTANTE: es un PROTOTIPO en desarrollo y NO representa el producto final. Los gráficos, el sonido, la dificultad " +
@@ -135,7 +137,7 @@ public class StudyHub : MonoBehaviour
             "• Participar es voluntario y puedes dejarlo cuando quieras (cierra el juego). Debes tener 18 años o más.\n\n" +
             "Antes de empezar: necesitas un RATÓN con clic izquierdo y derecho (no se puede jugar con el touchpad), " +
             "usa AURICULARES CON CABLE (los Bluetooth retrasan el sonido) y juega en un sitio tranquilo. " +
-            "Durante la partida, F1 muestra los controles.",
+            "Durante la partida, TAB muestra los controles.",
             100f, 620f);
         Bottom(p, Loc.T("Acepto y quiero participar", "I agree and want to take part"), 40f, () => { StudySession.Begin(); ShowPartIntro(); });
         Bottom(p, Loc.T("Volver", "Back"), 860f, () => { Destroy(_screen); _screen = null; });
@@ -148,9 +150,9 @@ public class StudyHub : MonoBehaviour
         Transform p = NewScreen(Loc.T($"Parte {StudySession.Step + 1} de {total} · {part.title}", $"Part {StudySession.Step + 1} of {total} · {part.title}"));
         Body(p, part.description +
                 Loc.T($"\n\nSi mueres puedes reintentar (hasta {StudySettings.MaxAttemptsPerPart} intentos); después se pasa a la siguiente parte." +
-                      "\nF1: controles.   Tu código de participante: ",
+                      "\nTAB: controles.   Tu código de participante: ",
                       $"\n\nIf you die you can retry (up to {StudySettings.MaxAttemptsPerPart} attempts); after that you move on to the next part." +
-                      "\nF1: controls.   Your participant code: ") + StudySession.Participant,
+                      "\nTAB: controls.   Your participant code: ") + StudySession.Participant,
              100f, 600f);
         Bottom(p, Loc.T("Empezar", "Start"), 40f, StudySession.StartPart);
     }
@@ -222,8 +224,8 @@ public class StudyHub : MonoBehaviour
     /// <summary>Después de una parte: la siguiente, la elección de seguir (tras la 3.ª) o el final.</summary>
     private void AfterPart()
     {
-        if (!StudySession.NextPart()) { ShowFinalStand(); return; }
-        if (StudySession.Step == StudySession.MainParts) { ShowContinueChoice(); return; }
+        StudySession.NextPart();
+        if (StudySession.Step >= StudySession.MainParts) { ShowContinueChoice(); return; }
         ShowPartIntro();
     }
 
@@ -251,18 +253,47 @@ public class StudyHub : MonoBehaviour
         Bottom(p, Loc.T("Terminar sin cobrar", "Finish without claiming"), 860f, ShowEnd);
     }
 
+    /// <summary>
+    /// Tras la parte 3 (y las siguientes): CONTINUAR al siguiente nivel, REPETIR el nivel jugado en práctica libre
+    /// (todo desbloqueado, no se registra nada) o TERMINAR.
+    /// </summary>
     private void ShowContinueChoice()
     {
-        Transform p = NewScreen(Loc.T("¡Parte principal terminada!", "Main part finished!"));
-        Body(p, Loc.T("Ya has completado las 3 partes principales. ¡Gracias!\n\n" +
-                      "Si te apetece, puedes seguir con los niveles 2 y 3 (unos 15 minutos más): tienen mecánicas distintas " +
-                      "(kayak, enemigos que se desactivan mirándolos y un jefe final) y ayudan mucho al estudio.",
-                      "You have completed the 3 main parts. Thank you!\n\n" +
-                      "If you feel like it, you can continue with levels 2 and 3 (about 15 more minutes): they have different mechanics " +
-                      "(kayak, enemies you disable by looking at them and a final boss) and they help the study a lot."), 100f, 400f);
-        Bottom(p, Loc.T("Seguir con los niveles 2 y 3", "Continue with levels 2 and 3"), 40f, ShowPartIntro);
-        Bottom(p, Loc.T("Terminar aquí", "Finish here"), 860f, ShowEnd);
+        bool more = StudySession.Step < StudySession.Plan.Length;
+        StudySession.Part last = StudySession.LastPlayed;
+        string lastName = LevelName(last.scene);
+        bool afterMain = StudySession.Step == StudySession.MainParts;
+
+        Transform p = NewScreen(afterMain ? Loc.T("¡Parte principal terminada!", "Main part finished!")
+                                          : Loc.T($"¡{lastName} terminado!", $"{lastName} finished!"));
+        string intro = afterMain
+            ? Loc.T("Ya has completado las 3 partes principales. ¡Gracias!\n\n", "You have completed the 3 main parts. Thank you!\n\n")
+            : "";
+        string next = more
+            ? Loc.T($"• CONTINUAR: {StudySession.Current.title}. " +
+                    (afterMain ? "Los niveles 2 y 3 (unos 15 minutos más) tienen mecánicas distintas (kayak, enemigos que se desactivan mirándolos y un jefe final) y ayudan mucho al estudio.\n\n" : "\n\n"),
+                    $"• CONTINUE: {StudySession.Current.title}. " +
+                    (afterMain ? "Levels 2 and 3 (about 15 more minutes) have different mechanics (kayak, enemies you disable by looking at them and a final boss) and they help the study a lot.\n\n" : "\n\n"))
+            : "";
+        string practice = Loc.T(
+            $"• PRACTICAR: repite el {lastName} con TODO desbloqueado: la tienda con todas las mejoras, {StudySession.FreePlayCoins} monedas " +
+            "para probarlas, contratos y sin límite de intentos. Es solo para practicar: no se guarda nada ni se registran datos, " +
+            "y al volver todo queda como estaba. Cuando termines, vuelve al menú (Esc → Menú, o acaba el nivel) y desde aquí " +
+            "podrás continuar con el siguiente nivel.\n\n",
+            $"• PRACTICE: replay {lastName} with EVERYTHING unlocked: the shop with all upgrades, {StudySession.FreePlayCoins} coins " +
+            "to try them, contracts and unlimited attempts. It is just for practice: nothing is saved and no data is recorded, " +
+            "and when you come back everything is as it was. When you are done, go back to the menu (Esc → Menu, or finish " +
+            "the level) and you will be able to continue with the next level from here.\n\n");
+        string finish = Loc.T("• TERMINAR: ir al cuestionario final.", "• FINISH: go to the final questionnaire.");
+        Body(p, intro + next + practice + finish, 100f, 620f);
+
+        if (more) Bottom(p, Loc.T("Continuar", "Continue"), 40f, ShowPartIntro);
+        Bottom(p, Loc.T($"Practicar {lastName}", $"Practice {lastName}"), more ? 450f : 40f, StudySession.StartFreePlay);
+        Bottom(p, Loc.T("Terminar", "Finish"), 860f, ShowFinalStand);
     }
+
+    private static string LevelName(string scene)
+        => scene.StartsWith("Level") ? Loc.T("Nivel ", "Level ") + scene.Substring(5) : scene;
 
     private void ShowEnd()
     {

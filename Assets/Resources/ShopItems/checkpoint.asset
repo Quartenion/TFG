@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: checkpoint
   displayName: Checkpoint
-  description: "Al morir, vuelves al \xFAltimo checkpoint que hayas pasado en el
-    nivel (la canci\xF3n sigue desde ah\xED)."
+  description: "Al morir, vuelves al \xFAltimo checkpoint."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.25, g: 0.7, b: 0.35, a: 1}

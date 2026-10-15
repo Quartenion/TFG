@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Events;
 
 /// <summary>
@@ -14,12 +15,12 @@ using UnityEngine.Events;
 ///   • Cada golpe con éxito = −1 HP. A los 3 golpes de la fase → avanza a la siguiente (en el
 ///     siguiente múltiplo de 4). HP total = 9 (3 por fase).
 ///
-/// Este componente NO dibuja nada: dispara ataques (BossProjectile / BossTailSweep) y emite eventos
+/// Este componente NO dibuja nada: dispara ataques (BossProjectile / BossTridentSweep) y emite eventos
 /// (UnityEvent) para que enganches animaciones, la barra de vida y el generador de plataformas.
 ///
 /// SETUP:
 ///   1. Pon esto en el objeto raíz del jefe.
-///   2. Asigna el prefab de proyectil (con BossProjectile) y el BossTailSweep del jefe.
+///   2. Asigna el prefab de proyectil (con BossProjectile) y el BossTridentSweep del jefe.
 ///   3. Asigna el punto de salida de proyectiles (boca/mano) y ajusta los carriles X.
 ///   4. Engancha los eventos: OnClimbStart→animación, OnAppear→mostrar barra, OnHpChanged→fill de la
 ///      barra, OnPlatformBeat→tu spawner de plataformas.
@@ -43,7 +44,8 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     [Tooltip("Prefab del proyectil (debe tener un BossProjectile).")]
     [SerializeField] private BossProjectile _projectilePrefab;
     [Tooltip("Componente del barrido de cola.")]
-    [SerializeField] private BossTailSweep _tailSweep;
+    [FormerlySerializedAs("_tailSweep")]
+    [SerializeField] private BossTridentSweep _tridentSweep;
     [Tooltip("Puño DERECHO (Ataque C, estampidos). Va primero.")]
     [SerializeField] private BossFistSlam _rightFist;
     [Tooltip("Puño IZQUIERDO (Ataque C, estampidos).")]
@@ -101,7 +103,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     public void GiveExtraLife(string how)
     {
         PlayerProgress.AddCount(ShopIds.ExtraLife, 1);
-        ReviveFX.ShowMessage(Loc.T("+1 VIDA EXTRA", "+1 EXTRA LIFE"), how, new Color(0.2f, 0.9f, 0.35f, 0.4f));
+        ReviveFX.ShowMessage(Loc.T("VIDA EXTRA GANADA", "EXTRA LIFE GAINED"), how, new Color(0.2f, 0.9f, 0.35f, 0.4f));
         if (_verbose) Debug.Log($"[Boss] +1 vida extra ({how}). Ahora: {PlayerProgress.GetCount(ShopIds.ExtraLife)}.");
     }
 
@@ -318,7 +320,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     // ── Getters para los ataques ────────────────────────────────────────────
     public Transform PlayerT { get; private set; }
     public Transform BossT => _bossBody != null ? _bossBody : transform;
-    public float BeatDuration => _beatManager != null ? _beatManager.BeatDuration : (60f / 120f);
+    public float BeatDuration => BeatManager.BeatDurationOf(_beatManager);
     public float DeflectReturnBeats => _deflectReturnBeats;
     public Color NormalColor => _normalColor;
     public Color DeflectColor => _deflectColor;
@@ -377,7 +379,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     }
 
     public double DspForBeat(double beat) =>
-        (_beatManager != null ? _beatManager.ScheduledStartDSP : 0.0) + beat * BeatDuration;
+        (_beatManager != null ? _beatManager.DspAtBeat(beat) : beat * BeatDuration);
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -413,7 +415,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         // Esperar a que la música esté programada (mismo gate que los obstáculos).
         if (!_ready)
         {
-            if (_beatManager.ScheduledStartDSP <= 0.0) return;
+            if (!_beatManager.HasClock) return;
             _lastBeat = CurrentBeat() - 1;   // no re-disparar beats ya pasados
             _ready = true;
 
@@ -481,7 +483,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     private float ClimbOffset()
     {
         if (_debugStartPhase != DebugStartPhase.Normal) return 0f;   // debug: el jefe ya está arriba
-        double beatExact = (AudioSettings.dspTime - _beatManager.ScheduledStartDSP) / BeatDuration;
+        double beatExact = _beatManager.ClockBeats;
         if (beatExact <= _introStartBeat) return -_climbDepth;   // escondido bajo el suelo
         if (beatExact >= _appearBeat)     return 0f;             // ya en su sitio
         float t = (float)((beatExact - _introStartBeat) / Mathf.Max(1, _appearBeat - _introStartBeat));
@@ -491,7 +493,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
 
     private int CurrentBeat()
     {
-        double b = (AudioSettings.dspTime - _beatManager.ScheduledStartDSP) / BeatDuration;
+        double b = _beatManager.ClockBeats;
         return Mathf.FloorToInt((float)b);
     }
 
@@ -774,9 +776,9 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
 
     private void TriggerTailAt(double contactDSP, float sweepBeats)
     {
-        if (_tailSweep == null) return;
+        if (_tridentSweep == null) return;
         bool high = Random.value < 0.5f;            // al azar: alto (agacharse) o bajo (salto)
-        _tailSweep.Sweep(this, high, _tailFromRightNext, contactDSP, sweepBeats);
+        _tridentSweep.Sweep(this, high, _tailFromRightNext, contactDSP, sweepBeats);
         _tailFromRightNext = !_tailFromRightNext;   // intercala el lado (der ↔ izq)
     }
 
@@ -886,7 +888,9 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     private void ScheduleWaves()
     {
         Phase2Tier tier = P2Tier;
-        float gap = Mathf.Max(0.5f, tier.waveInterval);
+        // Entre dos ondas tiene que caber un SALTO completo: si llegaban cada medio beat (dificultad alta, o los
+        // medios pasos de los patrones rítmicos) el jugador aún estaba en el aire y la siguiente le pillaba al caer.
+        float gap = Mathf.Max(MinWaveGap, tier.waveInterval);
 
         // 1) Lista de golpes: (instante de CONTACTO relativo a la sección, mano). El primero a 1 beat (aviso completo).
         //    El ataque se parte en DOS MITADES y a mitad CAMBIA de patrón (la 2ª nunca repite el tipo de la 1ª).
@@ -923,6 +927,9 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         if (_verbose) Debug.Log($"[Boss] Ondas: patrón {pattern}, {hits.Count} golpes (intervalo {gap} b).");
     }
 
+    /// <summary>Separación mínima (beats) entre dos ondas: lo que dura un salto del jugador en este nivel.</summary>
+    private float MinWaveGap => Mathf.Max(0.5f, _pm != null ? _pm.jumpAirTimeBeats : 1f);
+
     // Tipos de patrón de ondas.
     private const int WaveTogether = 0, WaveAlternate = 1, WaveRandomAlt = 2, WaveRhythm = 3;
 
@@ -943,7 +950,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
             kind = options[Random.Range(0, options.Count)];
         }
 
-        float rhythmHalf = Mathf.Max(0.5f, gap * 0.5f);   // medio paso de los patrones rítmicos (nunca < ½ beat)
+        float rhythmHalf = Mathf.Max(MinWaveGap, gap * 0.5f);   // «medio paso» de los patrones rítmicos (nunca menos que un salto)
 
         switch (kind)
         {
@@ -1503,6 +1510,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
         if (Time.time < _invulnerableUntil) return;
         if (_gameOver != null && _gameOver.IsDead) return;
         _invulnerableUntil = Time.time + _hitInvulnerability;
+        GameOverManager.LastBossHitTime = Time.time;   // (razón del game over si te deja sin sangre)
         if (EnergyManager.Instance != null) EnergyManager.Instance.TakeBossHit(_bossHitRedFraction);
         CameraShaker.Instance?.Shake(0.55f);
         if (_verbose) Debug.Log($"[Boss] Golpe al jugador: fuera el azul, o +{_bossHitRedFraction * 100f:0}% de jeringuilla roja.");

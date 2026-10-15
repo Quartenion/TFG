@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: coin_bonus
   displayName: Bolsa de oro
-  description: "\xD71.5 monedas si terminas el nivel con m\xE1s del 80 % de precisi\xF3n."
+  description: "\xD71.5 monedas si acabas con m\xE1s del 80 % de precisi\xF3n."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.95, g: 0.72, b: 0.15, a: 1}

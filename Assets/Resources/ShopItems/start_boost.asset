@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: start_boost
   displayName: Buen desayuno
-  description: "Empiezas cada nivel ya en modo azul, con sangre azul en la jeringuilla."
+  description: "Empiezas el nivel con sangre azul."
   levelDescriptions:
   - empiezas con un 20 % de sangre azul
   - con un 40 %

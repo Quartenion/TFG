@@ -1,0 +1,643 @@
+n;accion;beat;beat_cercano;desfase_ms;tiempo_s;x;y;z;en_suelo;obstaculo;obst_x;obst_y;obst_z;obst_dist_z;obst_ruta
+1;Clic Perfect;-0.760;-1.0;80;-0.232;0.00;1.08;0.48;1;Right Diagonal Beam (1);5.64;7.45;0.00;-0.48;Nivel/Timeline/Segmento 000 · beats 0-3/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam (1)
+2;Clic Miss;0.200;0.0;67;0.067;0.00;1.08;1.12;1;Right Diagonal Beam;5.64;7.45;16.00;14.88;Nivel/Timeline/Segmento 000 · beats 0-3/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+3;Clic Perfect;1.160;1.0;53;0.387;0.00;1.08;4.87;1;Right Diagonal Beam;5.64;7.45;16.00;11.13;Nivel/Timeline/Segmento 000 · beats 0-3/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+4;Clic Perfect;2.120;2.0;40;0.707;0.00;1.08;8.76;1;Right Diagonal Beam;5.64;7.45;16.00;7.24;Nivel/Timeline/Segmento 000 · beats 0-3/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+5;Clic Perfect;3.144;3.0;48;1.048;0.00;1.08;12.73;1;Right Diagonal Beam;5.64;7.45;16.00;3.27;Nivel/Timeline/Segmento 000 · beats 0-3/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+6;Clic Perfect;4.104;4.0;35;1.368;0.00;1.08;16.51;1;Right Diagonal Beam;5.64;7.45;16.00;-0.51;Nivel/Timeline/Segmento 000 · beats 0-3/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+7;Clic Perfect;5.128;5.0;43;1.709;0.00;1.08;20.71;1;Cube;0.00;1.00;33.00;12.29;Nivel/Timeline/Segmento 002 · beats 8-11/Obstáculos/Cube
+8;Clic Perfect;6.088;6.0;29;2.029;0.00;1.08;24.53;1;Cube;0.00;1.00;33.00;8.47;Nivel/Timeline/Segmento 002 · beats 8-11/Obstáculos/Cube
+9;Clic Perfect;6.984;7.0;-5;2.328;0.00;1.08;28.00;1;Cube;0.00;1.00;33.00;5.00;Nivel/Timeline/Segmento 002 · beats 8-11/Obstáculos/Cube
+10;Salto;7.048;7.0;16;2.349;0.00;1.08;28.00;1;Cube;0.00;1.00;33.00;5.00;Nivel/Timeline/Segmento 002 · beats 8-11/Obstáculos/Cube
+11;Clic Perfect;8.008;8.0;3;2.669;0.00;5.48;32.21;0;Beam Top;-0.13;10.36;32.00;-0.21;Nivel/Timeline/Segmento 001 · beats 4-7/Escenario/Mine Structure/Arch/Support/Beam Top
+12;Clic Perfect;9.096;9.0;32;3.032;-3.16;1.08;36.63;1;Left Side Beam;-6.81;9.58;40.28;3.65;Nivel/Timeline/Segmento 002 · beats 8-11/Escenario/Mine Structure/Arch/Support/Left Side Beam
+13;Clic Perfect;10.120;10.0;40;3.373;-3.16;1.08;40.73;1;Left Side Beam;-6.81;9.58;40.28;-0.45;Nivel/Timeline/Segmento 002 · beats 8-11/Escenario/Mine Structure/Arch/Support/Left Side Beam
+14;Clic Perfect;11.016;11.0;5;3.672;-3.16;1.08;44.47;1;Left Diagonal Beam;-5.64;7.45;48.00;3.53;Nivel/Timeline/Segmento 002 · beats 8-11/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+15;Clic Perfect;11.976;12.0;-8;3.992;-3.16;1.08;48.29;1;Left Diagonal Beam;-5.64;7.45;48.00;-0.29;Nivel/Timeline/Segmento 002 · beats 8-11/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+16;Clic Perfect;13.000;13.0;0;4.333;-3.16;1.08;52.34;1;Left Side Beam;-6.81;9.58;56.28;3.94;Nivel/Timeline/Segmento 003 · beats 12-15/Escenario/Mine Structure/Arch/Support/Left Side Beam
+17;Clic Perfect;14.024;14.0;8;4.675;-3.16;1.08;56.29;1;Cube (4);0.00;1.00;65.00;8.71;Nivel/Timeline/Segmento 004 · beats 16-19/Obstáculos/Cube (4)
+18;Salto;14.856;15.0;-48;4.952;-3.16;1.08;59.45;1;Cube (4);0.00;1.00;65.00;5.55;Nivel/Timeline/Segmento 004 · beats 16-19/Obstáculos/Cube (4)
+19;Clic Perfect;14.920;15.0;-27;4.973;-3.16;1.74;59.78;0;Beam Top;-0.13;10.36;64.00;4.22;Nivel/Timeline/Segmento 003 · beats 12-15/Escenario/Mine Structure/Arch/Support/Beam Top
+20;Clic Perfect;16.008;16.0;3;5.336;-1.90;5.33;64.23;0;Beam Top;-0.13;10.36;64.00;-0.23;Nivel/Timeline/Segmento 003 · beats 12-15/Escenario/Mine Structure/Arch/Support/Beam Top
+21;Clic Perfect;17.032;17.0;11;5.677;2.22;1.08;68.36;1;Right Side Beam;6.81;9.58;72.28;3.92;Nivel/Timeline/Segmento 004 · beats 16-19/Escenario/Mine Structure/Arch/Support/Right Side Beam
+22;Clic Perfect;18.056;18.0;19;6.019;2.56;1.08;72.57;1;Right Side Beam;6.81;9.58;72.28;-0.29;Nivel/Timeline/Segmento 004 · beats 16-19/Escenario/Mine Structure/Arch/Support/Right Side Beam
+23;Clic Perfect;19.080;19.0;27;6.360;2.56;1.08;76.58;1;Right Diagonal Beam;5.64;7.45;80.00;3.42;Nivel/Timeline/Segmento 004 · beats 16-19/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+24;Clic Perfect;20.040;20.0;13;6.680;2.56;1.08;80.50;1;Right Diagonal Beam;5.64;7.45;80.00;-0.50;Nivel/Timeline/Segmento 004 · beats 16-19/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+25;Clic Perfect;21.128;21.0;43;7.043;2.56;1.08;84.64;1;Right Side Beam;6.81;9.58;88.28;3.64;Nivel/Timeline/Segmento 005 · beats 20-23/Escenario/Mine Structure/Arch/Support/Right Side Beam
+26;Clic Perfect;22.088;22.0;29;7.363;2.56;1.08;88.51;1;Cube (5);0.00;1.00;97.00;8.49;Nivel/Timeline/Segmento 006 · beats 24-27/Obstáculos/Cube (5)
+27;Salto;22.856;23.0;-48;7.619;2.56;1.08;91.25;1;Cube (5);0.00;1.00;97.00;5.75;Nivel/Timeline/Segmento 006 · beats 24-27/Obstáculos/Cube (5)
+28;Clic Perfect;22.920;23.0;-27;7.640;2.56;2.34;91.92;0;Beam Top;-0.13;10.36;96.00;4.08;Nivel/Timeline/Segmento 005 · beats 20-23/Escenario/Mine Structure/Arch/Support/Beam Top
+29;Clic Perfect;23.944;24.0;-19;7.981;0.04;5.28;96.09;0;Beam Top;-0.13;10.36;96.00;-0.09;Nivel/Timeline/Segmento 005 · beats 20-23/Escenario/Mine Structure/Arch/Support/Beam Top
+30;Clic Perfect;24.904;25.0;-32;8.301;-0.31;1.08;100.00;1;Left Side Beam;-6.81;9.58;104.28;4.28;Nivel/Timeline/Segmento 006 · beats 24-27/Escenario/Mine Structure/Arch/Support/Left Side Beam
+31;Clic Perfect;25.992;26.0;-3;8.664;-0.31;1.08;104.18;1;Cube (6);0.00;1.00;121.00;16.82;Nivel/Timeline/Segmento 007 · beats 28-31/Obstáculos/Cube (6)
+32;Clic Perfect;27.016;27.0;5;9.005;-0.31;1.08;108.29;1;Cube (6);0.00;1.00;121.00;12.71;Nivel/Timeline/Segmento 007 · beats 28-31/Obstáculos/Cube (6)
+33;Clic Perfect;27.976;28.0;-8;9.325;-0.31;1.08;112.11;1;Cube (6);0.00;1.00;121.00;8.89;Nivel/Timeline/Segmento 007 · beats 28-31/Obstáculos/Cube (6)
+34;Clic Perfect;29.064;29.0;21;9.688;-0.31;1.08;116.25;1;Cube (6);0.00;1.00;121.00;4.75;Nivel/Timeline/Segmento 007 · beats 28-31/Obstáculos/Cube (6)
+35;Salto;29.128;29.0;43;9.709;-0.31;1.08;116.58;1;Cube (6);0.00;1.00;121.00;4.42;Nivel/Timeline/Segmento 007 · beats 28-31/Obstáculos/Cube (6)
+36;Clic Perfect;29.960;30.0;-13;9.987;-0.31;5.42;120.19;0;Cube (6);0.00;1.00;121.00;0.81;Nivel/Timeline/Segmento 007 · beats 28-31/Obstáculos/Cube (6)
+37;Doble salto;30.024;30.0;8;10.008;-0.31;5.42;120.19;0;Cube (6);0.00;1.00;121.00;0.81;Nivel/Timeline/Segmento 007 · beats 28-31/Obstáculos/Cube (6)
+38;Clic Perfect;30.984;31.0;-5;10.328;-0.31;8.06;124.09;0;Cube (7);0.00;2.00;124.50;0.41;Nivel/Timeline/Segmento 007 · beats 28-31/Obstáculos/Cube (7)
+39;Slam;31.176;31.0;59;10.392;-0.31;7.75;124.76;0;Cube (7);0.00;2.00;124.50;-0.26;Nivel/Timeline/Segmento 007 · beats 28-31/Obstáculos/Cube (7)
+40;Clic Perfect;32.008;32.0;3;10.669;-0.31;1.08;128.34;1;Cube (8);0.00;10.00;129.00;0.66;Nivel/Timeline/Segmento 008 · beats 32-35/Obstáculos/Cube (8)
+41;Clic Perfect;33.032;33.0;11;11.011;-0.31;1.08;132.55;1;Top Tight;0.00;10.00;152.00;19.45;Nivel/Timeline/Segmento 009 · beats 36-39/Escenario/Mine Structure/Tight Walls/Top Tight
+42;Clic Perfect;34.120;34.0;40;11.373;-0.31;1.08;136.69;1;Top Tight;0.00;10.00;152.00;15.31;Nivel/Timeline/Segmento 009 · beats 36-39/Escenario/Mine Structure/Tight Walls/Top Tight
+43;Clic Perfect;35.080;35.0;27;11.693;-0.31;1.08;140.36;1;Top Tight;0.00;10.00;152.00;11.64;Nivel/Timeline/Segmento 009 · beats 36-39/Escenario/Mine Structure/Tight Walls/Top Tight
+44;Clic Perfect;35.976;36.0;-8;11.992;-0.31;1.08;144.21;1;Top Tight;0.00;10.00;152.00;7.79;Nivel/Timeline/Segmento 009 · beats 36-39/Escenario/Mine Structure/Tight Walls/Top Tight
+45;Clic Perfect;37.128;37.0;43;12.376;-0.31;1.08;148.59;1;Top Tight;0.00;10.00;152.00;3.41;Nivel/Timeline/Segmento 009 · beats 36-39/Escenario/Mine Structure/Tight Walls/Top Tight
+46;Clic Perfect;38.088;38.0;29;12.696;-0.31;1.08;152.65;1;Top Tight;0.00;10.00;152.00;-0.65;Nivel/Timeline/Segmento 009 · beats 36-39/Escenario/Mine Structure/Tight Walls/Top Tight
+47;Deslizarse;38.984;39.0;-5;12.995;-0.31;1.08;155.82;1;Top Tight;0.00;10.00;152.00;-3.82;Nivel/Timeline/Segmento 009 · beats 36-39/Escenario/Mine Structure/Tight Walls/Top Tight
+48;Clic Perfect;38.984;39.0;-5;12.995;-0.31;1.08;156.14;1;Top Tight;0.00;10.00;152.00;-4.14;Nivel/Timeline/Segmento 009 · beats 36-39/Escenario/Mine Structure/Tight Walls/Top Tight
+49;Clic Perfect;40.008;40.0;3;13.336;-0.31;0.58;160.31;1;Top Tight;0.00;10.00;168.00;7.69;Nivel/Timeline/Segmento 010 · beats 40-43/Escenario/Mine Structure/Tight Walls/Top Tight
+50;Clic Perfect;41.096;41.0;32;13.699;-2.16;1.06;164.66;1;Top Tight;0.00;10.00;168.00;3.34;Nivel/Timeline/Segmento 010 · beats 40-43/Escenario/Mine Structure/Tight Walls/Top Tight
+51;Clic Perfect;42.056;42.0;19;14.019;-2.16;1.08;168.50;1;Top Tight;0.00;10.00;168.00;-0.50;Nivel/Timeline/Segmento 010 · beats 40-43/Escenario/Mine Structure/Tight Walls/Top Tight
+52;Clic Perfect;43.016;43.0;5;14.339;-2.16;1.08;172.26;1;Top Tight;0.00;10.00;168.00;-4.26;Nivel/Timeline/Segmento 010 · beats 40-43/Escenario/Mine Structure/Tight Walls/Top Tight
+53;Clic Perfect;44.040;44.0;13;14.680;-2.16;1.08;176.32;1;Top Tight;0.00;10.00;184.00;7.68;Nivel/Timeline/Segmento 011 · beats 44-47/Escenario/Mine Structure/Tight Walls/Top Tight
+54;Clic Perfect;45.064;45.0;21;15.021;-2.16;1.08;180.51;1;Top Tight;0.00;10.00;184.00;3.49;Nivel/Timeline/Segmento 011 · beats 44-47/Escenario/Mine Structure/Tight Walls/Top Tight
+55;Clic Perfect;46.024;46.0;8;15.341;-2.16;1.08;184.34;1;Top Tight;0.00;10.00;184.00;-0.34;Nivel/Timeline/Segmento 011 · beats 44-47/Escenario/Mine Structure/Tight Walls/Top Tight
+56;Clic Perfect;46.920;47.0;-27;15.640;-2.16;1.08;188.03;1;Top Tight;0.00;10.00;184.00;-4.03;Nivel/Timeline/Segmento 011 · beats 44-47/Escenario/Mine Structure/Tight Walls/Top Tight
+57;Deslizarse;46.984;47.0;-5;15.661;-2.16;1.08;188.03;1;Top Tight;0.00;10.00;184.00;-4.03;Nivel/Timeline/Segmento 011 · beats 44-47/Escenario/Mine Structure/Tight Walls/Top Tight
+58;Clic Perfect;47.944;48.0;-19;15.981;-2.16;0.58;192.12;1;Top Tight;0.00;10.00;200.00;7.88;Nivel/Timeline/Segmento 012 · beats 48-51/Escenario/Mine Structure/Tight Walls/Top Tight
+59;Clic Perfect;49.160;49.0;53;16.387;-0.01;1.06;196.90;1;Top Tight;0.00;10.00;200.00;3.10;Nivel/Timeline/Segmento 012 · beats 48-51/Escenario/Mine Structure/Tight Walls/Top Tight
+60;Clic Perfect;50.056;50.0;19;16.685;2.19;1.08;200.33;1;Top Tight;0.00;10.00;200.00;-0.33;Nivel/Timeline/Segmento 012 · beats 48-51/Escenario/Mine Structure/Tight Walls/Top Tight
+61;Clic Perfect;51.080;51.0;27;17.027;2.19;1.08;204.44;1;Top Tight;0.00;10.00;200.00;-4.44;Nivel/Timeline/Segmento 012 · beats 48-51/Escenario/Mine Structure/Tight Walls/Top Tight
+62;Clic Perfect;52.104;52.0;35;17.368;2.19;1.08;208.60;1;Top Tight;0.00;10.00;216.00;7.40;Nivel/Timeline/Segmento 013 · beats 52-55/Escenario/Mine Structure/Tight Walls/Top Tight
+63;Clic Perfect;53.064;53.0;21;17.688;2.19;1.08;212.57;1;Top Tight;0.00;10.00;216.00;3.43;Nivel/Timeline/Segmento 013 · beats 52-55/Escenario/Mine Structure/Tight Walls/Top Tight
+64;Clic Perfect;54.024;54.0;8;18.008;2.19;1.08;216.30;1;Top Tight;0.00;10.00;216.00;-0.30;Nivel/Timeline/Segmento 013 · beats 52-55/Escenario/Mine Structure/Tight Walls/Top Tight
+65;Clic Perfect;54.984;55.0;-5;18.328;2.19;1.08;220.07;1;Top Tight;0.00;10.00;216.00;-4.07;Nivel/Timeline/Segmento 013 · beats 52-55/Escenario/Mine Structure/Tight Walls/Top Tight
+66;Deslizarse;55.112;55.0;37;18.371;2.19;1.08;220.37;1;Top Tight;0.00;10.00;216.00;-4.37;Nivel/Timeline/Segmento 013 · beats 52-55/Escenario/Mine Structure/Tight Walls/Top Tight
+67;Clic Perfect;56.008;56.0;3;18.669;2.19;0.58;224.43;1;Top Tight;0.00;10.00;232.00;7.57;Nivel/Timeline/Segmento 014 · beats 56-59/Escenario/Mine Structure/Tight Walls/Top Tight
+68;Clic Perfect;57.160;57.0;53;19.053;0.64;1.03;228.87;1;Top Tight;0.00;10.00;232.00;3.13;Nivel/Timeline/Segmento 014 · beats 56-59/Escenario/Mine Structure/Tight Walls/Top Tight
+69;Clic Perfect;58.184;58.0;61;19.395;0.34;1.08;232.98;1;Top Tight;0.00;10.00;232.00;-0.98;Nivel/Timeline/Segmento 014 · beats 56-59/Escenario/Mine Structure/Tight Walls/Top Tight
+70;Clic Perfect;59.144;59.0;48;19.715;-0.29;1.08;236.69;1;Top Tight;0.00;10.00;232.00;-4.69;Nivel/Timeline/Segmento 014 · beats 56-59/Escenario/Mine Structure/Tight Walls/Top Tight
+71;Clic Perfect;60.104;60.0;35;20.035;-0.29;1.08;240.44;1;Top Tight;0.00;10.00;248.00;7.56;Nivel/Timeline/Segmento 015 · beats 60-63/Escenario/Mine Structure/Tight Walls/Top Tight
+72;Clic Perfect;61.000;61.0;0;20.333;-0.29;1.08;244.14;1;Top Tight;0.00;10.00;248.00;3.86;Nivel/Timeline/Segmento 015 · beats 60-63/Escenario/Mine Structure/Tight Walls/Top Tight
+73;Deslizarse;61.192;61.0;64;20.397;-0.29;1.08;244.45;1;Top Tight;0.00;10.00;248.00;3.55;Nivel/Timeline/Segmento 015 · beats 60-63/Escenario/Mine Structure/Tight Walls/Top Tight
+74;Salto;62.216;62.0;72;20.739;-0.29;0.58;248.80;1;Top Tight;0.00;10.00;248.00;-0.80;Nivel/Timeline/Segmento 015 · beats 60-63/Escenario/Mine Structure/Tight Walls/Top Tight
+75;Clic Good;62.216;62.0;72;20.739;-0.29;0.92;249.16;0;Top Tight;0.00;10.00;248.00;-1.16;Nivel/Timeline/Segmento 015 · beats 60-63/Escenario/Mine Structure/Tight Walls/Top Tight
+76;Clic Perfect;63.048;63.0;16;21.016;-0.29;3.91;252.44;0;Cube (5);0.37;0.25;252.50;0.06;Nivel/Timeline/Segmento 015 · beats 60-63/Obstáculos/Cube (5)
+77;Slam;63.176;63.0;59;21.059;-0.29;3.98;252.73;0;Cube (5);0.37;0.25;252.50;-0.23;Nivel/Timeline/Segmento 015 · beats 60-63/Obstáculos/Cube (5)
+78;Clic Perfect;64.136;64.0;45;21.379;0.80;1.08;256.81;1;Cube (19);0.00;6.25;256.50;-0.31;Nivel/Timeline/Segmento 016 · beats 64-67/Obstáculos/Cube (19)
+79;Clic Perfect;65.096;65.0;32;21.699;4.54;1.08;260.54;1;Right Side Beam;6.81;9.58;264.28;3.74;Nivel/Timeline/Segmento 016 · beats 64-67/Escenario/Mine Structure/Arch/Support/Right Side Beam
+80;Clic Perfect;66.056;66.0;19;22.019;6.77;1.08;264.64;1;Right Side Beam;6.81;9.58;264.28;-0.36;Nivel/Timeline/Segmento 016 · beats 64-67/Escenario/Mine Structure/Arch/Support/Right Side Beam
+81;Clic Perfect;67.080;67.0;27;22.360;6.77;1.08;268.66;1;Right Side Beam;6.81;9.58;264.28;-4.38;Nivel/Timeline/Segmento 016 · beats 64-67/Escenario/Mine Structure/Arch/Support/Right Side Beam
+82;Clic Perfect;68.104;68.0;35;22.701;6.77;1.08;272.66;1;Right Side Beam;6.81;9.58;280.28;7.63;Nivel/Timeline/Segmento 017 · beats 68-71/Escenario/Mine Structure/Arch/Support/Right Side Beam
+83;Clic Perfect;69.064;69.0;21;23.021;6.77;1.08;276.53;1;Right Side Beam;6.81;9.58;280.28;3.75;Nivel/Timeline/Segmento 017 · beats 68-71/Escenario/Mine Structure/Arch/Support/Right Side Beam
+84;Clic Perfect;70.088;70.0;29;23.363;6.77;1.08;280.43;1;Right Side Beam;6.81;9.58;280.28;-0.15;Nivel/Timeline/Segmento 017 · beats 68-71/Escenario/Mine Structure/Arch/Support/Right Side Beam
+85;Clic Perfect;70.856;71.0;-48;23.619;6.77;1.08;283.54;1;Right Side Beam;6.81;9.58;280.28;-3.26;Nivel/Timeline/Segmento 017 · beats 68-71/Escenario/Mine Structure/Arch/Support/Right Side Beam
+86;Salto;71.048;71.0;16;23.683;6.77;1.08;284.19;1;Right Side Beam;6.81;9.58;280.28;-3.91;Nivel/Timeline/Segmento 017 · beats 68-71/Escenario/Mine Structure/Arch/Support/Right Side Beam
+87;Clic Perfect;72.008;72.0;3;24.003;2.65;5.40;288.32;0;Beam Top;-0.13;10.36;288.00;-0.32;Nivel/Timeline/Segmento 017 · beats 68-71/Escenario/Mine Structure/Arch/Support/Beam Top
+88;Dash izquierda;72.072;72.0;24;24.024;2.65;5.40;288.32;0;Beam Top;-0.13;10.36;288.00;-0.32;Nivel/Timeline/Segmento 017 · beats 68-71/Escenario/Mine Structure/Arch/Support/Beam Top
+89;Clic Perfect;73.032;73.0;11;24.344;-4.41;4.79;292.30;0;Left Side Beam;-6.81;9.58;296.28;3.98;Nivel/Timeline/Segmento 018 · beats 72-75/Escenario/Mine Structure/Arch/Support/Left Side Beam
+90;Clic Perfect;74.184;74.0;61;24.728;-7.04;1.08;296.80;1;Left Side Beam;-6.81;9.58;296.28;-0.52;Nivel/Timeline/Segmento 018 · beats 72-75/Escenario/Mine Structure/Arch/Support/Left Side Beam
+91;Clic Perfect;75.016;75.0;5;25.005;-7.04;1.08;300.24;1;Left Side Beam;-6.81;9.58;296.28;-3.96;Nivel/Timeline/Segmento 018 · beats 72-75/Escenario/Mine Structure/Arch/Support/Left Side Beam
+92;Clic Perfect;76.104;76.0;35;25.368;-7.04;1.08;304.60;1;Left Side Beam;-6.81;9.58;312.28;7.68;Nivel/Timeline/Segmento 019 · beats 76-79/Escenario/Mine Structure/Arch/Support/Left Side Beam
+93;Clic Perfect;77.064;77.0;21;25.688;-7.04;1.08;308.58;1;Left Side Beam;-6.81;9.58;312.28;3.70;Nivel/Timeline/Segmento 019 · beats 76-79/Escenario/Mine Structure/Arch/Support/Left Side Beam
+94;Clic Perfect;78.024;78.0;8;26.008;-7.04;1.08;312.36;1;Left Side Beam;-6.81;9.58;312.28;-0.08;Nivel/Timeline/Segmento 019 · beats 76-79/Escenario/Mine Structure/Arch/Support/Left Side Beam
+95;Clic Perfect;78.984;79.0;-5;26.328;-7.04;1.08;316.08;1;Left Side Beam;-6.81;9.58;312.28;-3.80;Nivel/Timeline/Segmento 019 · beats 76-79/Escenario/Mine Structure/Arch/Support/Left Side Beam
+96;Salto;79.048;79.0;16;26.349;-7.04;1.08;316.08;1;Left Side Beam;-6.81;9.58;312.28;-3.80;Nivel/Timeline/Segmento 019 · beats 76-79/Escenario/Mine Structure/Arch/Support/Left Side Beam
+97;Dash derecha;80.008;80.0;3;26.669;-3.22;5.41;319.89;0;Beam Top;-0.13;10.36;320.00;0.11;Nivel/Timeline/Segmento 019 · beats 76-79/Escenario/Mine Structure/Arch/Support/Beam Top
+98;Clic Perfect;80.008;80.0;3;26.669;-2.52;5.48;320.19;0;Beam Top;-0.13;10.36;320.00;-0.19;Nivel/Timeline/Segmento 019 · beats 76-79/Escenario/Mine Structure/Arch/Support/Beam Top
+99;Clic Perfect;81.096;81.0;32;27.032;4.41;4.17;324.62;0;Right Side Beam;6.81;9.58;328.28;3.66;Nivel/Timeline/Segmento 020 · beats 80-83/Escenario/Mine Structure/Arch/Support/Right Side Beam
+100;Clic Perfect;82.120;82.0;40;27.373;6.94;1.08;328.73;1;Right Side Beam;6.81;9.58;328.28;-0.45;Nivel/Timeline/Segmento 020 · beats 80-83/Escenario/Mine Structure/Arch/Support/Right Side Beam
+101;Clic Perfect;83.144;83.0;48;27.715;6.94;1.08;332.77;1;Right Side Beam;6.81;9.58;328.28;-4.49;Nivel/Timeline/Segmento 020 · beats 80-83/Escenario/Mine Structure/Arch/Support/Right Side Beam
+102;Clic Perfect;84.104;84.0;35;28.035;6.94;1.08;336.62;1;Right Side Beam;6.81;9.58;344.28;7.66;Nivel/Timeline/Segmento 021 · beats 84-87/Escenario/Mine Structure/Arch/Support/Right Side Beam
+103;Clic Perfect;85.000;85.0;0;28.333;6.94;1.08;340.31;1;Right Side Beam;6.81;9.58;344.28;3.97;Nivel/Timeline/Segmento 021 · beats 84-87/Escenario/Mine Structure/Arch/Support/Right Side Beam
+104;Clic Perfect;86.088;86.0;29;28.696;6.94;1.08;344.65;1;Right Side Beam;6.81;9.58;344.28;-0.37;Nivel/Timeline/Segmento 021 · beats 84-87/Escenario/Mine Structure/Arch/Support/Right Side Beam
+105;Clic Perfect;86.920;87.0;-27;28.973;6.94;1.08;347.83;1;Right Side Beam;6.81;9.58;344.28;-3.55;Nivel/Timeline/Segmento 021 · beats 84-87/Escenario/Mine Structure/Arch/Support/Right Side Beam
+106;Salto;87.048;87.0;16;29.016;6.94;1.08;348.17;1;Right Side Beam;6.81;9.58;344.28;-3.89;Nivel/Timeline/Segmento 021 · beats 84-87/Escenario/Mine Structure/Arch/Support/Right Side Beam
+107;Clic Perfect;88.072;88.0;24;29.357;2.80;5.49;352.30;0;Beam Top;-0.13;10.36;352.00;-0.30;Nivel/Timeline/Segmento 021 · beats 84-87/Escenario/Mine Structure/Arch/Support/Beam Top
+108;Dash izquierda;88.136;88.0;45;29.379;2.80;5.49;352.30;0;Beam Top;-0.13;10.36;352.00;-0.30;Nivel/Timeline/Segmento 021 · beats 84-87/Escenario/Mine Structure/Arch/Support/Beam Top
+109;Clic Perfect;89.096;89.0;32;29.699;-4.74;4.35;356.81;0;Left Side Beam;-6.81;9.58;360.28;3.47;Nivel/Timeline/Segmento 022 · beats 88-91/Escenario/Mine Structure/Arch/Support/Left Side Beam
+110;Clic Perfect;90.120;90.0;40;30.040;-7.39;1.08;360.73;1;Left Side Beam;-6.81;9.58;360.28;-0.45;Nivel/Timeline/Segmento 022 · beats 88-91/Escenario/Mine Structure/Arch/Support/Left Side Beam
+111;Clic Perfect;91.144;91.0;48;30.381;-7.39;1.08;364.78;1;Left Side Beam;-6.81;9.58;360.28;-4.50;Nivel/Timeline/Segmento 022 · beats 88-91/Escenario/Mine Structure/Arch/Support/Left Side Beam
+112;Clic Perfect;92.168;92.0;56;30.723;-7.39;1.08;368.87;1;Left Side Beam;-6.81;9.58;376.28;7.41;Nivel/Timeline/Segmento 023 · beats 92-95/Escenario/Mine Structure/Arch/Support/Left Side Beam
+113;Clic Perfect;92.936;93.0;-21;30.979;-7.39;1.08;372.23;1;Left Side Beam;-6.81;9.58;376.28;4.05;Nivel/Timeline/Segmento 023 · beats 92-95/Escenario/Mine Structure/Arch/Support/Left Side Beam
+114;Clic Perfect;94.088;94.0;29;31.363;-7.39;1.08;376.66;1;Floor (1);0.00;-10.25;380.00;3.34;Nivel/Timeline/Segmento 024 · beats 96-99/Escenario/Mine Structure/Floor (1)
+115;Clic Perfect;95.112;95.0;37;31.704;-7.39;1.08;380.75;1;Floor (1);0.00;-10.25;380.00;-0.75;Nivel/Timeline/Segmento 024 · beats 96-99/Escenario/Mine Structure/Floor (1)
+116;Clic Perfect;96.136;96.0;45;32.045;-7.39;1.08;384.84;1;Left Side Beam;-6.81;9.58;392.28;7.44;Nivel/Timeline/Segmento 024 · beats 96-99/Escenario/Mine Structure/Arch/Support/Left Side Beam
+117;Clic Perfect;97.096;97.0;32;32.365;-7.39;1.08;388.49;1;Left Side Beam;-6.81;9.58;392.28;3.79;Nivel/Timeline/Segmento 024 · beats 96-99/Escenario/Mine Structure/Arch/Support/Left Side Beam
+118;Salto;97.864;98.0;-45;32.621;-7.39;1.08;391.34;1;Left Side Beam;-6.81;9.58;392.28;0.94;Nivel/Timeline/Segmento 024 · beats 96-99/Escenario/Mine Structure/Arch/Support/Left Side Beam
+119;Clic Perfect;97.864;98.0;-45;32.621;-7.09;1.68;391.64;0;Left Side Beam;-6.81;9.58;392.28;0.64;Nivel/Timeline/Segmento 024 · beats 96-99/Escenario/Mine Structure/Arch/Support/Left Side Beam
+120;Clic Perfect;99.016;99.0;5;33.005;-4.23;5.16;396.40;0;Cube;-5.00;-10.00;400.00;3.60;Nivel/Timeline/Segmento 025 · beats 100-103/Obstáculos/Cube
+121;Clic Perfect;99.912;100.0;-29;33.304;-4.23;1.08;399.84;1;Left Diagonal Beam;-5.64;7.45;400.00;0.16;Nivel/Timeline/Segmento 024 · beats 96-99/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+122;Salto;99.976;100.0;-8;33.325;-4.23;1.08;399.84;1;Left Diagonal Beam;-5.64;7.45;400.00;0.16;Nivel/Timeline/Segmento 024 · beats 96-99/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+123;Clic Perfect;100.872;101.0;-43;33.624;-0.28;5.38;403.79;0;Cube (1);3.00;-10.00;408.00;4.21;Nivel/Timeline/Segmento 026 · beats 104-107/Escenario/Mine Structure/Arch/Cube (1)
+124;Clic Perfect;101.960;102.0;-13;33.987;2.98;1.48;407.96;0;Cube (1);3.00;-10.00;408.00;0.04;Nivel/Timeline/Segmento 026 · beats 104-107/Escenario/Mine Structure/Arch/Cube (1)
+125;Doble salto;102.024;102.0;8;34.008;2.98;1.48;407.96;0;Cube (1);3.00;-10.00;408.00;0.04;Nivel/Timeline/Segmento 026 · beats 104-107/Escenario/Mine Structure/Arch/Cube (1)
+126;Clic Perfect;103.048;103.0;16;34.349;2.98;3.91;412.39;0;Cube (2);3.00;-10.00;416.00;3.61;Nivel/Timeline/Segmento 026 · beats 104-107/Escenario/Mine Structure/Arch/Cube (2)
+127;Clic Perfect;103.944;104.0;-19;34.648;2.98;1.08;415.95;1;Cube (2);3.00;-10.00;416.00;0.05;Nivel/Timeline/Segmento 026 · beats 104-107/Escenario/Mine Structure/Arch/Cube (2)
+128;Salto;104.008;104.0;3;34.669;2.98;1.08;415.95;1;Cube (2);3.00;-10.00;416.00;0.05;Nivel/Timeline/Segmento 026 · beats 104-107/Escenario/Mine Structure/Arch/Cube (2)
+129;Clic Perfect;105.096;105.0;32;35.032;-0.04;5.36;420.52;0;Cube (3);0.00;-10.00;424.00;3.48;Nivel/Timeline/Segmento 026 · beats 104-107/Escenario/Mine Structure/Arch/Cube (3)
+130;Doble salto;106.056;106.0;19;35.352;-0.04;1.41;424.08;0;Cube (3);0.00;-10.00;424.00;-0.08;Nivel/Timeline/Segmento 026 · beats 104-107/Escenario/Mine Structure/Arch/Cube (3)
+131;Clic Perfect;106.056;106.0;19;35.352;-0.33;1.88;424.38;0;Cube (3);0.00;-10.00;424.00;-0.38;Nivel/Timeline/Segmento 026 · beats 104-107/Escenario/Mine Structure/Arch/Cube (3)
+132;Clic Perfect;107.016;107.0;5;35.672;-3.95;3.96;428.30;0;Cube (2);-4.00;-10.00;432.00;3.70;Nivel/Timeline/Segmento 027 · beats 108-111/Escenario/Mine Structure/Arch/Cube (2)
+133;Clic Perfect;107.912;108.0;-29;35.971;-3.04;1.08;431.95;1;Cube (2);-4.00;-10.00;432.00;0.05;Nivel/Timeline/Segmento 027 · beats 108-111/Escenario/Mine Structure/Arch/Cube (2)
+134;Salto;107.976;108.0;-8;35.992;-3.04;1.08;431.95;1;Cube (2);-4.00;-10.00;432.00;0.05;Nivel/Timeline/Segmento 027 · beats 108-111/Escenario/Mine Structure/Arch/Cube (2)
+135;Clic Perfect;109.064;109.0;21;36.355;1.58;5.39;436.56;0;Cube (1);3.00;-10.00;440.00;3.44;Nivel/Timeline/Segmento 027 · beats 108-111/Escenario/Mine Structure/Arch/Cube (1)
+136;Clic Perfect;109.960;110.0;-13;36.653;4.13;1.67;440.01;0;Cube (1);3.00;-10.00;440.00;-0.01;Nivel/Timeline/Segmento 027 · beats 108-111/Escenario/Mine Structure/Arch/Cube (1)
+137;Doble salto;110.024;110.0;8;36.675;4.13;1.67;440.01;0;Cube (1);3.00;-10.00;440.00;-0.01;Nivel/Timeline/Segmento 027 · beats 108-111/Escenario/Mine Structure/Arch/Cube (1)
+138;Clic Perfect;110.984;111.0;-5;36.995;-0.05;4.23;444.20;0;Beam Top;-0.13;10.36;448.00;3.80;Nivel/Timeline/Segmento 027 · beats 108-111/Escenario/Mine Structure/Arch/Support/Beam Top
+139;Clic Perfect;111.880;112.0;-40;37.293;-1.34;1.08;447.69;1;Cube (1);-2.00;-10.00;448.00;0.31;Nivel/Timeline/Segmento 028 · beats 112-115/Escenario/Mine Structure/Arch/Cube (1)
+140;Salto;112.072;112.0;24;37.357;-1.34;1.08;448.06;1;Cube (1);-2.00;-10.00;448.00;-0.06;Nivel/Timeline/Segmento 028 · beats 112-115/Escenario/Mine Structure/Arch/Cube (1)
+141;Tirolina;112.776;113.0;-75;37.592;0.80;4.99;450.93;0;Beam Top;-0.13;10.36;464.00;13.07;Nivel/Timeline/Segmento 028 · beats 112-115/Escenario/Mine Structure/Arch/Support/Beam Top
+142;Clic Perfect;112.968;113.0;-11;37.656;0.78;5.01;450.94;0;Beam Top;-0.13;10.36;464.00;13.06;Nivel/Timeline/Segmento 028 · beats 112-115/Escenario/Mine Structure/Arch/Support/Beam Top
+143;Clic Perfect;114.056;114.0;19;38.019;-0.22;5.60;456.61;0;Beam Top;-0.13;10.36;464.00;7.39;Nivel/Timeline/Segmento 028 · beats 112-115/Escenario/Mine Structure/Arch/Support/Beam Top
+144;Clic Perfect;115.016;115.0;5;38.339;-1.64;6.44;460.42;0;Beam Top;-0.13;10.36;464.00;3.58;Nivel/Timeline/Segmento 028 · beats 112-115/Escenario/Mine Structure/Arch/Support/Beam Top
+145;Clic Perfect;116.104;116.0;35;38.701;-1.64;6.44;464.71;0;Beam Top;-0.13;10.36;464.00;-0.70;Nivel/Timeline/Segmento 028 · beats 112-115/Escenario/Mine Structure/Arch/Support/Beam Top
+146;Clic Perfect;117.000;117.0;0;39.000;-1.10;5.92;468.42;0;Beam Top;-0.13;10.36;480.00;11.58;Nivel/Timeline/Segmento 029 · beats 116-119/Escenario/Mine Structure/Arch/Support/Beam Top
+147;Clic Perfect;118.024;118.0;8;39.341;-0.01;5.59;472.37;0;Beam Top;-0.13;10.36;480.00;7.63;Nivel/Timeline/Segmento 029 · beats 116-119/Escenario/Mine Structure/Arch/Support/Beam Top
+148;Clic Perfect;119.048;119.0;16;39.683;-0.04;5.59;476.40;0;Beam Top;-0.13;10.36;480.00;3.60;Nivel/Timeline/Segmento 029 · beats 116-119/Escenario/Mine Structure/Arch/Support/Beam Top
+149;Clic Perfect;120.072;120.0;24;40.024;0.04;5.54;480.27;0;Beam Top;-0.13;10.36;480.00;-0.27;Nivel/Timeline/Segmento 029 · beats 116-119/Escenario/Mine Structure/Arch/Support/Beam Top
+150;Clic Perfect;121.032;121.0;11;40.344;0.04;1.08;484.26;1;Cube (1);0.00;-10.00;484.00;-0.26;Nivel/Timeline/Segmento 030 · beats 120-123/Escenario/Mine Structure/Arch/Cube (1)
+151;Salto;121.800;122.0;-67;40.600;0.04;1.08;487.12;1;Cube (1);0.00;-10.00;484.00;-3.12;Nivel/Timeline/Segmento 030 · beats 120-123/Escenario/Mine Structure/Arch/Cube (1)
+152;Clic Perfect;121.928;122.0;-24;40.643;0.04;2.33;487.78;0;Cube (1);0.00;-10.00;484.00;-3.78;Nivel/Timeline/Segmento 030 · beats 120-123/Escenario/Mine Structure/Arch/Cube (1)
+153;Clic Perfect;122.888;123.0;-37;40.963;0.04;5.32;491.89;0;Cube (2);0.00;-10.00;502.00;10.11;Nivel/Timeline/Segmento 031 · beats 124-127/Escenario/Mine Structure/Cube (2)
+154;Clic Perfect;124.104;124.0;35;41.368;0.04;1.08;496.56;1;Cube (2);0.00;-10.00;502.00;5.44;Nivel/Timeline/Segmento 031 · beats 124-127/Escenario/Mine Structure/Cube (2)
+155;Clic Perfect;125.000;125.0;0;41.667;0.04;1.08;500.22;1;Cube (2);0.00;-10.00;502.00;1.78;Nivel/Timeline/Segmento 031 · beats 124-127/Escenario/Mine Structure/Cube (2)
+156;Clic Perfect;126.024;126.0;8;42.008;0.04;1.08;504.30;1;Cube (2);0.00;-10.00;502.00;-2.30;Nivel/Timeline/Segmento 031 · beats 124-127/Escenario/Mine Structure/Cube (2)
+157;Clic Perfect;126.984;127.0;-5;42.328;0.04;1.08;508.02;1;Cube (2);0.00;-10.00;502.00;-6.02;Nivel/Timeline/Segmento 031 · beats 124-127/Escenario/Mine Structure/Cube (2)
+158;Clic Perfect;128.072;128.0;24;42.691;0.04;1.08;512.35;1;Cube (2);0.00;-10.00;502.00;-10.35;Nivel/Timeline/Segmento 031 · beats 124-127/Escenario/Mine Structure/Cube (2)
+159;Clic Perfect;129.096;129.0;32;43.032;0.04;1.08;516.65;1;Right Diagonal Beam;5.64;7.45;528.00;11.35;Nivel/Timeline/Segmento 032 · beats 128-131/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+160;Clic Perfect;130.120;130.0;40;43.373;0.04;1.08;520.55;1;Right Diagonal Beam;5.64;7.45;528.00;7.45;Nivel/Timeline/Segmento 032 · beats 128-131/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+161;Clic Perfect;131.144;131.0;48;43.715;0.04;1.08;524.58;1;Right Diagonal Beam;5.64;7.45;528.00;3.42;Nivel/Timeline/Segmento 032 · beats 128-131/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+162;Clic Perfect;131.976;132.0;-8;43.992;0.04;1.08;528.12;1;Right Diagonal Beam;5.64;7.45;528.00;-0.12;Nivel/Timeline/Segmento 032 · beats 128-131/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+163;Clic Perfect;133.064;133.0;21;44.355;0.04;1.08;532.44;1;Frame Right (1);0.00;4.50;544.47;12.03;Nivel/Timeline/Segmento 034 · beats 136-139/Obstáculos/Door (1)/Frame Right (1)
+164;Clic Perfect;134.024;134.0;8;44.675;0.04;1.08;536.21;1;Frame Right (1);0.00;4.50;544.47;8.26;Nivel/Timeline/Segmento 034 · beats 136-139/Obstáculos/Door (1)/Frame Right (1)
+165;Clic Perfect;134.984;135.0;-5;44.995;0.04;1.08;540.08;1;Frame Right (1);0.00;4.50;544.47;4.39;Nivel/Timeline/Segmento 034 · beats 136-139/Obstáculos/Door (1)/Frame Right (1)
+166;Bloquear;135.112;135.0;37;45.037;0.04;1.08;540.34;1;Frame Right (1);0.00;4.50;544.47;4.13;Nivel/Timeline/Segmento 034 · beats 136-139/Obstáculos/Door (1)/Frame Right (1)
+167;Clic Perfect;136.008;136.0;3;45.336;0.04;1.08;544.21;1;Frame Right (1);0.00;4.50;544.47;0.26;Nivel/Timeline/Segmento 034 · beats 136-139/Obstáculos/Door (1)/Frame Right (1)
+168;Clic Perfect;136.968;137.0;-11;45.656;0.04;1.08;548.02;1;Right Diagonal Beam;5.64;7.45;560.00;11.98;Nivel/Timeline/Segmento 034 · beats 136-139/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+169;Clic Perfect;137.992;138.0;-3;45.997;0.04;1.08;552.09;1;Right Diagonal Beam;5.64;7.45;560.00;7.91;Nivel/Timeline/Segmento 034 · beats 136-139/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+170;Clic Perfect;139.080;139.0;27;46.360;0.04;1.08;556.40;1;Right Diagonal Beam;5.64;7.45;560.00;3.60;Nivel/Timeline/Segmento 034 · beats 136-139/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+171;Clic Perfect;140.104;140.0;35;46.701;0.04;1.08;560.50;1;Right Diagonal Beam;5.64;7.45;560.00;-0.50;Nivel/Timeline/Segmento 034 · beats 136-139/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+172;Clic Perfect;141.128;141.0;43;47.043;0.04;1.08;564.53;1;Frame Right (1);0.00;4.50;576.47;11.94;Nivel/Timeline/Segmento 036 · beats 144-147/Obstáculos/Door (1)/Frame Right (1)
+173;Clic Perfect;142.024;142.0;8;47.341;0.04;1.08;568.36;1;Frame Right (1);0.00;4.50;576.47;8.11;Nivel/Timeline/Segmento 036 · beats 144-147/Obstáculos/Door (1)/Frame Right (1)
+174;Clic Perfect;142.984;143.0;-5;47.661;0.04;1.08;572.12;1;Frame Right (1);0.00;4.50;576.47;4.35;Nivel/Timeline/Segmento 036 · beats 144-147/Obstáculos/Door (1)/Frame Right (1)
+175;Bloquear;143.048;143.0;16;47.683;0.04;1.08;572.38;1;Frame Right (1);0.00;4.50;576.47;4.09;Nivel/Timeline/Segmento 036 · beats 144-147/Obstáculos/Door (1)/Frame Right (1)
+176;Clic Perfect;144.008;144.0;3;48.003;0.04;1.08;576.30;1;Cube (2);0.00;10.00;576.50;0.20;Nivel/Timeline/Segmento 036 · beats 144-147/Obstáculos/Cube (2)
+177;Clic Perfect;144.968;145.0;-11;48.323;0.04;1.08;579.89;1;Right Diagonal Beam;5.64;7.45;592.00;12.11;Nivel/Timeline/Segmento 036 · beats 144-147/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+178;Clic Perfect;146.120;146.0;40;48.707;-1.65;1.08;584.57;1;Left Side Beam;-6.81;9.58;584.28;-0.29;Nivel/Timeline/Segmento 036 · beats 144-147/Escenario/Mine Structure/Arch/Support/Left Side Beam
+179;Clic Perfect;147.080;147.0;27;49.027;-4.21;1.08;588.60;1;Left Diagonal Beam;-5.64;7.45;592.00;3.40;Nivel/Timeline/Segmento 036 · beats 144-147/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+180;Clic Perfect;148.104;148.0;35;49.368;-4.21;1.08;592.70;1;Left Diagonal Beam;-5.64;7.45;592.00;-0.70;Nivel/Timeline/Segmento 036 · beats 144-147/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+181;Clic Perfect;149.000;149.0;0;49.688;-4.21;1.08;596.28;1;Left Side Beam;-6.81;9.58;600.28;4.00;Nivel/Timeline/Segmento 037 · beats 148-151/Escenario/Mine Structure/Arch/Support/Left Side Beam
+182;Clic Perfect;150.088;150.0;29;50.029;-4.21;1.08;600.34;1;Left Side Beam;-6.81;9.58;600.28;-0.06;Nivel/Timeline/Segmento 037 · beats 148-151/Escenario/Mine Structure/Arch/Support/Left Side Beam
+183;Clic Perfect;150.984;151.0;-5;50.328;-4.21;1.08;603.91;1;Left Diagonal Beam;-5.64;7.45;608.00;4.09;Nivel/Timeline/Segmento 037 · beats 148-151/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+184;Bloquear;151.048;151.0;16;50.349;-4.21;1.08;604.18;1;Left Diagonal Beam;-5.64;7.45;608.00;3.82;Nivel/Timeline/Segmento 037 · beats 148-151/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+185;Clic Perfect;152.008;152.0;3;50.669;-4.21;1.08;608.39;1;Door;-4.00;2.50;608.50;0.11;Nivel/Timeline/Segmento 038 · beats 152-155/Obstáculos/Door
+186;Clic Perfect;153.160;153.0;53;51.053;-0.63;1.08;612.76;1;Left Side Beam;-6.81;9.58;616.28;3.52;Nivel/Timeline/Segmento 038 · beats 152-155/Escenario/Mine Structure/Arch/Support/Left Side Beam
+187;Clic Perfect;154.120;154.0;40;51.373;0.39;1.08;616.58;1;Frame Right (1);0.00;4.50;632.47;15.90;Nivel/Timeline/Segmento 039 · beats 156-159/Obstáculos/Door (1)/Frame Right (1)
+188;Clic Perfect;155.208;155.0;69;51.736;0.39;1.08;620.88;1;Frame Right (1);0.00;4.50;632.47;11.59;Nivel/Timeline/Segmento 039 · beats 156-159/Obstáculos/Door (1)/Frame Right (1)
+189;Clic Perfect;156.040;156.0;13;52.013;-0.14;1.08;624.42;1;Frame Right (1);0.00;4.50;632.47;8.05;Nivel/Timeline/Segmento 039 · beats 156-159/Obstáculos/Door (1)/Frame Right (1)
+190;Clic Perfect;157.064;157.0;21;52.355;-0.64;1.08;628.52;1;Frame Right (1);0.00;4.50;632.47;3.96;Nivel/Timeline/Segmento 039 · beats 156-159/Obstáculos/Door (1)/Frame Right (1)
+191;Bloquear;157.192;157.0;64;52.397;-0.64;1.08;629.03;1;Frame Right (1);0.00;4.50;632.47;3.44;Nivel/Timeline/Segmento 039 · beats 156-159/Obstáculos/Door (1)/Frame Right (1)
+192;Clic Perfect;158.024;158.0;8;52.675;-0.64;1.08;632.19;1;Cube (2);0.00;10.00;632.50;0.31;Nivel/Timeline/Segmento 039 · beats 156-159/Obstáculos/Cube (2)
+193;Bloquear;158.152;158.0;51;52.717;-0.64;1.08;632.80;1;Cube (2);0.00;10.00;632.50;-0.30;Nivel/Timeline/Segmento 039 · beats 156-159/Obstáculos/Cube (2)
+194;Clic Perfect;159.112;159.0;37;53.037;-0.64;1.08;636.45;1;Cube (5);0.00;10.00;636.50;0.05;Nivel/Timeline/Segmento 039 · beats 156-159/Obstáculos/Cube (5)
+195;Bloquear;159.112;159.0;37;53.037;-0.64;1.08;636.45;1;Cube (5);0.00;10.00;636.50;0.05;Nivel/Timeline/Segmento 039 · beats 156-159/Obstáculos/Cube (5)
+196;Clic Perfect;160.136;160.0;45;53.379;-0.64;1.08;640.74;1;Cube (10);0.00;10.00;640.50;-0.24;Nivel/Timeline/Segmento 040 · beats 160-163/Obstáculos/Cube (10)
+197;Clic Perfect;161.096;161.0;32;53.699;-0.64;1.08;644.56;1;Left Side Beam;-6.81;9.58;648.28;3.72;Nivel/Timeline/Segmento 040 · beats 160-163/Escenario/Mine Structure/Arch/Support/Left Side Beam
+198;Clic Perfect;162.056;162.0;19;54.019;-0.64;1.08;648.37;1;Left Side Beam;-6.81;9.58;648.28;-0.09;Nivel/Timeline/Segmento 040 · beats 160-163/Escenario/Mine Structure/Arch/Support/Left Side Beam
+199;Clic Perfect;163.016;163.0;5;54.339;-1.67;1.08;652.27;1;Left Diagonal Beam;-5.64;7.45;656.00;3.73;Nivel/Timeline/Segmento 040 · beats 160-163/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+200;Clic Perfect;164.104;164.0;35;54.701;-0.88;1.08;656.38;1;Left Diagonal Beam;-5.64;7.45;656.00;-0.38;Nivel/Timeline/Segmento 040 · beats 160-163/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+201;Clic Perfect;165.064;165.0;21;55.021;-0.88;1.08;660.31;1;Left Side Beam;-6.81;9.58;664.28;3.97;Nivel/Timeline/Segmento 041 · beats 164-167/Escenario/Mine Structure/Arch/Support/Left Side Beam
+202;Clic Perfect;166.088;166.0;29;55.363;-0.88;1.08;664.59;1;Cube (13);-6.50;7.50;672.50;7.91;Nivel/Timeline/Segmento 042 · beats 168-171/Escenario/Mine Structure/Cube (13)
+203;Clic Perfect;167.048;167.0;16;55.683;-0.88;1.08;668.30;1;Cube (13);-6.50;7.50;672.50;4.20;Nivel/Timeline/Segmento 042 · beats 168-171/Escenario/Mine Structure/Cube (13)
+204;Salto;167.816;168.0;-61;55.939;-0.88;1.08;671.41;1;Cube (13);-6.50;7.50;672.50;1.09;Nivel/Timeline/Segmento 042 · beats 168-171/Escenario/Mine Structure/Cube (13)
+205;Clic Perfect;167.880;168.0;-40;55.960;-0.88;1.59;671.66;0;Cube (13);-6.50;7.50;672.50;0.84;Nivel/Timeline/Segmento 042 · beats 168-171/Escenario/Mine Structure/Cube (13)
+206;Wallrun;168.776;169.0;-75;56.259;-2.44;5.28;675.04;0;Cube (15);-1.50;4.50;684.50;9.46;Nivel/Timeline/Segmento 042 · beats 168-171/Escenario/Mine Structure/Cube (15)
+207;Clic Perfect;168.904;169.0;-32;56.301;-2.44;5.27;675.81;0;Cube (15);-1.50;4.50;684.50;8.69;Nivel/Timeline/Segmento 042 · beats 168-171/Escenario/Mine Structure/Cube (15)
+208;Clic Perfect;169.992;170.0;-3;56.664;-2.44;5.09;680.12;0;Cube (15);-1.50;4.50;684.50;4.38;Nivel/Timeline/Segmento 042 · beats 168-171/Escenario/Mine Structure/Cube (15)
+209;Walljump;170.056;170.0;19;56.685;-2.44;5.09;680.12;0;Cube (15);-1.50;4.50;684.50;4.38;Nivel/Timeline/Segmento 042 · beats 168-171/Escenario/Mine Structure/Cube (15)
+210;Clic Perfect;171.144;171.0;48;57.048;2.18;5.31;684.71;0;Cube (15);-1.50;4.50;684.50;-0.21;Nivel/Timeline/Segmento 042 · beats 168-171/Escenario/Mine Structure/Cube (15)
+211;Wallrun;171.208;171.0;69;57.069;2.44;4.99;684.98;0;Cube (15);1.50;4.50;692.50;7.52;Nivel/Timeline/Segmento 043 · beats 172-175/Escenario/Mine Structure/Cube (15)
+212;Clic Perfect;171.976;172.0;-8;57.325;2.44;4.92;688.15;0;Cube (15);1.50;4.50;692.50;4.35;Nivel/Timeline/Segmento 043 · beats 172-175/Escenario/Mine Structure/Cube (15)
+213;Walljump;172.040;172.0;13;57.347;2.44;4.92;688.15;0;Cube (15);1.50;4.50;692.50;4.35;Nivel/Timeline/Segmento 043 · beats 172-175/Escenario/Mine Structure/Cube (15)
+214;Clic Perfect;173.064;173.0;21;57.688;-2.04;5.47;692.35;0;Cube (15);1.50;4.50;692.50;0.15;Nivel/Timeline/Segmento 043 · beats 172-175/Escenario/Mine Structure/Cube (15)
+215;Wallrun;173.192;173.0;64;57.731;-2.33;5.18;692.64;0;Cube (15);1.50;4.50;692.50;-0.14;Nivel/Timeline/Segmento 043 · beats 172-175/Escenario/Mine Structure/Cube (15)
+216;Clic Perfect;174.024;174.0;8;58.008;-2.33;5.09;696.20;0;Cube (16);-1.50;4.50;700.50;4.30;Nivel/Timeline/Segmento 043 · beats 172-175/Escenario/Mine Structure/Cube (16)
+217;Walljump;174.088;174.0;29;58.029;-2.33;5.09;696.20;0;Cube (16);-1.50;4.50;700.50;4.30;Nivel/Timeline/Segmento 043 · beats 172-175/Escenario/Mine Structure/Cube (16)
+218;Clic Perfect;175.112;175.0;37;58.371;2.43;5.40;700.69;0;Right Diagonal Beam;5.64;7.45;704.00;3.31;Nivel/Timeline/Segmento 043 · beats 172-175/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+219;Wallrun;175.112;175.0;37;58.371;2.43;5.40;700.69;0;Right Diagonal Beam;5.64;7.45;704.00;3.31;Nivel/Timeline/Segmento 043 · beats 172-175/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+220;Clic Perfect;176.008;176.0;3;58.669;2.43;5.30;704.24;0;Cube (15);1.50;4.50;708.50;4.26;Nivel/Timeline/Segmento 044 · beats 176-179/Escenario/Mine Structure/Cube (15)
+221;Walljump;176.008;176.0;3;58.669;2.43;5.30;704.24;0;Cube (15);1.50;4.50;708.50;4.26;Nivel/Timeline/Segmento 044 · beats 176-179/Escenario/Mine Structure/Cube (15)
+222;Wallrun;177.096;177.0;32;59.032;-2.42;5.84;708.54;0;Cube (15);1.50;4.50;708.50;-0.04;Nivel/Timeline/Segmento 044 · beats 176-179/Escenario/Mine Structure/Cube (15)
+223;Clic Perfect;177.160;177.0;53;59.053;-2.42;5.84;708.79;0;Cube (16);-1.50;4.50;716.50;7.71;Nivel/Timeline/Segmento 044 · beats 176-179/Escenario/Mine Structure/Cube (16)
+224;Walljump;178.056;178.0;19;59.352;-2.42;5.74;712.24;0;Cube (16);-1.50;4.50;716.50;4.26;Nivel/Timeline/Segmento 044 · beats 176-179/Escenario/Mine Structure/Cube (16)
+225;Clic Perfect;178.120;178.0;40;59.373;-2.27;6.06;712.53;0;Cube (16);-1.50;4.50;716.50;3.97;Nivel/Timeline/Segmento 044 · beats 176-179/Escenario/Mine Structure/Cube (16)
+226;Clic Perfect;179.080;179.0;27;59.693;2.28;6.40;716.37;0;Cube (16);-1.50;4.50;716.50;0.13;Nivel/Timeline/Segmento 044 · beats 176-179/Escenario/Mine Structure/Cube (16)
+227;Wallrun;179.208;179.0;69;59.736;2.44;6.15;716.64;0;Right Diagonal Beam;5.64;7.45;720.00;3.36;Nivel/Timeline/Segmento 044 · beats 176-179/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+228;Walljump;179.976;180.0;-8;59.992;2.44;6.08;719.80;0;Cube (15);1.50;4.50;724.50;4.70;Nivel/Timeline/Segmento 045 · beats 180-183/Escenario/Mine Structure/Cube (15)
+229;Clic Perfect;179.976;180.0;-8;59.992;2.32;6.36;720.05;0;Cube (15);1.50;4.50;724.50;4.45;Nivel/Timeline/Segmento 045 · beats 180-183/Escenario/Mine Structure/Cube (15)
+230;Wallrun;181.064;181.0;21;60.355;-2.44;6.47;724.17;0;Cube (15);1.50;4.50;724.50;0.33;Nivel/Timeline/Segmento 045 · beats 180-183/Escenario/Mine Structure/Cube (15)
+231;Clic Perfect;181.128;181.0;43;60.376;-2.44;6.47;724.40;0;Cube (15);1.50;4.50;724.50;0.10;Nivel/Timeline/Segmento 045 · beats 180-183/Escenario/Mine Structure/Cube (15)
+232;Walljump;181.896;182.0;-35;60.632;-2.44;6.38;727.75;0;Cube (16);-1.50;4.50;732.50;4.75;Nivel/Timeline/Segmento 045 · beats 180-183/Escenario/Mine Structure/Cube (16)
+233;Clic Perfect;181.960;182.0;-13;60.653;-2.31;6.68;728.01;0;Cube (16);-1.50;4.50;732.50;4.49;Nivel/Timeline/Segmento 045 · beats 180-183/Escenario/Mine Structure/Cube (16)
+234;Wallrun;182.984;183.0;-5;60.995;2.44;6.81;732.09;0;Cube (16);-1.50;4.50;732.50;0.41;Nivel/Timeline/Segmento 045 · beats 180-183/Escenario/Mine Structure/Cube (16)
+235;Clic Perfect;183.048;183.0;16;61.016;2.44;6.81;732.36;0;Cube (16);-1.50;4.50;732.50;0.14;Nivel/Timeline/Segmento 045 · beats 180-183/Escenario/Mine Structure/Cube (16)
+236;Walljump;183.944;184.0;-19;61.315;2.44;6.71;735.72;0;Cube (15);1.50;4.50;740.50;4.78;Nivel/Timeline/Segmento 046 · beats 184-187/Escenario/Mine Structure/Cube (15)
+237;Clic Perfect;183.944;184.0;-19;61.315;2.31;7.02;736.00;0;Cube (15);1.50;4.50;740.50;4.50;Nivel/Timeline/Segmento 046 · beats 184-187/Escenario/Mine Structure/Cube (15)
+238;Wallrun;185.032;185.0;11;61.677;-2.43;7.19;740.03;0;Cube (15);1.50;4.50;740.50;0.47;Nivel/Timeline/Segmento 046 · beats 184-187/Escenario/Mine Structure/Cube (15)
+239;Clic Perfect;185.032;185.0;11;61.677;-2.43;7.19;740.30;0;Cube (15);1.50;4.50;740.50;0.20;Nivel/Timeline/Segmento 046 · beats 184-187/Escenario/Mine Structure/Cube (15)
+240;Walljump;185.928;186.0;-24;61.976;-2.43;7.09;743.67;0;Cube (16);-1.50;4.50;748.50;4.83;Nivel/Timeline/Segmento 046 · beats 184-187/Escenario/Mine Structure/Cube (16)
+241;Clic Perfect;185.992;186.0;-3;61.997;-2.30;7.38;743.92;0;Cube (16);-1.50;4.50;748.50;4.58;Nivel/Timeline/Segmento 046 · beats 184-187/Escenario/Mine Structure/Cube (16)
+242;Wallrun;186.952;187.0;-16;62.317;2.39;7.58;747.92;0;Cube (16);-1.50;4.50;748.50;0.58;Nivel/Timeline/Segmento 046 · beats 184-187/Escenario/Mine Structure/Cube (16)
+243;Clic Perfect;187.080;187.0;27;62.360;2.39;7.58;748.41;0;Cube (16);-1.50;4.50;748.50;0.09;Nivel/Timeline/Segmento 046 · beats 184-187/Escenario/Mine Structure/Cube (16)
+244;Walljump;187.912;188.0;-29;62.637;2.39;7.48;751.55;0;Right Diagonal Beam;5.64;7.45;752.00;0.45;Nivel/Timeline/Segmento 046 · beats 184-187/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+245;Clic Perfect;187.976;188.0;-8;62.659;1.90;8.02;752.06;0;Right Diagonal Beam;5.64;7.45;752.00;-0.06;Nivel/Timeline/Segmento 046 · beats 184-187/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+246;Clic Perfect;189.192;189.0;64;63.064;-3.49;6.71;756.90;0;Left Side Beam;-6.81;9.58;760.28;3.38;Nivel/Timeline/Segmento 047 · beats 188-191/Escenario/Mine Structure/Arch/Support/Left Side Beam
+247;Clic Perfect;190.152;190.0;51;63.384;-4.31;1.08;760.78;1;Left Side Beam;-6.81;9.58;760.28;-0.50;Nivel/Timeline/Segmento 047 · beats 188-191/Escenario/Mine Structure/Arch/Support/Left Side Beam
+248;Clic Perfect;191.048;191.0;16;63.683;-3.02;1.08;764.37;1;Left Diagonal Beam;-5.64;7.45;768.00;3.63;Nivel/Timeline/Segmento 047 · beats 188-191/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+249;Clic Perfect;192.072;192.0;24;64.024;-4.31;1.08;768.50;1;Left Diagonal Beam;-5.64;7.45;768.00;-0.50;Nivel/Timeline/Segmento 047 · beats 188-191/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+250;Clic Perfect;193.032;193.0;11;64.344;-4.31;1.08;772.19;1;Left Side Beam;-6.81;9.58;776.28;4.09;Nivel/Timeline/Segmento 048 · beats 192-195/Escenario/Mine Structure/Arch/Support/Left Side Beam
+251;Clic Perfect;193.928;194.0;-24;64.643;-4.31;1.08;775.75;1;Left Side Beam;-6.81;9.58;776.28;0.53;Nivel/Timeline/Segmento 048 · beats 192-195/Escenario/Mine Structure/Arch/Support/Left Side Beam
+252;Clic Perfect;194.888;195.0;-37;64.963;-0.55;1.08;779.79;1;Cube (4);-4.00;1.50;785.50;5.71;Nivel/Timeline/Segmento 049 · beats 196-199/Obstáculos/Cube (4)
+253;Clic Perfect;195.912;196.0;-29;65.304;0.23;1.08;783.87;1;Cube (3);0.00;1.50;793.50;9.63;Nivel/Timeline/Segmento 049 · beats 196-199/Obstáculos/Cube (3)
+254;Clic Perfect;197.064;197.0;21;65.688;-2.40;1.08;788.37;1;Cube (3);0.00;1.50;793.50;5.13;Nivel/Timeline/Segmento 049 · beats 196-199/Obstáculos/Cube (3)
+255;Clic Perfect;198.088;198.0;29;66.029;-2.40;1.08;792.39;1;Cube (3);0.00;1.50;793.50;1.11;Nivel/Timeline/Segmento 049 · beats 196-199/Obstáculos/Cube (3)
+256;Clic Perfect;199.048;199.0;16;66.349;-2.40;1.08;796.41;1;Left Diagonal Beam;-5.64;7.45;800.00;3.59;Nivel/Timeline/Segmento 049 · beats 196-199/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+257;Clic Perfect;200.072;200.0;24;66.691;1.12;1.08;800.47;1;Right Diagonal Beam;5.64;7.45;800.00;-0.47;Nivel/Timeline/Segmento 049 · beats 196-199/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+258;Clic Good;201.224;201.0;75;67.075;2.16;1.08;804.98;1;Right Side Beam;6.81;9.58;808.28;3.30;Nivel/Timeline/Segmento 050 · beats 200-203/Escenario/Mine Structure/Arch/Support/Right Side Beam
+259;Clic Good;202.248;202.0;83;67.416;1.12;1.08;809.10;1;GameObject;-5.00;7.50;816.42;7.32;Nivel/Timeline/Segmento 050 · beats 200-203/Escenario/Mine Structure/Cube (13)/GameObject
+260;Clic Good;203.272;203.5;-76;67.757;1.12;1.08;813.18;1;GameObject;-5.00;7.50;816.42;3.24;Nivel/Timeline/Segmento 050 · beats 200-203/Escenario/Mine Structure/Cube (13)/GameObject
+261;Clic Perfect;204.104;204.0;35;68.035;1.12;1.08;816.71;1;GameObject;-5.00;7.50;816.42;-0.29;Nivel/Timeline/Segmento 050 · beats 200-203/Escenario/Mine Structure/Cube (13)/GameObject
+262;Clic Perfect;205.128;205.0;43;68.376;-1.80;1.08;820.66;1;GameObject;-5.14;7.50;828.42;7.76;Nivel/Timeline/Segmento 051 · beats 204-207/Obstáculos/Cube (15)/GameObject
+263;Clic Perfect;206.088;206.0;29;68.696;-1.06;1.08;824.51;1;GameObject;5.00;7.50;824.42;-0.09;Nivel/Timeline/Segmento 051 · beats 204-207/Obstáculos/Cube (14)/GameObject
+264;Clic Perfect;207.048;207.0;16;69.016;2.62;1.08;828.41;1;Right Diagonal Beam;5.64;7.45;832.00;3.59;Nivel/Timeline/Segmento 051 · beats 204-207/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+265;Clic Perfect;208.136;208.0;45;69.379;-0.63;1.08;832.76;1;Left Diagonal Beam;-5.64;7.45;832.00;-0.76;Nivel/Timeline/Segmento 051 · beats 204-207/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+266;Clic Good;209.224;209.0;75;69.741;-0.63;1.08;837.08;1;Left Side Beam;-6.81;9.58;840.28;3.20;Nivel/Timeline/Segmento 052 · beats 208-211/Escenario/Mine Structure/Arch/Support/Left Side Beam
+267;Clic Perfect;210.120;210.0;40;70.040;0.49;1.08;840.57;1;Cube;3.43;1.50;849.50;8.93;Nivel/Timeline/Segmento 053 · beats 212-215/Obstáculos/Cube
+268;Clic Perfect;211.016;211.0;5;70.339;0.49;1.08;844.29;1;Cube;3.43;1.50;849.50;5.21;Nivel/Timeline/Segmento 053 · beats 212-215/Obstáculos/Cube
+269;Clic Perfect;212.040;212.0;13;70.680;0.49;1.08;848.41;1;Cube;3.43;1.50;849.50;1.09;Nivel/Timeline/Segmento 053 · beats 212-215/Obstáculos/Cube
+270;Clic Perfect;212.936;213.0;-21;70.979;-0.29;1.08;852.02;1;Cube (1);-4.00;1.50;857.50;5.48;Nivel/Timeline/Segmento 053 · beats 212-215/Obstáculos/Cube (1)
+271;Clic Perfect;214.024;214.0;8;71.341;-0.29;1.08;856.25;1;Cube (1);-4.00;1.50;857.50;1.25;Nivel/Timeline/Segmento 053 · beats 212-215/Obstáculos/Cube (1)
+272;Clic Perfect;215.176;215.0;59;71.725;-0.29;1.08;860.69;1;Cube (2);2.50;1.50;861.50;0.81;Nivel/Timeline/Segmento 053 · beats 212-215/Obstáculos/Cube (2)
+273;Clic Perfect;216.136;216.0;45;72.045;-0.29;1.08;864.61;1;GameObject;0.00;11.64;872.42;7.81;Nivel/Timeline/Segmento 054 · beats 216-219/Obstáculos/Cube (15)/GameObject
+274;Clic Perfect;216.968;217.0;-11;72.323;-0.29;1.08;868.04;1;GameObject;0.00;9.30;872.42;4.38;Nivel/Timeline/Segmento 054 · beats 216-219/Obstáculos/Cube (15)/GameObject
+275;Deslizarse;217.032;217.0;11;72.344;-0.29;1.08;868.04;1;GameObject;0.00;9.30;872.42;4.38;Nivel/Timeline/Segmento 054 · beats 216-219/Obstáculos/Cube (15)/GameObject
+276;Clic Perfect;217.992;218.0;-3;72.664;-0.29;0.58;872.31;1;GameObject;0.00;9.00;872.42;0.11;Nivel/Timeline/Segmento 054 · beats 216-219/Obstáculos/Cube (15)/GameObject
+277;Clic Perfect;219.144;219.0;48;73.048;-0.29;1.05;876.75;1;Left Diagonal Beam;-5.64;7.45;880.00;3.25;Nivel/Timeline/Segmento 054 · beats 216-219/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+278;Clic Perfect;220.168;220.0;56;73.389;-0.29;1.08;880.88;1;Left Side Beam;-6.81;9.58;888.28;7.40;Nivel/Timeline/Segmento 055 · beats 220-223/Escenario/Mine Structure/Arch/Support/Left Side Beam
+279;Clic Perfect;221.128;221.0;43;73.709;-0.29;1.08;884.74;1;Left Side Beam;-6.81;9.58;888.28;3.54;Nivel/Timeline/Segmento 055 · beats 220-223/Escenario/Mine Structure/Arch/Support/Left Side Beam
+280;Clic Perfect;222.088;222.0;29;74.029;-0.29;1.08;888.54;1;Left Side Beam;-6.81;9.58;888.28;-0.26;Nivel/Timeline/Segmento 055 · beats 220-223/Escenario/Mine Structure/Arch/Support/Left Side Beam
+281;Clic Perfect;223.112;223.0;37;74.371;-0.29;1.08;892.68;1;Left Diagonal Beam;-5.64;7.45;896.00;3.32;Nivel/Timeline/Segmento 055 · beats 220-223/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+282;Clic Perfect;224.072;224.0;24;74.691;-0.29;1.08;896.37;1;Left Diagonal Beam;-5.64;7.45;896.00;-0.37;Nivel/Timeline/Segmento 055 · beats 220-223/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+283;Salto;224.840;225.0;-53;74.947;-0.29;1.08;899.46;1;Cube;0.00;1.00;916.50;17.04;Nivel/Timeline/Segmento 056 · beats 224-227/Escenario/Mine Structure/Cube
+284;Clic Perfect;224.968;225.0;-11;74.989;-0.29;1.92;899.88;0;Beam Top;-0.13;10.36;912.00;12.12;Nivel/Timeline/Segmento 056 · beats 224-227/Escenario/Mine Structure/Arch/Support/Beam Top
+285;Clic Perfect;226.056;226.0;19;75.352;-0.29;5.06;904.55;0;Beam Top;-0.13;10.36;912.00;7.45;Nivel/Timeline/Segmento 056 · beats 224-227/Escenario/Mine Structure/Arch/Support/Beam Top
+286;Clic Perfect;227.144;227.0;48;75.715;-0.29;1.85;908.80;0;Beam Top;-0.13;10.36;912.00;3.20;Nivel/Timeline/Segmento 056 · beats 224-227/Escenario/Mine Structure/Arch/Support/Beam Top
+287;Clic Perfect;227.976;228.0;-8;75.992;-0.29;1.08;912.01;1;Cube;0.00;1.00;916.50;4.49;Nivel/Timeline/Segmento 056 · beats 224-227/Escenario/Mine Structure/Cube
+288;Salto;227.976;228.0;-8;75.992;-0.29;1.08;912.01;1;Cube;0.00;1.00;916.50;4.49;Nivel/Timeline/Segmento 056 · beats 224-227/Escenario/Mine Structure/Cube
+289;Clic Perfect;229.128;229.0;43;76.376;-0.29;5.26;916.63;0;Cube;0.00;1.00;916.50;-0.13;Nivel/Timeline/Segmento 056 · beats 224-227/Escenario/Mine Structure/Cube
+290;Slam;229.256;229.5;-81;76.419;-0.29;5.19;916.85;0;Cube;0.00;1.00;916.50;-0.35;Nivel/Timeline/Segmento 056 · beats 224-227/Escenario/Mine Structure/Cube
+291;Clic Perfect;230.024;230.0;8;76.675;-0.29;1.08;920.24;1;Cube;0.00;1.00;924.50;4.26;Nivel/Timeline/Segmento 057 · beats 228-231/Escenario/Mine Structure/Cube
+292;Salto;230.152;230.0;51;76.717;-0.29;1.08;920.46;1;Cube;0.00;1.00;924.50;4.04;Nivel/Timeline/Segmento 057 · beats 228-231/Escenario/Mine Structure/Cube
+293;Clic Perfect;230.920;231.0;-27;76.973;-0.29;5.25;923.85;0;Cube;0.00;1.00;924.50;0.65;Nivel/Timeline/Segmento 057 · beats 228-231/Escenario/Mine Structure/Cube
+294;Slam;231.048;231.0;16;77.016;-0.29;5.32;924.09;0;Cube;0.00;1.00;924.50;0.41;Nivel/Timeline/Segmento 057 · beats 228-231/Escenario/Mine Structure/Cube
+295;Clic Perfect;232.136;232.0;45;77.379;-0.29;1.08;928.61;1;Left Diagonal Beam;-5.64;7.45;928.00;-0.61;Nivel/Timeline/Segmento 057 · beats 228-231/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+296;Clic Perfect;233.096;233.0;32;77.699;2.18;1.08;932.55;1;Cube;0.35;8.01;936.00;3.45;Nivel/Timeline/Segmento 058 · beats 232-235/Escenario/Mine Structure/Pivot/Cube
+297;Clic Perfect;234.056;234.0;19;78.019;2.80;1.08;936.31;1;Cube;6.06;11.50;936.00;-0.31;Nivel/Timeline/Segmento 058 · beats 232-235/Escenario/Mine Structure/Pivot/Cube
+298;Clic Perfect;234.952;235.0;-16;78.317;3.59;1.08;939.91;1;Right Diagonal Beam;5.64;7.45;944.00;4.09;Nivel/Timeline/Segmento 058 · beats 232-235/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+299;Clic Perfect;235.976;236.0;-8;78.659;-0.60;1.08;944.11;1;Cube (15);-5.00;7.06;956.00;11.89;Nivel/Timeline/Segmento 059 · beats 236-239/Escenario/Mine Structure/Cube (15)
+300;Clic Perfect;236.936;237.0;-21;78.979;-2.54;1.08;947.99;1;Cube (15);-5.00;14.16;956.00;8.01;Nivel/Timeline/Segmento 059 · beats 236-239/Escenario/Mine Structure/Cube (15)
+301;Clic Perfect;238.024;238.0;8;79.341;-2.54;1.08;952.22;1;Cube (15);-5.00;15.90;956.00;3.78;Nivel/Timeline/Segmento 059 · beats 236-239/Escenario/Mine Structure/Cube (15)
+302;Clic Perfect;238.984;239.0;-5;79.661;1.70;1.08;956.08;1;Cube (16);5.00;14.25;956.00;-0.08;Nivel/Timeline/Segmento 059 · beats 236-239/Escenario/Mine Structure/Cube (16)
+303;Clic Perfect;239.944;240.0;-19;79.981;1.68;1.08;959.87;1;Cube (16);5.00;15.87;956.00;-3.87;Nivel/Timeline/Segmento 059 · beats 236-239/Escenario/Mine Structure/Cube (16)
+304;Clic Perfect;241.032;241.0;11;80.344;-0.14;1.08;964.43;1;Cube;0.00;1.00;972.50;8.07;Nivel/Timeline/Segmento 060 · beats 240-243/Escenario/Mine Structure/Cube
+305;Clic Perfect;241.928;242.0;-24;80.643;-0.14;1.08;967.94;1;Cube;0.00;1.00;972.50;4.56;Nivel/Timeline/Segmento 060 · beats 240-243/Escenario/Mine Structure/Cube
+306;Salto;241.992;242.0;-3;80.664;-0.14;1.08;968.16;1;Cube;0.00;1.00;972.50;4.34;Nivel/Timeline/Segmento 060 · beats 240-243/Escenario/Mine Structure/Cube
+307;Clic Perfect;243.080;243.0;27;81.027;-0.14;5.34;972.36;0;Cube;0.00;1.00;972.50;0.14;Nivel/Timeline/Segmento 060 · beats 240-243/Escenario/Mine Structure/Cube
+308;Clic Perfect;244.168;244.0;56;81.389;-0.14;1.08;976.71;1;GameObject;0.00;-5.65;985.45;8.74;Nivel/Timeline/Segmento 061 · beats 244-247/Escenario/Mine Structure/Cube (16)/GameObject
+309;Clic Perfect;245.000;245.0;0;81.667;-0.14;1.08;980.07;1;GameObject;0.00;-5.55;985.45;5.38;Nivel/Timeline/Segmento 061 · beats 244-247/Escenario/Mine Structure/Cube (16)/GameObject
+310;Salto;245.128;245.0;43;81.709;-0.14;1.08;980.52;1;GameObject;0.00;-5.55;985.45;4.93;Nivel/Timeline/Segmento 061 · beats 244-247/Escenario/Mine Structure/Cube (16)/GameObject
+311;Clic Perfect;245.960;246.0;-13;81.987;-0.14;5.22;983.94;0;GameObject;0.00;-5.55;985.45;1.51;Nivel/Timeline/Segmento 061 · beats 244-247/Escenario/Mine Structure/Cube (16)/GameObject
+312;Doble salto;246.152;246.0;51;82.051;-0.14;5.34;984.61;0;GameObject;0.00;-5.55;985.45;0.84;Nivel/Timeline/Segmento 061 · beats 244-247/Escenario/Mine Structure/Cube (16)/GameObject
+313;Clic Perfect;246.984;247.0;-5;82.328;-0.14;8.15;987.87;0;GameObject;0.00;-3.55;988.45;0.58;Nivel/Timeline/Segmento 061 · beats 244-247/Escenario/Mine Structure/Cube (17)/GameObject
+314;Clic Perfect;247.880;248.0;-40;82.627;-0.14;7.08;991.63;1;GameObject;0.00;-1.55;991.45;-0.18;Nivel/Timeline/Segmento 062 · beats 248-251/Escenario/Mine Structure/Cube (17)/GameObject
+315;Clic Perfect;249.096;249.0;32;83.032;-0.14;1.48;996.40;0;Cube (6);0.00;0.25;1014.75;18.35;Nivel/Timeline/Segmento 063 · beats 252-255/Escenario/Mine Structure/Pivot/Cube (6)
+316;Clic Perfect;250.056;250.0;19;83.352;-0.14;1.08;1000.17;1;Cube (6);0.00;1.52;1014.18;14.01;Nivel/Timeline/Segmento 063 · beats 252-255/Escenario/Mine Structure/Pivot/Cube (6)
+317;Clic Perfect;251.016;251.0;5;83.672;-0.14;1.08;1004.17;1;Cube (6);0.00;2.26;1012.32;8.14;Nivel/Timeline/Segmento 063 · beats 252-255/Escenario/Mine Structure/Pivot/Cube (6)
+318;Clic Perfect;251.912;252.0;-29;83.971;-0.14;1.08;1007.83;1;Cube (6);0.00;2.25;1012.25;4.42;Nivel/Timeline/Segmento 063 · beats 252-255/Escenario/Mine Structure/Pivot/Cube (6)
+319;Bloquear;251.976;252.0;-8;83.992;-0.14;1.08;1008.07;1;Cube (6);0.00;2.25;1012.25;4.18;Nivel/Timeline/Segmento 063 · beats 252-255/Escenario/Mine Structure/Pivot/Cube (6)
+320;Clic Perfect;252.936;253.0;-21;84.312;-0.14;1.08;1012.01;1;Cube (8);-5.00;2.25;1012.25;0.24;Nivel/Timeline/Segmento 063 · beats 252-255/Escenario/Mine Structure/Pivot/Cube (8)
+321;Clic Perfect;254.088;254.0;29;84.696;-0.14;1.08;1016.34;1;Left Side Beam;-6.81;9.58;1016.28;-0.06;Nivel/Timeline/Segmento 063 · beats 252-255/Escenario/Mine Structure/Arch/Support/Left Side Beam
+322;Clic Perfect;255.112;255.0;37;85.037;-0.14;1.08;1020.41;1;Cube;-0.57;7.06;1033.50;13.09;Nivel/Timeline/Segmento 064 · beats 256-259/Escenario/Mine Structure/Cube
+323;Clic Perfect;256.072;256.0;24;85.357;0.75;1.08;1024.14;1;Cube;-0.57;1.50;1033.50;9.36;Nivel/Timeline/Segmento 064 · beats 256-259/Escenario/Mine Structure/Cube
+324;Clic Perfect;257.032;257.0;11;85.677;3.52;1.08;1028.36;1;Right Side Beam;6.81;9.58;1032.28;3.92;Nivel/Timeline/Segmento 064 · beats 256-259/Escenario/Mine Structure/Arch/Support/Right Side Beam
+325;Clic Perfect;258.120;258.0;40;86.040;3.52;1.08;1032.64;1;Cube;3.43;1.50;1041.50;8.86;Nivel/Timeline/Segmento 065 · beats 260-263/Escenario/Mine Structure/Cube
+326;Clic Perfect;259.016;259.0;5;86.339;0.62;1.08;1036.21;1;Cube;3.43;1.50;1041.50;5.29;Nivel/Timeline/Segmento 065 · beats 260-263/Escenario/Mine Structure/Cube
+327;Clic Perfect;260.040;260.0;13;86.680;-0.23;1.08;1040.32;1;Cube;3.43;1.50;1041.50;1.18;Nivel/Timeline/Segmento 065 · beats 260-263/Escenario/Mine Structure/Cube
+328;Clic Perfect;260.936;261.0;-21;86.979;1.72;1.08;1043.98;1;Cube (1);-0.57;1.50;1049.50;5.52;Nivel/Timeline/Segmento 065 · beats 260-263/Escenario/Mine Structure/Cube (1)
+329;Clic Perfect;262.152;262.0;51;87.384;3.49;1.08;1048.68;1;Cube (1);3.43;1.50;1057.50;8.82;Nivel/Timeline/Segmento 066 · beats 264-267/Escenario/Mine Structure/Cube (1)
+330;Clic Perfect;262.920;263.0;-27;87.640;1.42;1.08;1051.79;1;Cube;-8.00;1.00;1056.50;4.71;Nivel/Timeline/Segmento 066 · beats 264-267/Escenario/Mine Structure/Cube
+331;Salto;262.984;263.0;-5;87.661;1.19;1.08;1052.02;1;Cube;-8.00;1.00;1056.50;4.48;Nivel/Timeline/Segmento 066 · beats 264-267/Escenario/Mine Structure/Cube
+332;Clic Perfect;264.008;264.0;3;88.003;-1.16;5.32;1056.21;0;Cube;-8.00;1.00;1056.50;0.29;Nivel/Timeline/Segmento 066 · beats 264-267/Escenario/Mine Structure/Cube
+333;Clic Perfect;265.096;265.0;32;88.365;2.58;1.08;1060.39;1;Cube (2);-0.57;1.50;1065.50;5.11;Nivel/Timeline/Segmento 066 · beats 264-267/Escenario/Mine Structure/Cube (2)
+334;Clic Perfect;266.184;266.0;61;88.728;3.88;1.08;1064.69;1;Right Side Beam;6.81;9.58;1064.28;-0.41;Nivel/Timeline/Segmento 066 · beats 264-267/Escenario/Mine Structure/Arch/Support/Right Side Beam
+335;Clic Perfect;266.952;267.0;-16;88.984;1.55;1.08;1068.04;1;Right Diagonal Beam;5.64;7.45;1072.00;3.96;Nivel/Timeline/Segmento 066 · beats 264-267/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+336;Clic Perfect;268.040;268.0;13;89.347;0.30;1.08;1072.25;1;Cube (2);-3.57;1.50;1073.50;1.26;Nivel/Timeline/Segmento 067 · beats 268-271/Escenario/Mine Structure/Cube (2)
+337;Clic Perfect;269.064;269.0;21;89.688;-0.56;1.08;1076.39;1;Cube (4);0.43;1.50;1085.50;9.11;Nivel/Timeline/Segmento 067 · beats 268-271/Escenario/Mine Structure/Cube (4)
+338;Clic Perfect;270.088;270.0;29;90.029;-3.21;1.08;1080.52;1;Left Side Beam;-6.81;9.58;1080.28;-0.24;Nivel/Timeline/Segmento 067 · beats 268-271/Escenario/Mine Structure/Arch/Support/Left Side Beam
+339;Clic Perfect;271.112;271.0;37;90.371;-3.21;1.08;1084.64;1;Left Diagonal Beam;-5.64;7.45;1088.00;3.36;Nivel/Timeline/Segmento 067 · beats 268-271/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+340;Clic Perfect;272.072;272.0;24;90.691;-1.65;1.08;1088.43;1;Left Diagonal Beam;-5.64;7.45;1088.00;-0.43;Nivel/Timeline/Segmento 067 · beats 268-271/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+341;Clic Perfect;273.160;273.0;53;91.053;0.65;1.08;1092.65;1;Cube;0.00;1.00;1100.50;7.85;Nivel/Timeline/Segmento 068 · beats 272-275/Escenario/Mine Structure/Cube
+342;Salto;273.800;274.0;-67;91.267;0.65;1.08;1095.38;1;Cube;0.00;1.00;1100.50;5.12;Nivel/Timeline/Segmento 068 · beats 272-275/Escenario/Mine Structure/Cube
+343;Clic Perfect;273.864;274.0;-45;91.288;0.65;1.52;1095.60;0;Cube;0.00;1.00;1100.50;4.90;Nivel/Timeline/Segmento 068 · beats 272-275/Escenario/Mine Structure/Cube
+344;Clic Perfect;274.952;275.0;-16;91.651;-0.47;5.25;1099.96;0;Cube;0.00;1.00;1100.50;0.54;Nivel/Timeline/Segmento 068 · beats 272-275/Escenario/Mine Structure/Cube
+345;Clic Perfect;276.104;276.0;35;92.035;-0.47;1.08;1104.39;1;Frame Right (1);0.00;4.50;1112.47;8.08;Nivel/Timeline/Segmento 069 · beats 276-279/Escenario/Mine Structure/Door (1)/Frame Right (1)
+346;Deslizarse;276.936;277.0;-21;92.312;-0.47;1.08;1107.96;1;Frame Right (1);0.00;4.50;1112.47;4.51;Nivel/Timeline/Segmento 069 · beats 276-279/Escenario/Mine Structure/Door (1)/Frame Right (1)
+347;Clic Perfect;277.000;277.0;0;92.333;-0.47;1.08;1108.15;1;Frame Right (1);0.00;4.50;1112.47;4.32;Nivel/Timeline/Segmento 069 · beats 276-279/Escenario/Mine Structure/Door (1)/Frame Right (1)
+348;Clic Good;278.216;278.0;72;92.739;-0.47;0.58;1112.89;1;Cube (2);0.00;10.00;1112.50;-0.39;Nivel/Timeline/Segmento 069 · beats 276-279/Escenario/Mine Structure/Cube (2)
+349;Clic Perfect;279.048;279.0;16;93.016;-0.47;1.03;1116.22;1;Cube (16);0.00;4.00;1120.50;4.28;Nivel/Timeline/Segmento 070 · beats 280-283/Escenario/Mine Structure/Cube (16)
+350;Deslizarse;279.048;279.0;16;93.016;-0.47;1.03;1116.22;1;Cube (16);0.00;4.00;1120.50;4.28;Nivel/Timeline/Segmento 070 · beats 280-283/Escenario/Mine Structure/Cube (16)
+351;Clic Perfect;280.136;280.0;45;93.379;-0.47;0.58;1120.60;1;Cube (16);0.00;4.00;1120.50;-0.10;Nivel/Timeline/Segmento 070 · beats 280-283/Escenario/Mine Structure/Cube (16)
+352;Clic Perfect;281.032;281.0;11;93.677;-0.47;0.99;1124.17;1;Cube (18);0.00;4.00;1132.50;8.33;Nivel/Timeline/Segmento 070 · beats 280-283/Escenario/Cube (18)
+353;Clic Perfect;281.992;282.0;-3;93.997;-0.47;1.08;1128.00;1;Cube (18);0.00;4.00;1132.50;4.50;Nivel/Timeline/Segmento 070 · beats 280-283/Escenario/Cube (18)
+354;Deslizarse;282.056;282.0;19;94.019;-0.47;1.08;1128.00;1;Cube (18);0.00;4.00;1132.50;4.50;Nivel/Timeline/Segmento 070 · beats 280-283/Escenario/Cube (18)
+355;Clic Perfect;283.144;283.0;48;94.381;-0.47;0.58;1132.56;1;Cube (18);0.00;4.00;1132.50;-0.06;Nivel/Timeline/Segmento 070 · beats 280-283/Escenario/Cube (18)
+356;Clic Perfect;284.104;284.0;35;94.701;-0.47;1.04;1136.46;1;Left Diagonal Beam;-5.64;7.45;1136.00;-0.46;Nivel/Timeline/Segmento 070 · beats 280-283/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+357;Clic Good;285.256;285.5;-81;95.085;1.02;1.08;1140.98;1;Right Side Beam;6.81;9.58;1144.28;3.30;Nivel/Timeline/Segmento 071 · beats 284-287/Escenario/Mine Structure/Arch/Support/Right Side Beam
+358;Clic Perfect;286.024;286.0;8;95.341;1.02;1.08;1144.41;1;Right Side Beam;6.81;9.58;1144.28;-0.13;Nivel/Timeline/Segmento 071 · beats 284-287/Escenario/Mine Structure/Arch/Support/Right Side Beam
+359;Clic Perfect;286.920;287.0;-27;95.640;1.02;1.08;1147.77;1;Beam Top;-0.13;0.99;1152.00;4.23;Nivel/Timeline/Segmento 071 · beats 284-287/Escenario/Mine Structure/Arch/Support/Beam Top
+360;Salto;286.984;287.0;-5;95.661;1.02;1.08;1148.03;1;Beam Top;-0.13;0.54;1152.00;3.97;Nivel/Timeline/Segmento 071 · beats 284-287/Escenario/Mine Structure/Arch/Support/Beam Top
+361;Clic Perfect;287.816;288.0;-61;95.939;1.92;5.26;1151.57;0;Beam Top;-0.13;0.47;1152.00;0.43;Nivel/Timeline/Segmento 071 · beats 284-287/Escenario/Mine Structure/Arch/Support/Beam Top
+362;Doble salto;288.008;288.0;3;96.003;2.39;5.35;1152.04;0;Beam Top;-0.13;0.47;1152.00;-0.04;Nivel/Timeline/Segmento 071 · beats 284-287/Escenario/Mine Structure/Arch/Support/Beam Top
+363;Slam;289.032;289.0;11;96.344;5.47;8.06;1156.04;0;Right Side Beam;6.81;9.58;1160.28;4.24;Nivel/Timeline/Segmento 072 · beats 288-291/Escenario/Mine Structure/Arch/Support/Right Side Beam
+364;Clic Perfect;289.032;289.0;11;96.344;5.47;7.50;1156.23;0;Right Side Beam;6.81;9.58;1160.28;4.05;Nivel/Timeline/Segmento 072 · beats 288-291/Escenario/Mine Structure/Arch/Support/Right Side Beam
+365;Salto;289.800;290.0;-67;96.600;5.47;4.08;1159.12;1;Right Side Beam;6.81;9.58;1160.28;1.16;Nivel/Timeline/Segmento 072 · beats 288-291/Escenario/Mine Structure/Arch/Support/Right Side Beam
+366;Clic Perfect;289.864;290.0;-45;96.621;5.25;4.97;1159.59;0;Cone (7);5.50;0.50;1161.50;1.91;Nivel/Timeline/Segmento 072 · beats 288-291/Escenario/Mine Structure/Cone (7)
+367;Wallrun;290.312;290.5;-63;96.771;3.57;7.35;1161.30;0;Cone (11);3.50;0.50;1161.50;0.20;Nivel/Timeline/Segmento 072 · beats 288-291/Escenario/Mine Structure/Cone (11)
+368;Clic Perfect;290.952;291.0;-16;96.984;3.57;7.30;1163.81;0;Cone (17);3.50;0.50;1163.50;-0.31;Nivel/Timeline/Segmento 072 · beats 288-291/Escenario/Mine Structure/Cone (17)
+369;Clic Perfect;291.976;292.0;-8;97.325;3.57;7.03;1168.03;0;Beam Top;-0.13;10.36;1168.00;-0.03;Nivel/Timeline/Segmento 072 · beats 288-291/Escenario/Mine Structure/Arch/Support/Beam Top
+370;Clic Perfect;293.000;293.0;0;97.667;3.57;6.51;1172.16;0;Cone (71);3.50;0.50;1172.50;0.34;Nivel/Timeline/Segmento 072 · beats 288-291/Escenario/Mine Structure/Cone (71)
+371;Clic Perfect;294.024;294.0;8;98.008;3.57;5.79;1176.20;0;Cone (95);3.50;0.50;1176.50;0.30;Nivel/Timeline/Segmento 073 · beats 292-295/Obstáculos/Cone (95)
+372;Wallrun;294.856;295.0;-48;98.285;3.57;4.98;1179.50;0;Cone (118);3.50;0.50;1179.50;0.00;Nivel/Timeline/Segmento 073 · beats 292-295/Obstáculos/Cone (118)
+373;Clic Perfect;295.048;295.0;16;98.349;3.57;4.98;1180.16;0;Cone (118);3.50;0.50;1179.50;-0.66;Nivel/Timeline/Segmento 073 · beats 292-295/Obstáculos/Cone (118)
+374;Clic Perfect;296.008;296.0;3;98.669;0.09;1.08;1184.29;1;Cube;0.00;1.00;1196.50;12.21;Nivel/Timeline/Segmento 074 · beats 296-299/Escenario/Mine Structure/Cube
+375;Clic Perfect;297.032;297.0;11;99.011;0.09;1.08;1188.33;1;Cube;0.00;1.00;1196.50;8.17;Nivel/Timeline/Segmento 074 · beats 296-299/Escenario/Mine Structure/Cube
+376;Clic Perfect;297.992;298.0;-3;99.331;0.09;1.08;1192.10;1;Cube;0.00;1.00;1196.50;4.40;Nivel/Timeline/Segmento 074 · beats 296-299/Escenario/Mine Structure/Cube
+377;Salto;298.056;298.0;19;99.352;0.09;1.08;1192.31;1;Cube;0.00;1.00;1196.50;4.19;Nivel/Timeline/Segmento 074 · beats 296-299/Escenario/Mine Structure/Cube
+378;Clic Perfect;299.144;299.0;48;99.715;0.09;5.36;1196.48;0;Cube;0.00;1.00;1196.50;0.02;Nivel/Timeline/Segmento 074 · beats 296-299/Escenario/Mine Structure/Cube
+379;Clic Perfect;300.168;300.0;56;100.056;0.09;1.12;1200.56;0;Right Diagonal Beam;5.64;7.45;1200.00;-0.56;Nivel/Timeline/Segmento 074 · beats 296-299/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+380;Clic Perfect;301.000;301.0;0;100.333;0.09;1.08;1204.31;1;Cube (1);3.00;8.80;1216.00;11.69;Nivel/Timeline/Segmento 075 · beats 300-303/Escenario/Mine Structure/Pivot/Cube (1)
+381;Clic Perfect;302.024;302.0;8;100.675;-2.44;1.08;1208.30;1;Cube (1);-4.93;10.58;1216.00;7.70;Nivel/Timeline/Segmento 075 · beats 300-303/Escenario/Mine Structure/Pivot/Cube (1)
+382;Clic Perfect;303.048;303.0;16;101.016;-2.87;1.08;1212.38;1;Cube (1);-3.09;8.85;1216.00;3.62;Nivel/Timeline/Segmento 075 · beats 300-303/Escenario/Mine Structure/Pivot/Cube (1)
+383;Clic Perfect;304.072;304.0;24;101.357;-2.87;1.08;1216.25;1;Left Diagonal Beam;-5.64;7.45;1216.00;-0.25;Nivel/Timeline/Segmento 075 · beats 300-303/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+384;Clic Perfect;305.096;305.0;32;101.699;0.79;1.08;1220.40;1;Cube (1);-2.82;8.70;1232.00;11.60;Nivel/Timeline/Segmento 076 · beats 304-307/Escenario/Mine Structure/Pivot/Cube (1)
+385;Clic Perfect;306.120;306.0;40;102.040;1.27;1.08;1224.70;1;Cube (1);5.19;10.99;1232.00;7.30;Nivel/Timeline/Segmento 076 · beats 304-307/Escenario/Mine Structure/Pivot/Cube (1)
+386;Clic Perfect;307.080;307.0;27;102.360;2.27;1.08;1228.44;1;Cube (1);2.91;8.75;1232.00;3.56;Nivel/Timeline/Segmento 076 · beats 304-307/Escenario/Mine Structure/Pivot/Cube (1)
+387;Clic Perfect;308.104;308.0;35;102.701;4.45;1.08;1232.49;1;Right Diagonal Beam;5.64;7.45;1232.00;-0.49;Nivel/Timeline/Segmento 076 · beats 304-307/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+388;Clic Perfect;309.128;309.0;43;103.043;1.49;1.08;1236.49;1;Cube (1);3.00;8.80;1248.00;11.51;Nivel/Timeline/Segmento 077 · beats 308-311/Escenario/Mine Structure/Pivot/Cube (1)
+389;Clic Perfect;310.088;310.0;29;103.363;-0.22;1.08;1240.53;1;Left Side Beam;-6.81;9.58;1240.28;-0.25;Nivel/Timeline/Segmento 077 · beats 308-311/Escenario/Mine Structure/Arch/Support/Left Side Beam
+390;Clic Perfect;311.112;311.0;37;103.704;-2.09;1.08;1244.50;1;Cube (1);-2.73;8.66;1248.00;3.50;Nivel/Timeline/Segmento 077 · beats 308-311/Escenario/Mine Structure/Pivot/Cube (1)
+391;Clic Perfect;312.136;312.0;45;104.045;-4.87;1.08;1248.54;1;Left Diagonal Beam;-5.64;7.45;1248.00;-0.54;Nivel/Timeline/Segmento 077 · beats 308-311/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+392;Clic Perfect;312.968;313.0;-11;104.323;-3.19;1.08;1252.06;1;Left Side Beam;-6.81;9.58;1256.28;4.22;Nivel/Timeline/Segmento 078 · beats 312-315/Escenario/Mine Structure/Arch/Support/Left Side Beam
+393;Clic Perfect;313.992;314.0;-3;104.664;-0.01;1.08;1256.11;1;Cube (1);4.70;10.27;1264.00;7.89;Nivel/Timeline/Segmento 078 · beats 312-315/Escenario/Mine Structure/Pivot/Cube (1)
+394;Clic Perfect;314.888;315.0;-37;104.963;1.46;1.08;1259.76;1;Cube (1);3.83;9.38;1264.00;4.24;Nivel/Timeline/Segmento 078 · beats 312-315/Escenario/Mine Structure/Pivot/Cube (1)
+395;Clic Perfect;316.040;316.0;13;105.347;3.97;1.08;1264.16;1;Right Diagonal Beam;5.64;7.45;1264.00;-0.16;Nivel/Timeline/Segmento 078 · beats 312-315/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+396;Clic Perfect;317.128;317.0;43;105.709;0.18;1.08;1268.45;1;Right Side Beam;6.81;9.58;1272.28;3.83;Nivel/Timeline/Segmento 079 · beats 316-319/Escenario/Mine Structure/Arch/Support/Right Side Beam
+397;Clic Perfect;318.088;318.0;29;106.029;-0.06;1.08;1272.26;1;Cube;0.00;1.00;1288.50;16.24;Nivel/Timeline/Segmento 080 · beats 320-323/Escenario/Mine Structure/Cube
+398;Clic Perfect;319.048;319.0;16;106.349;-0.06;1.08;1276.20;1;Cube;0.00;1.00;1288.50;12.30;Nivel/Timeline/Segmento 080 · beats 320-323/Escenario/Mine Structure/Cube
+399;Clic Perfect;320.008;320.0;3;106.669;-0.06;1.08;1280.28;1;Cube;0.00;1.00;1288.50;8.22;Nivel/Timeline/Segmento 080 · beats 320-323/Escenario/Mine Structure/Cube
+400;Clic Perfect;320.904;321.0;-32;106.968;-0.06;1.08;1283.68;1;Cube;0.00;1.00;1288.50;4.82;Nivel/Timeline/Segmento 080 · beats 320-323/Escenario/Mine Structure/Cube
+401;Salto;320.968;321.0;-11;106.989;-0.06;1.08;1283.90;1;Cube;0.00;1.00;1288.50;4.60;Nivel/Timeline/Segmento 080 · beats 320-323/Escenario/Mine Structure/Cube
+402;Clic Perfect;322.056;322.0;19;107.352;-0.06;5.34;1288.18;0;Cube;0.00;1.00;1288.50;0.32;Nivel/Timeline/Segmento 080 · beats 320-323/Escenario/Mine Structure/Cube
+403;Slam;322.184;322.0;61;107.395;-0.06;5.26;1288.62;0;Cube;0.00;1.00;1288.50;-0.12;Nivel/Timeline/Segmento 080 · beats 320-323/Escenario/Mine Structure/Cube
+404;Salto;322.888;323.0;-37;107.629;-0.06;1.08;1291.60;1;Cube;0.00;1.00;1296.50;4.90;Nivel/Timeline/Segmento 081 · beats 324-327/Escenario/Mine Structure/Cube
+405;Clic Perfect;322.888;323.0;-37;107.629;-0.06;1.58;1291.85;0;Cube;0.00;1.00;1296.50;4.65;Nivel/Timeline/Segmento 081 · beats 324-327/Escenario/Mine Structure/Cube
+406;Clic Perfect;324.040;324.0;13;108.013;-0.06;5.23;1296.41;0;Cube;0.00;1.00;1296.50;0.09;Nivel/Timeline/Segmento 081 · beats 324-327/Escenario/Mine Structure/Cube
+407;Slam;324.232;324.0;77;108.077;-0.06;5.04;1296.83;0;Cube;0.00;1.00;1296.50;-0.33;Nivel/Timeline/Segmento 081 · beats 324-327/Escenario/Mine Structure/Cube
+408;Salto;325.000;325.0;0;108.333;-0.06;1.08;1299.98;1;Cube (1);0.00;1.00;1304.50;4.52;Nivel/Timeline/Segmento 081 · beats 324-327/Escenario/Mine Structure/Cube (1)
+409;Clic Perfect;325.000;325.0;0;108.333;-0.06;1.47;1300.17;0;Cube (1);0.00;1.00;1304.50;4.33;Nivel/Timeline/Segmento 081 · beats 324-327/Escenario/Mine Structure/Cube (1)
+410;Clic Perfect;326.088;326.0;29;108.696;-0.06;5.24;1304.37;0;Cube (1);0.00;1.00;1304.50;0.13;Nivel/Timeline/Segmento 081 · beats 324-327/Escenario/Mine Structure/Cube (1)
+411;Slam;326.152;326.0;51;108.717;-0.06;5.19;1304.59;0;Cube (1);0.00;1.00;1304.50;-0.09;Nivel/Timeline/Segmento 081 · beats 324-327/Escenario/Mine Structure/Cube (1)
+412;Clic Perfect;326.920;327.0;-27;108.973;-0.06;1.08;1307.81;1;Cube (1);0.00;1.00;1312.50;4.69;Nivel/Timeline/Segmento 082 · beats 328-331/Escenario/Mine Structure/Cube (1)
+413;Salto;327.048;327.0;16;109.016;-0.06;1.08;1308.05;1;Cube (1);0.00;1.00;1312.50;4.45;Nivel/Timeline/Segmento 082 · beats 328-331/Escenario/Mine Structure/Cube (1)
+414;Clic Perfect;328.072;328.0;24;109.357;-0.06;5.31;1312.40;0;Beam Top;-0.13;10.36;1312.00;-0.40;Nivel/Timeline/Segmento 081 · beats 324-327/Escenario/Mine Structure/Arch/Support/Beam Top
+415;Slam;328.200;328.0;67;109.400;-0.06;5.22;1312.82;0;Beam Top;-0.13;10.36;1312.00;-0.82;Nivel/Timeline/Segmento 081 · beats 324-327/Escenario/Mine Structure/Arch/Support/Beam Top
+416;Clic Perfect;328.968;329.0;-11;109.656;-0.06;1.08;1315.94;1;Cube (2);0.00;1.00;1320.50;4.56;Nivel/Timeline/Segmento 082 · beats 328-331/Escenario/Mine Structure/Cube (2)
+417;Salto;329.032;329.0;11;109.677;-0.06;1.08;1316.15;1;Cube (2);0.00;1.00;1320.50;4.35;Nivel/Timeline/Segmento 082 · beats 328-331/Escenario/Mine Structure/Cube (2)
+418;Clic Perfect;330.120;330.0;40;110.040;-0.06;5.31;1320.59;0;Cube (2);0.00;1.00;1320.50;-0.09;Nivel/Timeline/Segmento 082 · beats 328-331/Escenario/Mine Structure/Cube (2)
+419;Slam;330.184;330.0;61;110.061;-0.06;5.31;1320.59;0;Cube (2);0.00;1.00;1320.50;-0.09;Nivel/Timeline/Segmento 082 · beats 328-331/Escenario/Mine Structure/Cube (2)
+420;Clic Perfect;331.016;331.0;5;110.339;-0.06;1.08;1324.01;1;Cube;0.00;1.00;1329.50;5.49;Nivel/Timeline/Segmento 083 · beats 332-335/Escenario/Mine Structure/Cube
+421;Salto;331.016;331.0;5;110.339;-0.06;1.08;1324.01;1;Cube;0.00;1.00;1329.50;5.49;Nivel/Timeline/Segmento 083 · beats 332-335/Escenario/Mine Structure/Cube
+422;Clic Perfect;332.168;332.0;56;110.723;-0.06;5.20;1328.87;0;Beam Top;-0.13;10.36;1328.00;-0.87;Nivel/Timeline/Segmento 082 · beats 328-331/Escenario/Mine Structure/Arch/Support/Beam Top
+423;Slam;332.232;332.0;77;110.744;-0.06;5.20;1328.87;0;Beam Top;-0.13;10.36;1328.00;-0.87;Nivel/Timeline/Segmento 082 · beats 328-331/Escenario/Mine Structure/Arch/Support/Beam Top
+424;Deslizarse;333.000;333.0;0;111.000;-0.06;1.08;1332.19;1;Cube (1);0.00;9.00;1336.50;4.31;Nivel/Timeline/Segmento 083 · beats 332-335/Escenario/Mine Structure/Cube (1)
+425;Clic Perfect;333.064;333.0;21;111.021;-0.06;1.08;1332.43;1;Cube (1);0.00;9.00;1336.50;4.07;Nivel/Timeline/Segmento 083 · beats 332-335/Escenario/Mine Structure/Cube (1)
+426;Clic Perfect;334.088;334.0;29;111.363;-0.06;0.58;1336.36;1;Cube (1);0.00;9.00;1336.50;0.14;Nivel/Timeline/Segmento 083 · beats 332-335/Escenario/Mine Structure/Cube (1)
+427;Clic Perfect;335.048;335.0;16;111.683;-0.06;1.01;1340.40;1;Left Diagonal Beam;-5.64;7.45;1344.00;3.60;Nivel/Timeline/Segmento 083 · beats 332-335/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+428;Clic Perfect;336.200;336.0;67;112.067;-0.06;1.08;1344.79;1;Left Diagonal Beam;-5.64;7.45;1344.00;-0.79;Nivel/Timeline/Segmento 083 · beats 332-335/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+429;Clic Perfect;337.096;337.0;32;112.365;-0.06;1.08;1348.28;1;Left Side Beam;-6.81;9.58;1352.28;4.00;Nivel/Timeline/Segmento 084 · beats 336-339/Escenario/Mine Structure/Arch/Support/Left Side Beam
+430;Clic Perfect;337.928;338.0;-24;112.643;-2.40;1.08;1351.91;1;Left Side Beam;-6.81;9.58;1352.28;0.37;Nivel/Timeline/Segmento 084 · beats 336-339/Escenario/Mine Structure/Arch/Support/Left Side Beam
+431;Clic Perfect;338.952;339.0;-16;112.984;0.34;1.08;1356.08;1;Right Diagonal Beam;5.64;7.45;1360.00;3.92;Nivel/Timeline/Segmento 084 · beats 336-339/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+432;Clic Perfect;340.104;340.0;35;113.368;-0.35;1.08;1360.58;1;Left Diagonal Beam;-5.64;7.45;1360.00;-0.58;Nivel/Timeline/Segmento 084 · beats 336-339/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+433;Clic Perfect;341.128;341.0;43;113.709;-0.77;1.08;1364.53;1;Left Side Beam;-6.81;9.58;1368.28;3.75;Nivel/Timeline/Segmento 085 · beats 340-343/Escenario/Mine Structure/Arch/Support/Left Side Beam
+434;Clic Perfect;342.088;342.0;29;114.029;1.58;1.08;1368.46;1;Right Side Beam;6.81;9.58;1368.28;-0.18;Nivel/Timeline/Segmento 085 · beats 340-343/Escenario/Mine Structure/Arch/Support/Right Side Beam
+435;Clic Perfect;343.112;343.0;37;114.371;2.04;1.08;1372.58;1;Right Diagonal Beam;5.64;7.45;1376.00;3.42;Nivel/Timeline/Segmento 085 · beats 340-343/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+436;Clic Perfect;344.136;344.0;45;114.712;0.24;1.08;1376.84;1;Right Diagonal Beam;5.64;7.45;1376.00;-0.84;Nivel/Timeline/Segmento 085 · beats 340-343/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+437;Clic Perfect;345.160;345.0;53;115.053;-0.20;1.08;1380.66;1;Left Side Beam;-6.81;9.58;1384.28;3.62;Nivel/Timeline/Segmento 086 · beats 344-347/Escenario/Mine Structure/Arch/Support/Left Side Beam
+438;Clic Perfect;346.056;346.0;19;115.352;-0.87;1.08;1384.41;1;Left Side Beam;-6.81;9.58;1384.28;-0.13;Nivel/Timeline/Segmento 086 · beats 344-347/Escenario/Mine Structure/Arch/Support/Left Side Beam
+439;Clic Perfect;347.144;347.0;48;115.715;2.29;1.08;1388.51;1;Right Diagonal Beam;5.64;7.45;1392.00;3.49;Nivel/Timeline/Segmento 086 · beats 344-347/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+440;Clic Perfect;348.040;348.0;13;116.013;2.29;1.08;1392.47;1;Right Diagonal Beam;5.64;7.45;1392.00;-0.47;Nivel/Timeline/Segmento 086 · beats 344-347/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+441;Clic Perfect;349.064;349.0;21;116.355;0.37;1.08;1396.42;1;GameObject;0.00;-7.55;1407.95;11.53;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Cube (17)/GameObject
+442;Clic Perfect;349.960;350.0;-13;116.653;-0.09;1.08;1399.99;1;GameObject;0.00;-7.55;1407.95;7.96;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Cube (17)/GameObject
+443;Clic Perfect;351.048;351.0;16;117.016;-0.09;1.08;1404.19;1;GameObject;0.00;-7.55;1407.95;3.76;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Cube (17)/GameObject
+444;Clic Good;351.752;352.0;-83;117.251;-0.09;1.08;1407.12;1;GameObject;0.00;-7.55;1407.95;0.83;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Cube (17)/GameObject
+445;Salto;351.816;352.0;-61;117.272;-0.09;1.08;1407.32;1;GameObject;0.00;-7.55;1407.95;0.63;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Cube (17)/GameObject
+446;Clic Perfect;353.096;353.0;32;117.699;-2.50;5.16;1412.43;0;Left Side Beam;-6.81;9.58;1416.28;3.85;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Arch/Support/Left Side Beam
+447;Wallrun;353.480;353.5;-7;117.827;-2.50;3.92;1413.84;0;Beam Top;-0.13;10.36;1424.00;10.16;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Arch/Support/Beam Top
+448;Clic Perfect;354.120;354.0;40;118.040;-2.50;3.87;1416.60;0;Beam Top;-0.13;10.36;1424.00;7.40;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Arch/Support/Beam Top
+449;Walljump;354.824;355.0;-59;118.275;-2.50;3.70;1419.36;0;Beam Top;-0.13;10.36;1424.00;4.64;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Arch/Support/Beam Top
+450;Clic Perfect;355.016;355.0;5;118.339;-2.20;4.36;1420.01;0;Beam Top;-0.13;10.36;1424.00;3.99;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Arch/Support/Beam Top
+451;Clic Perfect;356.168;356.0;56;118.723;1.97;3.12;1424.57;0;Beam Top;-0.13;10.36;1424.00;-0.57;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Arch/Support/Beam Top
+452;Wallrun;356.296;356.5;-68;118.765;2.38;2.49;1424.99;0;Beam Top;-0.13;10.36;1424.00;-0.99;Nivel/Timeline/Segmento 088 · beats 352-355/Escenario/Mine Structure/Arch/Support/Beam Top
+453;Walljump;356.680;356.5;60;118.893;2.38;2.47;1426.75;0;Right Side Beam;6.81;9.58;1432.28;5.53;Nivel/Timeline/Segmento 089 · beats 356-359/Escenario/Mine Structure/Arch/Support/Right Side Beam
+454;Clic Perfect;356.936;357.0;-21;118.979;1.84;3.60;1428.08;0;Beam Top;-0.13;10.36;1440.00;11.92;Nivel/Timeline/Segmento 089 · beats 356-359/Escenario/Mine Structure/Arch/Support/Beam Top
+455;Dash izquierda;357.832;358.0;-56;119.277;-1.00;2.76;1431.18;0;Beam Top;-0.13;10.36;1440.00;8.82;Nivel/Timeline/Segmento 089 · beats 356-359/Escenario/Mine Structure/Arch/Support/Beam Top
+456;Wallrun;358.344;358.5;-52;119.448;-2.43;0.62;1433.36;0;Floor;0.00;-2.85;1448.00;14.64;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Floor
+457;Clic Miss;358.472;358.5;-9;119.491;-2.43;0.61;1433.98;0;Floor;0.00;-3.91;1448.00;14.02;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Floor
+458;Walljump;358.920;359.0;-27;119.661;-2.43;0.57;1435.85;0;Floor;0.00;-6.98;1448.00;12.15;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Floor
+459;Clic Good;359.688;359.5;63;119.896;0.07;1.92;1438.64;0;Beam Top;-0.13;10.36;1440.00;1.36;Nivel/Timeline/Segmento 089 · beats 356-359/Escenario/Mine Structure/Arch/Support/Beam Top
+460;Doble salto;359.816;360.0;-61;119.939;0.75;1.67;1439.32;0;Beam Top;-0.13;10.36;1440.00;0.68;Nivel/Timeline/Segmento 089 · beats 356-359/Escenario/Mine Structure/Arch/Support/Beam Top
+461;Wallrun;360.264;360.5;-79;120.088;2.40;3.76;1440.97;0;Beam Top;-0.13;10.36;1440.00;-0.97;Nivel/Timeline/Segmento 089 · beats 356-359/Escenario/Mine Structure/Arch/Support/Beam Top
+462;Clic Perfect;360.968;361.0;-11;120.323;2.40;3.70;1443.92;0;Right Side Beam;6.81;9.58;1448.28;4.36;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Arch/Support/Right Side Beam
+463;Walljump;361.160;361.0;53;120.387;2.40;3.67;1444.60;0;Beam Top;-0.13;10.36;1456.00;11.40;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Arch/Support/Beam Top
+464;Clic Good;362.248;362.0;83;120.749;-2.21;3.92;1449.05;0;Beam Top;-0.13;10.36;1456.00;6.95;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Arch/Support/Beam Top
+465;Wallrun;362.312;362.5;-63;120.771;-2.41;3.69;1449.25;0;Beam Top;-0.13;10.36;1456.00;6.75;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Arch/Support/Beam Top
+466;Clic Perfect;363.144;363.0;48;121.048;-2.41;3.61;1452.54;0;Beam Top;-0.13;10.36;1456.00;3.46;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Arch/Support/Beam Top
+467;Walljump;363.208;363.0;69;121.069;-2.41;3.60;1452.77;0;Beam Top;-0.13;10.36;1456.00;3.23;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Arch/Support/Beam Top
+468;Clic Perfect;364.040;364.0;13;121.347;0.65;4.57;1456.38;0;Beam Top;-0.13;10.36;1456.00;-0.38;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Arch/Support/Beam Top
+469;Doble salto;364.104;364.0;35;121.368;0.65;4.45;1456.56;0;Beam Top;-0.13;10.36;1456.00;-0.56;Nivel/Timeline/Segmento 090 · beats 360-363/Escenario/Mine Structure/Arch/Support/Beam Top
+470;Slam;364.936;365.0;-21;121.645;0.65;7.27;1459.69;0;Cube (1);0.00;-10.00;1462.00;2.31;Nivel/Timeline/Segmento 091 · beats 364-367/Escenario/Mine Structure/Cube (1)
+471;Clic Perfect;364.936;365.0;-21;121.645;0.65;6.74;1459.87;0;Cube (1);0.00;-10.00;1462.00;2.13;Nivel/Timeline/Segmento 091 · beats 364-367/Escenario/Mine Structure/Cube (1)
+472;Salto;365.576;365.5;25;121.859;0.65;1.08;1462.28;1;Cube (1);0.00;-10.00;1462.00;-0.28;Nivel/Timeline/Segmento 091 · beats 364-367/Escenario/Mine Structure/Cube (1)
+473;Clic Perfect;365.832;366.0;-56;121.944;0.65;3.18;1463.49;0;Cube (1);0.00;-10.00;1462.00;-1.49;Nivel/Timeline/Segmento 091 · beats 364-367/Escenario/Mine Structure/Cube (1)
+474;Clic Perfect;366.856;367.0;-48;122.285;0.65;4.88;1467.54;0;Beam Top;-0.13;10.36;1472.00;4.46;Nivel/Timeline/Segmento 091 · beats 364-367/Escenario/Mine Structure/Arch/Support/Beam Top
+475;Doble salto;366.984;367.0;-5;122.328;0.65;4.75;1467.74;0;Beam Top;-0.13;10.36;1472.00;4.26;Nivel/Timeline/Segmento 091 · beats 364-367/Escenario/Mine Structure/Arch/Support/Beam Top
+476;Clic Perfect;367.816;368.0;-61;122.605;0.65;7.55;1471.35;0;Beam Top;-0.13;10.36;1472.00;0.65;Nivel/Timeline/Segmento 091 · beats 364-367/Escenario/Mine Structure/Arch/Support/Beam Top
+477;Tirolina;367.944;368.0;-19;122.648;0.65;7.52;1471.55;0;Beam Top;-0.13;10.36;1472.00;0.45;Nivel/Timeline/Segmento 091 · beats 364-367/Escenario/Mine Structure/Arch/Support/Beam Top
+478;Clic Perfect;368.904;369.0;-32;122.968;0.00;5.59;1475.98;0;Beam Top;-0.13;10.36;1488.00;12.02;Nivel/Timeline/Segmento 092 · beats 368-371/Escenario/Mine Structure/Arch/Support/Beam Top
+479;Clic Perfect;370.056;370.0;19;123.352;0.00;5.59;1480.46;0;Beam Top;-0.13;10.36;1488.00;7.54;Nivel/Timeline/Segmento 092 · beats 368-371/Escenario/Mine Structure/Arch/Support/Beam Top
+480;Clic Perfect;371.144;371.0;48;123.715;0.00;5.59;1484.69;0;Beam Top;-0.13;10.36;1488.00;3.31;Nivel/Timeline/Segmento 092 · beats 368-371/Escenario/Mine Structure/Arch/Support/Beam Top
+481;Clic Perfect;372.168;372.0;56;124.056;0.00;5.59;1488.65;0;Beam Top;-0.13;10.36;1488.00;-0.65;Nivel/Timeline/Segmento 092 · beats 368-371/Escenario/Mine Structure/Arch/Support/Beam Top
+482;Clic Perfect;373.128;373.0;43;124.376;0.00;5.59;1492.41;0;Beam Top;-0.13;10.36;1504.00;11.59;Nivel/Timeline/Segmento 093 · beats 372-375/Escenario/Mine Structure/Arch/Support/Beam Top
+483;Clic Perfect;374.024;374.0;8;124.675;0.00;5.59;1496.24;0;Beam Top;-0.13;10.36;1504.00;7.76;Nivel/Timeline/Segmento 093 · beats 372-375/Escenario/Mine Structure/Arch/Support/Beam Top
+484;Clic Perfect;375.112;375.0;37;125.037;0.00;5.59;1500.43;0;Beam Top;-0.13;10.36;1504.00;3.57;Nivel/Timeline/Segmento 093 · beats 372-375/Escenario/Mine Structure/Arch/Support/Beam Top
+485;Clic Perfect;376.072;376.0;24;125.357;0.00;5.59;1504.37;0;Beam Top;-0.13;10.36;1504.00;-0.37;Nivel/Timeline/Segmento 093 · beats 372-375/Escenario/Mine Structure/Arch/Support/Beam Top
+486;Clic Perfect;377.096;377.0;32;125.699;0.00;5.59;1508.45;0;Beam Top;-0.13;10.36;1520.00;11.55;Nivel/Timeline/Segmento 094 · beats 376-379/Escenario/Mine Structure/Arch/Support/Beam Top
+487;Clic Perfect;378.056;378.0;19;126.019;0.00;5.59;1512.35;0;Beam Top;-0.13;10.36;1520.00;7.65;Nivel/Timeline/Segmento 094 · beats 376-379/Escenario/Mine Structure/Arch/Support/Beam Top
+488;Clic Perfect;379.016;379.0;5;126.339;0.00;5.59;1516.14;0;Beam Top;-0.13;10.36;1520.00;3.86;Nivel/Timeline/Segmento 094 · beats 376-379/Escenario/Mine Structure/Arch/Support/Beam Top
+489;Clic Perfect;380.040;380.0;13;126.680;0.00;5.59;1520.18;0;Beam Top;-0.13;10.36;1520.00;-0.18;Nivel/Timeline/Segmento 094 · beats 376-379/Escenario/Mine Structure/Arch/Support/Beam Top
+490;Clic Perfect;381.064;381.0;21;127.021;0.00;5.59;1524.24;0;GameObject;0.00;-7.55;1535.95;11.71;Nivel/Timeline/Segmento 096 · beats 384-387/Obstáculos/Cube (18)/GameObject
+491;Clic Perfect;382.024;382.0;8;127.341;0.00;5.59;1528.21;0;GameObject;0.00;-7.55;1535.95;7.74;Nivel/Timeline/Segmento 096 · beats 384-387/Obstáculos/Cube (18)/GameObject
+492;Clic Perfect;382.984;383.0;-5;127.661;0.00;5.59;1532.22;0;GameObject;0.00;-7.55;1535.95;3.73;Nivel/Timeline/Segmento 096 · beats 384-387/Obstáculos/Cube (18)/GameObject
+493;Clic Perfect;384.008;384.0;3;128.003;0.00;5.57;1536.16;0;Beam Top;-0.13;10.36;1536.00;-0.16;Nivel/Timeline/Segmento 095 · beats 380-383/Escenario/Mine Structure/Arch/Support/Beam Top
+494;Clic Perfect;385.032;385.0;11;128.344;0.00;1.17;1540.10;0;Right Diagonal Beam;5.64;7.45;1552.00;11.90;Nivel/Timeline/Segmento 096 · beats 384-387/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+495;Clic Perfect;386.056;386.0;19;128.685;0.00;1.08;1544.15;1;GameObject;-7.50;7.50;1552.42;8.27;Nivel/Timeline/Segmento 097 · beats 388-391/Escenario/Mine Structure/Cube (16)/GameObject
+496;Clic Perfect;387.016;387.0;5;129.005;-3.16;1.08;1547.96;1;GameObject;1.25;7.50;1552.42;4.46;Nivel/Timeline/Segmento 097 · beats 388-391/Escenario/Mine Structure/Cube (16)/GameObject
+497;Clic Perfect;388.040;388.0;13;129.347;0.53;1.08;1552.14;1;Right Diagonal Beam;5.64;7.45;1552.00;-0.14;Nivel/Timeline/Segmento 096 · beats 384-387/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+498;Clic Perfect;389.128;389.0;43;129.709;4.80;1.08;1556.41;1;Right Side Beam;6.81;9.58;1560.28;3.87;Nivel/Timeline/Segmento 097 · beats 388-391/Escenario/Mine Structure/Arch/Support/Right Side Beam
+499;Clic Perfect;390.152;390.0;51;130.051;8.44;1.08;1560.72;1;Right Side Beam;6.81;9.58;1560.28;-0.44;Nivel/Timeline/Segmento 097 · beats 388-391/Escenario/Mine Structure/Arch/Support/Right Side Beam
+500;Clic Good;391.240;391.0;80;130.413;6.30;1.08;1564.82;1;Right Side Beam;6.81;9.58;1560.28;-4.54;Nivel/Timeline/Segmento 097 · beats 388-391/Escenario/Mine Structure/Arch/Support/Right Side Beam
+501;Clic Perfect;392.136;392.0;45;130.712;2.47;1.08;1568.65;1;Right Diagonal Beam;5.64;7.45;1568.00;-0.65;Nivel/Timeline/Segmento 097 · beats 388-391/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+502;Clic Perfect;393.032;393.0;11;131.011;1.93;1.08;1572.37;1;Right Side Beam;6.81;9.58;1576.28;3.91;Nivel/Timeline/Segmento 098 · beats 392-395/Escenario/Mine Structure/Arch/Support/Right Side Beam
+503;Clic Perfect;394.056;394.0;19;131.352;-2.01;1.08;1576.30;1;Left Side Beam;-6.81;9.58;1576.28;-0.02;Nivel/Timeline/Segmento 098 · beats 392-395/Escenario/Mine Structure/Arch/Support/Left Side Beam
+504;Clic Perfect;395.080;395.0;27;131.693;-2.97;1.08;1580.47;1;Left Side Beam;-6.81;9.58;1576.28;-4.19;Nivel/Timeline/Segmento 098 · beats 392-395/Escenario/Mine Structure/Arch/Support/Left Side Beam
+505;Clic Perfect;396.104;396.0;35;132.035;-3.71;1.08;1584.39;1;Left Side Beam;-6.81;9.58;1592.28;7.89;Nivel/Timeline/Segmento 099 · beats 396-399/Escenario/Mine Structure/Arch/Support/Left Side Beam
+506;Clic Perfect;397.000;397.0;0;132.333;-2.95;1.08;1587.93;1;Cube;0.00;7.00;1592.00;4.07;Nivel/Timeline/Segmento 099 · beats 396-399/Escenario/Mine Structure/Fan/Cube
+507;Clic Perfect;398.088;398.0;29;132.696;1.32;1.08;1592.20;1;Cube;0.00;7.00;1592.00;-0.20;Nivel/Timeline/Segmento 099 · beats 396-399/Escenario/Mine Structure/Fan/Cube
+508;Clic Perfect;399.048;399.0;16;133.016;3.00;1.08;1596.32;1;Right Diagonal Beam;5.64;7.45;1600.00;3.69;Nivel/Timeline/Segmento 099 · beats 396-399/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+509;Clic Perfect;400.008;400.0;3;133.336;3.00;1.08;1600.18;1;Right Diagonal Beam;5.64;7.45;1600.00;-0.18;Nivel/Timeline/Segmento 099 · beats 396-399/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+510;Clic Perfect;401.096;401.0;32;133.699;6.08;1.08;1604.29;1;Right Side Beam;6.81;9.58;1608.28;3.99;Nivel/Timeline/Segmento 100 · beats 400-403/Escenario/Mine Structure/Arch/Support/Right Side Beam
+511;Clic Perfect;402.056;402.0;19;134.019;2.45;1.08;1608.42;1;Cube (1);-2.84;8.72;1608.00;-0.42;Nivel/Timeline/Segmento 100 · beats 400-403/Escenario/Mine Structure/Pivot/Cube (1)
+512;Clic Perfect;403.016;403.0;5;134.339;2.45;1.08;1612.20;1;Right Diagonal Beam;5.64;7.45;1616.00;3.80;Nivel/Timeline/Segmento 100 · beats 400-403/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+513;Clic Perfect;404.104;404.0;35;134.701;5.04;1.08;1616.58;1;Right Diagonal Beam;5.64;7.45;1616.00;-0.58;Nivel/Timeline/Segmento 100 · beats 400-403/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+514;Clic Perfect;405.064;405.0;21;135.021;6.28;1.08;1620.45;1;Right Side Beam;6.81;9.58;1624.28;3.83;Nivel/Timeline/Segmento 101 · beats 404-407/Escenario/Mine Structure/Arch/Support/Right Side Beam
+515;Clic Perfect;406.024;406.0;8;135.341;4.40;1.08;1624.17;1;Cube (1);0.00;7.00;1624.00;-0.17;Nivel/Timeline/Segmento 101 · beats 404-407/Escenario/Mine Structure/Fan/Cube (1)
+516;Clic Perfect;407.112;407.0;37;135.704;1.40;1.08;1628.47;1;Right Diagonal Beam;5.64;7.45;1632.00;3.53;Nivel/Timeline/Segmento 101 · beats 404-407/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+517;Clic Perfect;408.136;408.0;45;136.045;-1.83;1.08;1632.60;1;Left Diagonal Beam;-5.64;7.45;1632.00;-0.60;Nivel/Timeline/Segmento 101 · beats 404-407/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+518;Clic Perfect;409.032;409.0;11;136.344;-2.77;1.08;1636.16;1;Left Side Beam;-6.81;9.58;1640.28;4.12;Nivel/Timeline/Segmento 102 · beats 408-411/Escenario/Mine Structure/Arch/Support/Left Side Beam
+519;Clic Perfect;409.992;410.0;-3;136.664;-1.09;1.08;1640.13;1;Cube (1);3.19;8.92;1640.00;-0.13;Nivel/Timeline/Segmento 102 · beats 408-411/Escenario/Mine Structure/Pivot/Cube (1)
+520;Clic Perfect;411.016;411.0;5;137.005;-2.48;1.08;1643.98;1;Left Diagonal Beam;-5.64;7.45;1648.00;4.02;Nivel/Timeline/Segmento 102 · beats 408-411/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+521;Clic Perfect;412.104;412.0;35;137.368;-2.48;1.08;1648.18;1;Left Diagonal Beam;-5.64;7.45;1648.00;-0.18;Nivel/Timeline/Segmento 102 · beats 408-411/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+522;Clic Perfect;413.064;413.0;21;137.688;0.22;1.08;1652.13;1;Cube (1);0.00;7.00;1656.00;3.87;Nivel/Timeline/Segmento 103 · beats 412-415/Escenario/Mine Structure/Fan/Cube (1)
+523;Clic Perfect;413.960;414.0;-13;137.987;4.17;1.08;1656.05;1;Cube;0.00;7.00;1656.00;-0.05;Nivel/Timeline/Segmento 103 · beats 412-415/Escenario/Mine Structure/Fan/Cube
+524;Clic Perfect;415.048;415.0;16;138.349;4.17;1.08;1660.28;1;Right Diagonal Beam;5.64;7.45;1664.00;3.72;Nivel/Timeline/Segmento 103 · beats 412-415/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+525;Clic Perfect;416.200;416.0;67;138.733;2.52;1.08;1664.70;1;Right Diagonal Beam;5.64;7.45;1664.00;-0.70;Nivel/Timeline/Segmento 103 · beats 412-415/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+526;Clic Perfect;417.032;417.0;11;139.011;3.61;1.08;1668.15;1;Right Side Beam;6.81;9.58;1672.28;4.13;Nivel/Timeline/Segmento 104 · beats 416-419/Escenario/Mine Structure/Arch/Support/Right Side Beam
+527;Clic Perfect;417.992;418.0;-3;139.331;3.61;1.08;1672.13;1;Right Side Beam;6.81;9.58;1672.28;0.15;Nivel/Timeline/Segmento 104 · beats 416-419/Escenario/Mine Structure/Arch/Support/Right Side Beam
+528;Clic Perfect;419.016;419.0;5;139.672;3.61;1.08;1676.12;1;Right Diagonal Beam;5.64;7.45;1680.00;3.88;Nivel/Timeline/Segmento 104 · beats 416-419/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+529;Clic Perfect;419.912;420.0;-29;139.971;3.61;1.08;1679.83;1;Right Diagonal Beam;5.64;7.45;1680.00;0.17;Nivel/Timeline/Segmento 104 · beats 416-419/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+530;Bloquear;420.040;420.0;13;140.013;3.61;1.08;1680.24;1;Right Diagonal Beam;5.64;7.45;1680.00;-0.24;Nivel/Timeline/Segmento 104 · beats 416-419/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+531;Clic Perfect;420.936;421.0;-21;140.312;4.40;1.08;1683.67;1;Cube;0.00;7.00;1688.00;4.33;Nivel/Timeline/Segmento 105 · beats 420-423/Escenario/Mine Structure/Fan/Cube
+532;Clic Perfect;421.960;422.0;-13;140.653;8.06;1.08;1687.75;1;Right Side Beam;6.81;9.58;1688.28;0.53;Nivel/Timeline/Segmento 105 · beats 420-423/Escenario/Mine Structure/Arch/Support/Right Side Beam
+533;Clic Perfect;422.984;423.0;-5;140.995;4.88;1.08;1692.04;1;Right Side Beam;6.81;9.58;1688.28;-3.76;Nivel/Timeline/Segmento 105 · beats 420-423/Escenario/Mine Structure/Arch/Support/Right Side Beam
+534;Clic Perfect;424.072;424.0;24;141.357;4.88;1.08;1696.34;1;Right Diagonal Beam;5.64;7.45;1696.00;-0.34;Nivel/Timeline/Segmento 105 · beats 420-423/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+535;Clic Perfect;425.096;425.0;32;141.699;3.30;1.08;1700.32;1;Right Side Beam;6.81;9.58;1704.28;3.97;Nivel/Timeline/Segmento 106 · beats 424-427/Escenario/Mine Structure/Arch/Support/Right Side Beam
+536;Clic Perfect;426.056;426.0;19;142.019;3.09;1.08;1704.28;1;Cube (6);3.00;2.25;1711.75;7.47;Nivel/Timeline/Segmento 107 · beats 428-431/Escenario/Mine Structure/Pivot (2)/Cube (6)
+537;Clic Perfect;427.016;427.0;5;142.339;3.09;1.08;1708.10;1;Cube (6);3.00;2.25;1711.75;3.65;Nivel/Timeline/Segmento 107 · beats 428-431/Escenario/Mine Structure/Pivot (2)/Cube (6)
+538;Bloquear;427.080;427.0;27;142.360;3.09;1.08;1708.32;1;Cube (6);3.00;2.25;1711.75;3.43;Nivel/Timeline/Segmento 107 · beats 428-431/Escenario/Mine Structure/Pivot (2)/Cube (6)
+539;Clic Perfect;428.040;428.0;13;142.680;3.62;1.08;1712.27;1;Right Diagonal Beam;5.64;7.45;1712.00;-0.27;Nivel/Timeline/Segmento 106 · beats 424-427/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+540;Clic Perfect;429.128;429.0;43;143.043;5.68;1.08;1716.45;1;Right Side Beam;6.81;9.58;1720.28;3.83;Nivel/Timeline/Segmento 107 · beats 428-431/Escenario/Mine Structure/Arch/Support/Right Side Beam
+541;Clic Perfect;430.024;430.0;8;143.341;2.02;1.08;1720.11;1;Right Side Beam;6.81;9.58;1720.28;0.17;Nivel/Timeline/Segmento 107 · beats 428-431/Escenario/Mine Structure/Arch/Support/Right Side Beam
+542;Clic Perfect;431.112;431.0;37;143.704;1.08;1.08;1724.36;1;Right Diagonal Beam;5.64;7.45;1728.00;3.64;Nivel/Timeline/Segmento 107 · beats 428-431/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+543;Clic Perfect;432.008;432.0;3;144.003;4.31;1.08;1728.28;1;Right Diagonal Beam;5.64;7.45;1728.00;-0.28;Nivel/Timeline/Segmento 107 · beats 428-431/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+544;Clic Perfect;433.096;433.0;32;144.365;3.93;1.08;1732.43;1;Right Side Beam;6.81;9.58;1736.28;3.85;Nivel/Timeline/Segmento 108 · beats 432-435/Escenario/Mine Structure/Arch/Support/Right Side Beam
+545;Clic Perfect;434.056;434.0;19;144.685;1.43;1.08;1736.33;1;Beam Top;-0.13;5.59;1744.00;7.67;Nivel/Timeline/Segmento 108 · beats 432-435/Escenario/Mine Structure/Arch/Support/Beam Top
+546;Salto;435.016;435.0;5;145.005;1.43;1.08;1739.92;1;Beam Top;-0.13;0.67;1744.00;4.08;Nivel/Timeline/Segmento 108 · beats 432-435/Escenario/Mine Structure/Arch/Support/Beam Top
+547;Clic Perfect;435.080;435.0;27;145.027;1.43;1.58;1740.17;0;Beam Top;-0.13;0.67;1744.00;3.83;Nivel/Timeline/Segmento 108 · beats 432-435/Escenario/Mine Structure/Arch/Support/Beam Top
+548;Clic Perfect;436.104;436.0;35;145.368;1.24;5.40;1744.22;0;Beam Top;-0.13;0.67;1744.00;-0.22;Nivel/Timeline/Segmento 108 · beats 432-435/Escenario/Mine Structure/Arch/Support/Beam Top
+549;Clic Perfect;437.064;437.0;21;145.688;-0.05;1.08;1748.43;1;Cube (1);0.00;7.00;1768.00;19.57;Nivel/Timeline/Segmento 110 · beats 440-443/Escenario/Mine Structure/Fan/Cube (1)
+550;Clic Perfect;438.088;438.0;29;146.029;-0.05;1.08;1752.43;1;Cube;0.00;7.00;1768.00;15.57;Nivel/Timeline/Segmento 110 · beats 440-443/Escenario/Mine Structure/Fan/Cube
+551;Clic Perfect;439.176;439.0;59;146.392;1.07;1.08;1756.72;1;Cube;0.00;7.00;1768.00;11.28;Nivel/Timeline/Segmento 110 · beats 440-443/Escenario/Mine Structure/Fan/Cube
+552;Clic Perfect;440.136;440.0;45;146.712;1.07;1.08;1760.62;1;Cube;0.00;7.00;1768.00;7.38;Nivel/Timeline/Segmento 110 · beats 440-443/Escenario/Mine Structure/Fan/Cube
+553;Clic Perfect;441.096;441.0;32;147.032;3.72;1.08;1764.45;1;Cube (1);0.00;7.00;1768.00;3.55;Nivel/Timeline/Segmento 110 · beats 440-443/Escenario/Mine Structure/Fan/Cube (1)
+554;Clic Perfect;442.120;442.0;40;147.373;5.17;1.08;1768.50;1;Cube (1);0.00;7.00;1768.00;-0.50;Nivel/Timeline/Segmento 110 · beats 440-443/Escenario/Mine Structure/Fan/Cube (1)
+555;Deslizarse;442.888;443.0;-37;147.629;2.82;1.08;1771.37;1;GameObject;0.00;9.72;1776.42;5.05;Nivel/Timeline/Segmento 110 · beats 440-443/Escenario/Mine Structure/Cube (16)/GameObject
+556;Clic Perfect;442.888;443.0;-37;147.629;2.82;1.08;1771.52;1;GameObject;0.00;9.19;1776.42;4.90;Nivel/Timeline/Segmento 110 · beats 440-443/Escenario/Mine Structure/Cube (16)/GameObject
+557;Clic Good;444.232;444.0;77;148.077;2.82;0.58;1776.81;1;GameObject;0.00;9.17;1776.42;-0.39;Nivel/Timeline/Segmento 110 · beats 440-443/Escenario/Mine Structure/Cube (16)/GameObject
+558;Clic Perfect;445.192;445.0;64;148.397;0.55;1.07;1780.61;1;Cone (176);0.50;0.50;1792.50;11.89;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (176)
+559;Clic Perfect;446.152;446.0;51;148.717;0.28;1.08;1784.44;1;Cone (176);0.50;0.50;1792.50;8.06;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (176)
+560;Clic Perfect;447.048;447.0;16;149.016;0.28;1.08;1788.26;1;Cone (176);0.50;0.50;1792.50;4.24;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (176)
+561;Salto;447.560;447.5;20;149.187;0.28;1.08;1790.10;1;Cone (176);0.50;0.50;1792.50;2.40;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (176)
+562;Clic Perfect;447.816;448.0;-61;149.272;0.28;3.16;1791.29;0;Beam Top;-0.13;10.36;1792.00;0.71;Nivel/Timeline/Segmento 111 · beats 444-447/Escenario/Mine Structure/Arch/Support/Beam Top
+563;Wallrun;448.776;449.0;-75;149.592;-1.39;5.01;1795.22;0;Cone (134);-1.50;0.50;1794.50;-0.72;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (134)
+564;Clic Perfect;448.968;449.0;-11;149.656;-1.39;5.00;1795.83;0;Cone (116);-1.50;0.50;1795.50;-0.33;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (116)
+565;Clic Perfect;450.056;450.0;19;150.019;-1.39;4.82;1800.29;0;Cone (193);-1.50;0.50;1800.50;0.21;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (193)
+566;Walljump;450.824;451.0;-59;150.275;-1.39;4.57;1803.09;0;Cone (285);-1.50;0.50;1803.50;0.41;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (285)
+567;Clic Perfect;450.952;451.0;-16;150.317;-1.05;5.31;1803.83;0;Cone (285);-1.50;0.50;1803.50;-0.33;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (285)
+568;Wallrun;451.656;451.5;52;150.552;1.44;5.68;1806.57;0;Cone (327);1.50;0.50;1806.50;-0.07;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (327)
+569;Clic Perfect;452.040;452.0;13;150.680;1.44;5.66;1808.32;0;Cone (420);1.50;0.50;1808.50;0.18;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (420)
+570;Walljump;452.744;452.5;81;150.936;1.44;5.54;1810.98;0;Cone (418);1.50;0.50;1810.50;-0.48;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (418)
+571;Clic Perfect;453.064;453.0;21;151.021;0.29;6.62;1812.25;0;Cone (613);0.50;0.50;1812.50;0.25;Nivel/Timeline/Segmento 112 · beats 448-451/Escenario/Mine Structure/Cone (613)
+572;Clic Good;454.216;454.0;72;151.405;-2.42;4.08;1816.83;1;Cone (777);-2.50;0.50;1816.50;-0.33;Nivel/Timeline/Segmento 113 · beats 452-455/Obstáculos/Cone (777)
+573;Salto;454.664;454.5;55;151.555;-2.42;4.08;1818.68;1;Cone (790);-2.50;0.50;1818.50;-0.18;Nivel/Timeline/Segmento 113 · beats 452-455/Obstáculos/Cone (790)
+574;Clic Perfect;454.920;455.0;-27;151.640;-2.42;5.76;1819.61;0;Cone (786);-2.50;0.50;1819.50;-0.11;Nivel/Timeline/Segmento 113 · beats 452-455/Obstáculos/Cone (786)
+575;Clic Perfect;455.816;456.0;-61;151.939;-0.44;8.17;1823.25;0;Cone (551);-0.50;0.50;1823.50;0.25;Nivel/Timeline/Segmento 113 · beats 452-455/Obstáculos/Cone (551)
+576;Doble salto;456.008;456.0;3;152.003;0.34;7.83;1824.04;0;Cone (611);0.50;0.50;1823.50;-0.54;Nivel/Timeline/Segmento 113 · beats 452-455/Obstáculos/Cone (611)
+577;Clic Perfect;456.968;457.0;-11;152.323;4.24;10.59;1827.94;0;Right Side Beam;6.81;9.58;1832.28;4.34;Nivel/Timeline/Segmento 114 · beats 456-459/Escenario/Mine Structure/Arch/Support/Right Side Beam
+578;Clic Good;458.312;458.5;-63;152.771;5.50;4.08;1833.10;1;Cone (893);5.50;0.50;1832.50;-0.60;Nivel/Timeline/Segmento 114 · beats 456-459/Obstáculos/Cone (893)
+579;Salto;458.504;458.5;1;152.835;5.50;4.08;1833.89;1;Cone (889);5.50;0.50;1833.50;-0.39;Nivel/Timeline/Segmento 114 · beats 456-459/Obstáculos/Cone (889)
+580;Clic Good;459.272;459.5;-76;153.091;2.27;8.18;1837.32;0;Cone (1094);2.50;0.50;1837.50;0.18;Nivel/Timeline/Segmento 114 · beats 456-459/Obstáculos/Cone (1094)
+581;Clic Perfect;460.168;460.0;56;153.389;0.33;6.13;1840.91;0;Cone (962);0.50;0.50;1840.50;-0.41;Nivel/Timeline/Segmento 115 · beats 460-463/Obstáculos/Cone (962)
+582;Doble salto;460.232;460.0;77;153.411;0.33;5.83;1841.11;0;Cone (958);0.50;0.50;1841.50;0.39;Nivel/Timeline/Segmento 115 · beats 460-463/Obstáculos/Cone (958)
+583;Clic Perfect;461.192;461.0;64;153.731;-3.45;8.62;1844.90;0;Cone (1107);-3.50;0.50;1844.50;-0.40;Nivel/Timeline/Segmento 115 · beats 460-463/Obstáculos/Cone (1107)
+584;Clic Perfect;462.088;462.0;29;154.029;-5.55;4.76;1848.46;0;Cone (992);-5.50;0.50;1848.50;0.04;Nivel/Timeline/Segmento 115 · beats 460-463/Obstáculos/Cone (992)
+585;Salto;462.536;462.5;12;154.179;-5.55;4.08;1850.45;1;Cone (984);-5.50;0.50;1850.50;0.05;Nivel/Timeline/Segmento 115 · beats 460-463/Obstáculos/Cone (984)
+586;Clic Perfect;462.792;463.0;-69;154.264;-5.55;5.74;1851.34;0;Cone (984);-5.50;0.50;1850.50;-0.84;Nivel/Timeline/Segmento 115 · beats 460-463/Obstáculos/Cone (984)
+587;Clic Perfect;463.944;464.0;-19;154.648;-2.68;7.85;1855.75;0;Cone (1501);-2.50;0.50;1855.50;-0.25;Nivel/Timeline/Segmento 115 · beats 460-463/Obstáculos/Cone (1501)
+588;Doble salto;464.136;464.0;45;154.712;-2.68;7.21;1856.54;0;Cone (1497);-2.50;0.50;1856.50;-0.04;Nivel/Timeline/Segmento 116 · beats 464-467/Obstáculos/Cone (1497)
+589;Clic Perfect;465.032;465.0;11;155.011;-0.35;10.03;1860.03;0;Left Side Beam;-6.81;9.58;1864.28;4.25;Nivel/Timeline/Segmento 116 · beats 464-467/Escenario/Mine Structure/Arch/Support/Left Side Beam
+590;Clic Perfect;466.120;466.0;40;155.373;2.17;4.46;1864.63;0;Cone (1447);2.50;0.50;1864.50;-0.13;Nivel/Timeline/Segmento 116 · beats 464-467/Obstáculos/Cone (1447)
+591;Salto;466.568;466.5;23;155.523;2.17;4.08;1866.28;1;Cone (1439);2.50;0.50;1866.50;0.22;Nivel/Timeline/Segmento 116 · beats 464-467/Obstáculos/Cone (1439)
+592;Clic Perfect;466.888;467.0;-37;155.629;1.99;6.36;1867.64;0;Cone (1396);1.50;0.50;1867.50;-0.14;Nivel/Timeline/Segmento 116 · beats 464-467/Obstáculos/Cone (1396)
+593;Clic Perfect;468.040;468.0;13;156.013;-0.54;7.31;1872.27;0;Cone (1633);-0.50;0.50;1872.50;0.23;Nivel/Timeline/Segmento 117 · beats 468-471/Obstáculos/Cone (1633)
+594;Doble salto;468.104;468.0;35;156.035;-0.54;7.08;1872.49;0;Cone (1633);-0.50;0.50;1872.50;0.01;Nivel/Timeline/Segmento 117 · beats 468-471/Obstáculos/Cone (1633)
+595;Clic Perfect;469.128;469.0;43;156.376;-0.54;9.77;1876.53;0;Left Side Beam;-6.81;9.58;1880.28;3.75;Nivel/Timeline/Segmento 117 · beats 468-471/Escenario/Mine Structure/Arch/Support/Left Side Beam
+596;Clic Perfect;470.088;470.0;29;156.696;-0.54;4.71;1880.39;0;Cone (1622);-0.50;0.50;1880.50;0.11;Nivel/Timeline/Segmento 117 · beats 468-471/Obstáculos/Cone (1622)
+597;Clic Perfect;470.856;471.0;-48;156.952;-0.54;3.98;1883.31;1;Cone (1635);-0.50;0.50;1882.50;-0.81;Nivel/Timeline/Segmento 117 · beats 468-471/Obstáculos/Cone (1635)
+598;Salto;470.856;471.0;-48;156.952;-0.54;3.74;1883.47;1;Cone (1631);-0.50;0.50;1883.50;0.03;Nivel/Timeline/Segmento 117 · beats 468-471/Obstáculos/Cone (1631)
+599;Clic Perfect;471.880;472.0;-40;157.293;-0.54;7.91;1887.80;0;Cone (1636);-0.50;0.50;1887.50;-0.30;Nivel/Timeline/Segmento 117 · beats 468-471/Obstáculos/Cone (1636)
+600;Doble salto;472.008;472.0;3;157.336;-0.54;7.85;1888.12;0;Cone (1632);-0.50;0.50;1888.50;0.38;Nivel/Timeline/Segmento 118 · beats 472-475/Obstáculos/Cone (1632)
+601;Clic Perfect;473.032;473.0;11;157.677;1.50;10.58;1892.17;0;Right Side Beam;6.81;9.58;1896.28;4.11;Nivel/Timeline/Segmento 118 · beats 472-475/Escenario/Mine Structure/Arch/Support/Right Side Beam
+602;Clic Good;474.248;474.0;83;158.083;3.51;4.08;1897.02;1;Cone (2197);3.50;0.50;1896.50;-0.52;Nivel/Timeline/Segmento 118 · beats 472-475/Obstáculos/Cone (2197)
+603;Salto;474.824;475.0;-59;158.275;3.32;4.01;1899.25;1;Cone (2206);3.50;0.50;1899.50;0.25;Nivel/Timeline/Segmento 118 · beats 472-475/Obstáculos/Cone (2206)
+604;Clic Perfect;474.888;475.0;-37;158.296;2.93;4.76;1899.64;0;Cone (2166);2.50;0.50;1899.50;-0.14;Nivel/Timeline/Segmento 118 · beats 472-475/Obstáculos/Cone (2166)
+605;Clic Perfect;475.976;476.0;-8;158.659;-0.82;8.17;1903.86;0;Cone (2341);-0.50;0.50;1903.50;-0.36;Nivel/Timeline/Segmento 118 · beats 472-475/Obstáculos/Cone (2341)
+606;Doble salto;476.040;476.0;13;158.680;-0.82;8.04;1904.21;0;Cone (1987);-0.50;0.50;1904.50;0.29;Nivel/Timeline/Segmento 119 · beats 476-479/Obstáculos/Cone (1987)
+607;Clic Perfect;477.000;477.0;0;159.000;-0.82;10.83;1908.15;0;Left Side Beam;-6.81;9.58;1912.28;4.13;Nivel/Timeline/Segmento 119 · beats 476-479/Escenario/Mine Structure/Arch/Support/Left Side Beam
+608;Clic Perfect;478.024;478.0;8;159.341;0.86;5.83;1912.10;0;Cone (2407);0.50;0.50;1912.50;0.40;Nivel/Timeline/Segmento 119 · beats 476-479/Obstáculos/Cone (2407)
+609;Salto;478.472;478.5;-9;159.491;0.86;4.08;1914.11;1;Cone (2399);0.50;0.50;1914.50;0.39;Nivel/Timeline/Segmento 119 · beats 476-479/Obstáculos/Cone (2399)
+610;Clic Perfect;478.792;479.0;-69;159.597;0.86;6.18;1915.31;0;Cone (2399);0.50;0.50;1914.50;-0.81;Nivel/Timeline/Segmento 119 · beats 476-479/Obstáculos/Cone (2399)
+611;Clic Perfect;480.008;480.0;3;160.003;-0.38;7.40;1920.01;0;Cone (2340);-0.50;0.50;1919.50;-0.50;Nivel/Timeline/Segmento 119 · beats 476-479/Obstáculos/Cone (2340)
+612;Clic Perfect;481.032;481.0;11;160.344;0.64;1.05;1924.28;1;Right Side Beam;6.81;9.58;1928.28;4.00;Nivel/Timeline/Segmento 120 · beats 480-483/Escenario/Mine Structure/Arch/Support/Right Side Beam
+613;Clic Perfect;482.056;482.0;19;160.685;-0.88;1.05;1928.31;1;Left Side Beam;-6.81;9.58;1928.28;-0.03;Nivel/Timeline/Segmento 120 · beats 480-483/Escenario/Mine Structure/Arch/Support/Left Side Beam
+614;Clic Perfect;483.080;483.0;27;161.027;1.92;1.05;1932.44;1;Right Diagonal Beam;5.64;7.45;1936.00;3.56;Nivel/Timeline/Segmento 120 · beats 480-483/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+615;Clic Perfect;484.040;484.0;13;161.347;-0.50;1.06;1936.01;1;Left Diagonal Beam;-5.64;7.45;1936.00;-0.01;Nivel/Timeline/Segmento 120 · beats 480-483/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+616;Clic Perfect;485.128;485.0;43;161.709;1.07;1.05;1940.29;1;Right Side Beam;6.81;9.58;1944.28;3.99;Nivel/Timeline/Segmento 121 · beats 484-487/Escenario/Mine Structure/Arch/Support/Right Side Beam
+617;Clic Perfect;486.088;486.0;29;162.029;-0.84;1.05;1944.31;1;Left Side Beam;-6.81;9.58;1944.28;-0.03;Nivel/Timeline/Segmento 121 · beats 484-487/Escenario/Mine Structure/Arch/Support/Left Side Beam
+618;Clic Perfect;487.112;487.0;37;162.371;0.75;1.05;1948.35;1;Right Diagonal Beam;5.64;7.45;1952.00;3.65;Nivel/Timeline/Segmento 121 · beats 484-487/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+619;Clic Perfect;488.072;488.0;24;162.691;-1.26;1.05;1952.29;1;Left Diagonal Beam;-5.64;7.45;1952.00;-0.29;Nivel/Timeline/Segmento 121 · beats 484-487/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+620;Clic Perfect;489.032;489.0;11;163.011;0.99;1.05;1956.36;1;Right Side Beam;6.81;9.58;1960.28;3.92;Nivel/Timeline/Segmento 122 · beats 488-491/Escenario/Mine Structure/Arch/Support/Right Side Beam
+621;Clic Perfect;490.056;490.0;19;163.352;-0.44;1.05;1960.28;1;Left Side Beam;-6.81;9.58;1960.28;0.00;Nivel/Timeline/Segmento 122 · beats 488-491/Escenario/Mine Structure/Arch/Support/Left Side Beam
+622;Clic Perfect;491.016;491.0;5;163.672;1.09;1.05;1964.21;1;Right Diagonal Beam;5.64;7.45;1968.00;3.79;Nivel/Timeline/Segmento 122 · beats 488-491/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+623;Clic Perfect;492.040;492.0;13;164.013;0.66;1.06;1968.21;1;Right Diagonal Beam;5.64;7.45;1968.00;-0.21;Nivel/Timeline/Segmento 122 · beats 488-491/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+624;Clic Perfect;493.128;493.0;43;164.376;2.24;1.05;1972.48;1;Right Side Beam;6.81;9.58;1976.28;3.80;Nivel/Timeline/Segmento 123 · beats 492-495/Escenario/Mine Structure/Arch/Support/Right Side Beam
+625;Clic Perfect;494.088;494.0;29;164.696;0.80;1.05;1976.37;1;Right Side Beam;6.81;9.58;1976.28;-0.09;Nivel/Timeline/Segmento 123 · beats 492-495/Escenario/Mine Structure/Arch/Support/Right Side Beam
+626;Clic Good;495.240;495.0;80;165.080;2.94;1.05;1981.01;1;Right Diagonal Beam;5.64;7.45;1984.00;2.99;Nivel/Timeline/Segmento 123 · beats 492-495/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+627;Clic Good;496.264;496.5;-79;165.421;-1.04;1.05;1984.79;1;Left Diagonal Beam;-5.64;7.45;1984.00;-0.79;Nivel/Timeline/Segmento 123 · beats 492-495/Escenario/Mine Structure/Arch/Support/Left Diagonal Beam
+628;Clic Perfect;497.160;497.0;53;165.720;2.11;1.05;1988.62;1;Right Side Beam;6.81;9.58;1992.28;3.66;Nivel/Timeline/Segmento 124 · beats 496-499/Escenario/Mine Structure/Arch/Support/Right Side Beam
+629;Clic Perfect;498.120;498.0;40;166.040;0.11;1.05;1992.67;1;Right Side Beam;6.81;9.58;1992.28;-0.39;Nivel/Timeline/Segmento 124 · beats 496-499/Escenario/Mine Structure/Arch/Support/Right Side Beam
+630;Clic Perfect;499.080;499.0;27;166.360;0.11;1.05;1996.52;1;Right Diagonal Beam;5.64;7.45;2000.00;3.48;Nivel/Timeline/Segmento 124 · beats 496-499/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+631;Clic Perfect;500.104;500.0;35;166.701;0.11;1.05;2000.39;1;Right Diagonal Beam;5.64;7.45;2000.00;-0.39;Nivel/Timeline/Segmento 124 · beats 496-499/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+632;Clic Perfect;501.064;501.0;21;167.021;0.11;1.05;2004.32;1;Right Side Beam;6.81;9.58;2008.28;3.96;Nivel/Timeline/Segmento 125 · beats 500-503/Escenario/Mine Structure/Arch/Support/Right Side Beam
+633;Clic Perfect;502.088;502.0;29;167.363;1.20;1.05;2008.21;1;Right Side Beam;6.81;9.58;2008.28;0.07;Nivel/Timeline/Segmento 125 · beats 500-503/Escenario/Mine Structure/Arch/Support/Right Side Beam
+634;Clic Perfect;502.984;503.0;-5;167.661;1.20;1.05;2012.18;1;Right Diagonal Beam;5.64;7.45;2016.00;3.82;Nivel/Timeline/Segmento 125 · beats 500-503/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+635;Clic Perfect;504.008;504.0;3;168.003;0.23;1.20;2016.03;1;Right Diagonal Beam;5.64;7.45;2016.00;-0.03;Nivel/Timeline/Segmento 125 · beats 500-503/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+636;Clic Perfect;505.096;505.0;32;168.365;0.23;1.05;2020.36;1;Right Side Beam;6.81;9.58;2024.28;3.92;Nivel/Timeline/Segmento 126 · beats 504-507/Escenario/Mine Structure/Arch/Support/Right Side Beam
+637;Clic Perfect;505.992;506.0;-3;168.664;0.23;1.05;2024.11;1;Right Side Beam;6.81;9.58;2024.28;0.17;Nivel/Timeline/Segmento 126 · beats 504-507/Escenario/Mine Structure/Arch/Support/Right Side Beam
+638;Clic Perfect;507.016;507.0;5;169.005;0.23;1.05;2028.11;1;Right Diagonal Beam;5.64;7.45;2032.00;3.89;Nivel/Timeline/Segmento 126 · beats 504-507/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+639;Clic Perfect;507.976;508.0;-8;169.325;0.23;1.13;2031.94;1;Right Diagonal Beam;5.64;7.45;2032.00;0.07;Nivel/Timeline/Segmento 126 · beats 504-507/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam
+640;Clic Perfect;509.064;509.0;21;169.688;0.23;1.05;2036.07;1;Right Side Beam;6.81;9.58;2040.28;4.21;Nivel/Timeline/Segmento 127 · beats 508-511/Escenario/Mine Structure/Arch/Support/Right Side Beam
+641;Clic Perfect;510.088;510.0;29;170.029;0.23;1.05;2040.36;1;Right Side Beam;6.81;9.58;2040.28;-0.08;Nivel/Timeline/Segmento 127 · beats 508-511/Escenario/Mine Structure/Arch/Support/Right Side Beam
+642;Clic Perfect;511.048;511.0;16;170.349;0.23;1.05;2044.27;1;Right Diagonal Beam;5.64;7.45;2048.00;3.73;Nivel/Timeline/Segmento 127 · beats 508-511/Escenario/Mine Structure/Arch/Support/Right Diagonal Beam

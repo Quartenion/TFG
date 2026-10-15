@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: perfect_coin
   displayName: Latido dorado
-  description: +1 moneda por cada latido PERFECTO.
+  description: "+1 moneda por cada Perfect."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.95, g: 0.72, b: 0.15, a: 1}

@@ -6,7 +6,7 @@ using UnityEngine;
 /// obstáculo, mira siempre a la cámara y LATE AL RITMO de la música (crece en cada beat).
 ///   • Ponlo en un objeto vacío justo encima/delante del obstáculo donde hay que usar esa acción.
 ///   • Aparece cuando el jugador está a menos de «Distancia de aparición» y desaparece cuando lo ha pasado.
-///   • Solo se ve si los consejos están activados (F1 → F2) o en la parte de práctica del modo prueba.
+///   • Solo se ve si los consejos están activados (TAB → F2) o en la parte de práctica del modo prueba.
 /// Menú: Tools/Tutorial/Crear avisos de ejemplo (Nivel 1) crea un juego de carteles para recolocar.
 /// </summary>
 [AddComponentMenu("Level/Tutorial Hint")]
@@ -76,6 +76,7 @@ public class TutorialHint : MonoBehaviour
         // (Se crea ya con RectTransform: si TextMeshPro lo cambia después, se pierde la posición.)
         var go = new GameObject("Billboard", typeof(RectTransform));
         _text = go.AddComponent<TextMeshPro>();
+        UIFonts.Apply(_text, title: false);
         if (follow)
         {
             // Suelto en la escena (no hijo del objeto): así no hereda su escala/giro y no sale aplastado.
@@ -97,6 +98,7 @@ public class TutorialHint : MonoBehaviour
 
         ApplyText();
         Loc.OnChanged += ApplyText;
+        Keybinds.Changed += ApplyText;
         _text.fontSize = textSize;
         _text.alignment = TextAlignmentOptions.Center;
         _text.textWrappingMode = TextWrappingModes.NoWrap;
@@ -110,6 +112,7 @@ public class TutorialHint : MonoBehaviour
     private void OnDestroy()
     {
         Loc.OnChanged -= ApplyText;
+        Keybinds.Changed -= ApplyText;
         if (follow && _billboard != null) Destroy(_billboard.gameObject);   // (va suelto en la escena)
     }
 
@@ -123,6 +126,7 @@ public class TutorialHint : MonoBehaviour
         if (_text == null) return;
         string k = Loc.English ? (string.IsNullOrEmpty(keyEnglish) ? Translate(key) : keyEnglish) : key;
         string m = Loc.English ? (string.IsNullOrEmpty(messageEnglish) ? Translate(message) : messageEnglish) : message;
+        k = Keybinds.Fix(k); m = Keybinds.Fix(m);   // (teclas cambiadas en Ajustes → Controles)
         _text.text = string.IsNullOrEmpty(m) ? k : $"{k}\n<size=45%>{m}</size>";
     }
 

@@ -477,16 +477,16 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: CONFIGURACION
+  m_text: "CONFIGURACI\xD3N"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: a90d81304a84dcc45873e25121b03ce7, type: 2}
-  m_sharedMaterial: {fileID: 1642787807614937146, guid: a90d81304a84dcc45873e25121b03ce7, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 6145c034cce6db54cadea5896610310d, type: 2}
+  m_sharedMaterial: {fileID: 3882418439835441494, guid: 6145c034cce6db54cadea5896610310d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4281479730
+    rgba: 4278190335
   m_fontColor: {r: 1, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -504,7 +504,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32.26
+  m_fontSize: 72
   m_fontSizeBase: 32.26
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -569,7 +569,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14f7bfb7c2e2b124f8c06bd507dfebda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
-  spanish: CONFIGURACION
+  spanish: "CONFIGURACI\xD3N"
   english: SETTINGS
 --- !u!1 &872802733
 GameObject:
@@ -630,10 +630,12 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'INF
 
+    -
+
     HARTO'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: a90d81304a84dcc45873e25121b03ce7, type: 2}
-  m_sharedMaterial: {fileID: 1642787807614937146, guid: a90d81304a84dcc45873e25121b03ce7, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: cfca24e9b1c9c854790b1e18020e868a, type: 2}
+  m_sharedMaterial: {fileID: -2584229049209839410, guid: cfca24e9b1c9c854790b1e18020e868a, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -657,7 +659,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 184.8
+  m_fontSize: 180.3
   m_fontSizeBase: 231
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -907,14 +909,14 @@ MonoBehaviour:
       m_Calls: []
   m_text: SALIR
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: a90d81304a84dcc45873e25121b03ce7, type: 2}
-  m_sharedMaterial: {fileID: 1642787807614937146, guid: a90d81304a84dcc45873e25121b03ce7, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 6145c034cce6db54cadea5896610310d, type: 2}
+  m_sharedMaterial: {fileID: 3882418439835441494, guid: 6145c034cce6db54cadea5896610310d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4281479730
+    rgba: 4278190335
   m_fontColor: {r: 1, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -932,7 +934,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32.26
+  m_fontSize: 72
   m_fontSizeBase: 32.26
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1888,14 +1890,14 @@ MonoBehaviour:
       m_Calls: []
   m_text: JUGAR
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: a90d81304a84dcc45873e25121b03ce7, type: 2}
-  m_sharedMaterial: {fileID: 1642787807614937146, guid: a90d81304a84dcc45873e25121b03ce7, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 6145c034cce6db54cadea5896610310d, type: 2}
+  m_sharedMaterial: {fileID: 3882418439835441494, guid: 6145c034cce6db54cadea5896610310d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4281479730
+    rgba: 4278190335
   m_fontColor: {r: 1, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -1913,7 +1915,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32.26
+  m_fontSize: 72
   m_fontSizeBase: 32.26
   m_fontWeight: 400
   m_enableAutoSizing: 1

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: accuracy_pay
   displayName: "Pago por precisi\xF3n"
-  description: "Al terminar el nivel, +1 moneda por cada % de precisi\xF3n."
+  description: "Al acabar el nivel, +1 moneda por cada % de precisi\xF3n."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.95, g: 0.72, b: 0.15, a: 1}

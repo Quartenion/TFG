@@ -128,7 +128,7 @@ public class StudyTelemetry : MonoBehaviour
     /// <summary>Contratos (partes 4-5): firmar, rescindir, cumplido y cobrar.</summary>
     public static void ContractEvent(string evt, string id)
     {
-        if (!StudySession.Active) return;
+        if (!StudySession.Active || StudySession.FreePlay) return;   // (la práctica libre no se registra)
         ContractDef c = ContractCatalog.Get(id);
         var f = new List<string>
         {
@@ -154,7 +154,7 @@ public class StudyTelemetry : MonoBehaviour
     /// <summary>Tienda (partes 4-5): abrir/cerrar (con duración), compras, equipar/quitar y muescas.</summary>
     public static void ShopEvent(string evt, string item, int price, float duration = -1f)
     {
-        if (!StudySession.Active) return;
+        if (!StudySession.Active || StudySession.FreePlay) return;   // (la práctica libre no se registra)
         var f = new List<string>
         {
             "tienda", StudySession.Participant, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,

@@ -19,7 +19,7 @@ public static class StudySession
     {
         public string scene, titleEs, titleEn, descEs, descEn;
         public string title       => Loc.T(titleEs, titleEn);
-        public string description => Loc.T(descEs, descEn);
+        public string description => Keybinds.Fix(Loc.T(descEs, descEn));   // (teclas de Ajustes → Controles)
         public StudyConfig.Profile config;
         public bool tutorial, questionnaire, preference, shop;   // tutorial = carteles de consejos (práctica y mecánicas nuevas de los niveles 2 y 3)
     }
@@ -37,12 +37,52 @@ public static class StudySession
 
     public static Part[] Plan { get; private set; }
 
-    public static bool InLevel => Active && AwaitingReturn && SceneManager.GetActiveScene().name != MenuScene;
+    /// <summary>Jugando una parte de la prueba (no la práctica libre).</summary>
+    public static bool InLevel => Active && AwaitingReturn && !FreePlay && SceneManager.GetActiveScene().name != MenuScene;
+
+    /// <summary>
+    /// PRÁCTICA LIBRE (tras las 3 partes principales): repetir el último nivel con TODO desbloqueado (tienda con todas
+    /// las mejoras, monedas de práctica, contratos), sin límite de intentos, sin cuestionario y SIN registrar datos.
+    /// Al volver al menú la partida guardada queda exactamente como estaba (lo comprado en la práctica no cuenta).
+    /// </summary>
+    public static bool FreePlay { get; private set; }
+    public static bool InFreePlay => Active && FreePlay && SceneManager.GetActiveScene().name != MenuScene;
+    public const int FreePlayCoins = 5000;
+    private static string _freePlaySave;
+
+    /// <summary>Nivel que se acaba de jugar (el que se repite en la práctica libre).</summary>
+    public static Part LastPlayed => Plan[Mathf.Clamp(Step - 1, 0, Plan.Length - 1)];
+
+    public static void StartFreePlay()
+    {
+        if (!Active) return;
+        _freePlaySave = PlayerProgress.Snapshot();
+        FreePlay = true;
+        AwaitingReturn = true;
+        Attempts = 0;
+        StudyConfig.Current = StudyConfig.Profile.Normal;
+        PlayerProgress.Suspended = false;
+        PlayerProgress.AddCoins(FreePlayCoins);
+        CheckpointSystem.Clear();
+        SceneManager.LoadScene(LastPlayed.scene);
+    }
+
+    /// <summary>De vuelta en el menú tras la práctica libre: todo como estaba.</summary>
+    public static void EndFreePlay()
+    {
+        if (!FreePlay) return;
+        FreePlay = false;
+        AwaitingReturn = false;
+        PlayerProgress.Restore(_freePlaySave);
+        _freePlaySave = null;
+        PlayerProgress.Suspended = true;
+        CheckpointSystem.Clear();
+    }
     public static bool TutorialStep => InLevel && Step >= 0 && Plan[Step].tutorial;
     public static Part Current => Plan[Mathf.Clamp(Step, 0, Plan.Length - 1)];
 
     /// <summary>¿Se puede usar la tienda (y cuentan las mejoras) en esta parte?</summary>
-    public static bool ShopAllowed => InLevel && Current.shop;
+    public static bool ShopAllowed => (InLevel && Current.shop) || InFreePlay;
 
     // ── Inicio / fin ──────────────────────────────────────────────────────────
 
@@ -97,6 +137,7 @@ public static class StudySession
 
     public static void Finish()
     {
+        EndFreePlay();
         Active = false;
         AwaitingReturn = false;
         StudyConfig.Current = StudyConfig.Profile.Normal;

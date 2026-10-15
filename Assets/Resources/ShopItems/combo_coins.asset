@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: combo_coins
   displayName: Racha dorada
-  description: +5 monedas cada 16 aciertos seguidos.
+  description: "+5 monedas cada 16 aciertos seguidos."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.95, g: 0.72, b: 0.15, a: 1}

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: wide_window
   displayName: "O\xEDdo fino"
-  description: "La ventana para acertar el beat es un poco m\xE1s amplia."
+  description: "M\xE1s margen para acertar el beat."
   levelDescriptions:
   - +15 % de margen
   - +30 % de margen

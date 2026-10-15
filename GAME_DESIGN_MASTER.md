@@ -52,7 +52,7 @@ Flotación *spring-damper*, remo al ritmo (clic izq./der.), combo de remo, salta
 `ObstacleInfo` (caras letales), `ObstacleCollision`, `FallingObstacle`, `StairFallingObstacle`, `FireballObstacle`, `WaterSpike`, `BeatOscillator`, `PivotOscillator`, `FloatingObject`, `CrushBottom` (cara inferior letal de bloques móviles), `BloodSucker` + `GazeSwitch` (mirar para activar). Todos implementan **`IRewindable`** para el Rebobinado.
 
 ### Jefe (Level3)
-`BossController` (+ `BossControllerPhase3`), `BossTailSweep` (tridente), `BossFistSlam`, `BossProjectile` (barriles), `BossHomingFireball`, `BossPillar`, `BossShockwave`, `BossPlatformSpawner`, `BossMusicController`, `BossLifeOrb`. Los golpes quitan **un cuarto de la sangre total** (1 s de invulnerabilidad); **una vida extra por fase** (barril de vida → bola de fuego de vida → orbe de vida por mirada). Las mejoras de la tienda funcionan en el jefe salvo el Rebobinado.
+`BossController` (+ `BossControllerPhase3`), `BossTridentSweep` (tridente), `BossFistSlam`, `BossProjectile` (barriles), `BossHomingFireball`, `BossPillar`, `BossShockwave`, `BossPlatformSpawner`, `BossMusicController`, `BossLifeOrb`. Los golpes **rompen el escudo azul** (se pierde toda la sangre azul, suena cristal y no se puede rellenar en 3 s) o, sin azul, llenan **media jeringuilla roja** (1 s de invulnerabilidad); **una vida extra por fase** (barril de vida → bola de fuego de vida → orbe de vida por mirada). Las mejoras de la tienda funcionan en el jefe salvo el Rebobinado.
 
 ### Tienda, economía y progreso
 - **PlayerProgress** — guardado JSON (monedas, mejoras, consumibles, muescas, contratos, iris, cosméticos). `LevelCoins` (monedas de la partida; se conservan en checkpoint y al morir), `RunStats`, `CheckpointSystem`.
@@ -1399,6 +1399,19 @@ También se quitaron del `Player.prefab` el componente `ArmPlaceholder` y el obj
 - **Pausa**: oculta todo el HUD (Canvas, avisos OnGUI y carteles del tutorial vía `PauseMenuManager.IsPaused`); botón y panel de Ajustes en el prefab Canvas (`Tools/Pausa/…`). En modo prueba, volver al menú avisa y descalifica (`StudySession.Abort`, fila `abandono`).
 - **Menú principal**: fondo de fuego (`MenuFireBackground`), música de Game Over en bucle, rótulos de los sliders.
 - **Idioma** (`Loc`): español por defecto / inglés, elegido en Ajustes (`LanguageButton`). Textos de código con `Loc.T(es, en)`; textos de escenas/prefabs con `LocalizedText` (`Tools/Idioma/Preparar menús`). Tienda en inglés en `ShopTextsEn`; contratos, cosméticos, estudio y tutorial traducidos. El Google Form final sigue en español.
+
+### Oct. 2026 — Organización de los scripts
+Carpetas de `Assets/Scripts` por sistema:
+- `Rhythm/`: BeatManager (+ TimingResult), RhythmInput, MetronomeClicks, GlassShatterSfx, PulseToTheBeat.
+- `GameFlow/`: inicio (StartSequenceManager, StartWall, DoorInteraction, LobbyMusic), fin de nivel y game over.
+- `Player/`: movimiento, energía, kayak, bloqueo, mano, cámara, pasos, buceo.
+- `Level/`: `Obstacles/`, `Enemies/` (BloodSucker, GazeSwitch), `Environment/` (agua, tirolina, rejilla de beats), `Collectibles/` (monedas, iris), `LevelDesign/` (herramientas de diseño en escena).
+- `UI/`: utilidades comunes (SimpleUI, UIKit, CursorRestorer), `HUD/` y `Menus/` (principal, pausa, ajustes, fondo de fuego).
+- `Settings/`: GameSettings (volumen, sensibilidad, VolumePreview), idioma (Loc, LocalizedText, LanguageButton).
+- `Shop/`: `Data/` (progreso, catálogo, textos, desbloqueos, muescas, cosméticos), `Perks/` (efectos de mejoras y consumibles, + IRewindable en TimeRewinder), `UI/`.
+- `Boss/`, `Contracts/`, `Study/` (StudyConfig dentro de StudySettings), `Tutorial/`.
+- `Editor/`: `BeatTracking/`, `Inspectors/`, `Level/` (incluye GameEditorMenus = menús Tools de Tienda/Contratos/Lobby), `Menus/` (MenuDesignTool reúne las herramientas de menús, idioma y fondo de fuego; UISharpnessTool).
+Fusiones: 4 menús de editor pequeños → GameEditorMenus; MainMenuLayoutFix + LanguageTool + PauseMenuSettingsTool → MenuDesignTool (sin el código muerto); StudyConfig → StudySettings; IRewindable → TimeRewinder; TimingResult → BeatManager.
 
 ---
 

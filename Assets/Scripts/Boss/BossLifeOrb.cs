@@ -28,7 +28,7 @@ public class BossLifeOrb : MonoBehaviour
         orb._cam = cam;
 
         // Corazón / orbe verde que brilla
-        GameObject v = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        GameObject v = RuntimeMaterials.Primitive(PrimitiveType.Sphere);
         Destroy(v.GetComponent<Collider>());
         v.transform.SetParent(go.transform, false);
         v.transform.localScale = Vector3.one * 1.3f;

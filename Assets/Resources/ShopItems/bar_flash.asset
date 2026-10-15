@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: bar_flash
   displayName: "Marca de comp\xE1s"
-  description: "El coraz\xF3n del punto de mira destella en el primer beat de cada
-    comp\xE1s."
+  description: "El punto de mira destella al empezar cada comp\xE1s."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.2, g: 0.5, b: 0.9, a: 1}

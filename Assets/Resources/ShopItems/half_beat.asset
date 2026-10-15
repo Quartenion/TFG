@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: half_beat
   displayName: Doble tempo
-  description: "Tambi\xE9n puedes acertar en los MEDIOS beats (el doble de latidos:
-    m\xE1s sangre si llevas el ritmo)."
+  description: "Tambi\xE9n puedes acertar en los medios beats."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.2, g: 0.5, b: 0.9, a: 1}

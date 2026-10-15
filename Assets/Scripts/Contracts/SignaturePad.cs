@@ -30,9 +30,10 @@ public class SignaturePad : MonoBehaviour, IPointerDownHandler, IDragHandler, IP
     public static SignaturePad Create(Transform parent, Vector2 size, int texWidth = 640)
     {
         var rt = UIKit.Node("SignaturePad", parent);
-        rt.sizeDelta = size;
-        rt.gameObject.AddComponent<RawImage>();
-        var pad = rt.gameObject.AddComponent<SignaturePad>();
+        if (!UIBind.IsReused(rt)) rt.sizeDelta = size;
+        UIBind.GetOrAdd<RawImage>(rt.gameObject);
+        var pad = UIBind.GetOrAdd<SignaturePad>(rt.gameObject);
+        if (UIBind.IsReused(rt)) size = rt.rect.size.sqrMagnitude > 1f ? rt.rect.size : size;   // (horneado: su tamaño)
         pad.Init(texWidth, Mathf.Max(8, Mathf.RoundToInt(texWidth * size.y / Mathf.Max(1f, size.x))));
         return pad;
     }

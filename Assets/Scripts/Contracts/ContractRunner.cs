@@ -31,7 +31,8 @@ public class ContractRunner : MonoBehaviour
 
     // HUD
     private CanvasGroup _hudGroup;
-    private TextMeshProUGUI _hudText;
+    private TextMeshProUGUI _hudText, _hudTitle;
+    private RectTransform _hudPanel;
     private float _hudRefresh;
 
     // ── Aparición automática ──────────────────────────────────────────────────
@@ -39,17 +40,13 @@ public class ContractRunner : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-        SceneManager.sceneLoaded += OnSceneLoaded;
-        Ensure();
+        AutoSpawn.Register(Ensure);
     }
-
-    private static void OnSceneLoaded(Scene s, LoadSceneMode m) => Ensure();
 
     private static void Ensure()
     {
         if (_instance != null) return;
-        if (FindAnyObjectByType<BeatManager>() == null || FindAnyObjectByType<PlayerMovement>() == null) return;
+        if (BeatManager.Instance == null || FindAnyObjectByType<PlayerMovement>() == null) return;
         new GameObject("ContractRunner").AddComponent<ContractRunner>();
     }
 
@@ -231,13 +228,25 @@ public class ContractRunner : MonoBehaviour
     private void BuildHud()
     {
         Canvas c = UIKit.CreateCanvas("ContractHUDCanvas", 85, transform);
-        var panel = UIKit.Panel("ContractHUD", c.transform, new Color(0f, 0f, 0f, 0.45f));
-        UIKit.Place(panel.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(24f, 60f), new Vector2(430f, 250f));
+        // Mismo estilo que el puesto de contratos (ContractUI / SimpleUI): cajas cuadradas en grises y título arriba.
+        var panel = SimpleUI.Box("ContractHUD", c.transform, new Color(SimpleUI.PanelCol.r, SimpleUI.PanelCol.g, SimpleUI.PanelCol.b, 0.9f));
+        _hudPanel = panel.rectTransform;
+        _hudPanel.anchorMin = _hudPanel.anchorMax = new Vector2(0f, 0.5f);
+        _hudPanel.pivot = new Vector2(0f, 0.5f);
+        _hudPanel.anchoredPosition = new Vector2(24f, 60f);
+        _hudPanel.sizeDelta = new Vector2(440f, 250f);
         panel.raycastTarget = false;
         _hudGroup = panel.gameObject.AddComponent<CanvasGroup>();
         _hudGroup.blocksRaycasts = false;
-        _hudText = UIKit.Label("Text", panel.transform, "", 22f, Color.white, TextAlignmentOptions.TopLeft);
-        UIKit.Stretch(_hudText.rectTransform, 16, 12, 10, 10);
+
+        var title = SimpleUI.Lbl("Title", panel.transform, Loc.T("CONTRATOS", "CONTRACTS"), SimpleUI.FontMid + 4f, TextAlignmentOptions.Left);
+        SimpleUI.PlaceTopLeft(title.rectTransform, 16f, 10f, 408f, 36f);
+        _hudTitle = title;
+        var box = SimpleUI.Box("Lista", panel.transform, SimpleUI.BoxCol);
+        box.raycastTarget = false;
+        SimpleUI.Stretch(box.rectTransform, 10f, 10f, 52f, 10f);
+        _hudText = SimpleUI.Lbl("Text", box.transform, "", SimpleUI.FontSmall + 1f, TextAlignmentOptions.TopLeft);
+        SimpleUI.Stretch(_hudText.rectTransform, 12f, 12f, 10f, 10f);
         _hudText.richText = true;
 
         // Aviso de contrato cumplido (arriba, en el centro)
@@ -252,25 +261,38 @@ public class ContractRunner : MonoBehaviour
         UpdateBanner();
         if (_hudGroup == null) return;
         List<ContractDef> here = ContractCatalog.ActiveHere();
-        bool show = Playing && here.Count > 0 && !ContractUI.IsOpen && !ShopUI.IsOpen;
-        _hudGroup.alpha = show ? 1f : 0f;
+        // Solo en la 2.ª pulsación de TAB (1.ª = controles, 2.ª = contratos, 3.ª = cerrar); entra desde la izquierda.
+        float open = TutorialHUD.ContractsAmount;
+        bool show = Playing && here.Count > 0 && !ContractUI.IsOpen && !ShopUI.IsOpen && open > 0.001f;
+        _hudGroup.alpha = show ? open : 0f;
+        if (_hudPanel != null)
+            _hudPanel.anchoredPosition = new Vector2(Mathf.Lerp(-460f, 24f, 1f - Mathf.Pow(1f - open, 3f)), 60f);
         if (!show) return;
 
         _hudRefresh -= Time.unscaledDeltaTime;
         if (_hudRefresh > 0f) return;
         _hudRefresh = 0.1f;
 
-        var sb = new System.Text.StringBuilder(Loc.T("<b><color=#FFC83A>CONTRATOS</color></b>\n", "<b><color=#FFC83A>CONTRACTS</color></b>\n"));
+        if (_hudTitle != null) _hudTitle.text = Loc.T("CONTRATOS", "CONTRACTS");
+        var sb = new System.Text.StringBuilder();
         foreach (ContractDef cd in here)
         {
             bool broken = cd.broken != null && cd.broken();
-            string col = broken ? "#FF6B6B" : "#" + ColorUtility.ToHtmlStringRGB(ContractDef.TierColor(cd.tier));
-            sb.Append($"<color={col}>•</color> <b>{cd.title}</b>");
-            if (broken) sb.Append(Loc.T("  <color=#FF6B6B>(fallado)</color>", "  <color=#FF6B6B>(failed)</color>"));
+            // Sin colores (como el puesto de contratos): blanco y grises; fallado = tachado y más apagado.
+            string name = broken ? $"<s>{cd.title}</s>" : cd.title;
+            sb.Append($"<color=#{(broken ? "8A8A8A" : "FFFFFF")}><b>{name}</b></color>");
+            if (broken) sb.Append(Loc.T("  <color=#8A8A8A>(fallado)</color>", "  <color=#8A8A8A>(failed)</color>"));
             sb.Append('\n');
             string p = cd.progress != null ? cd.progress() : Loc.T("al llegar a la meta", "on reaching the goal");
-            sb.Append($"<size=18><color=#{(broken ? "FF9B9B" : "CFCFCF")}>   {p}</color></size>\n");
+            sb.Append($"<color=#{(broken ? "6E6E6E" : "A8A8A8")}>   {p}</color>\n");
         }
+        sb.Append(Loc.T("\n<color=#8A8A8A>TAB para cerrar</color>", "\n<color=#8A8A8A>TAB to close</color>"));
         _hudText.text = sb.ToString();
+        // El panel crece con la lista (sin huecos ni texto cortado).
+        if (_hudPanel != null)
+        {
+            float h = _hudText.GetPreferredValues(_hudText.text, 416f - 24f, 0f).y;
+            _hudPanel.sizeDelta = new Vector2(440f, Mathf.Clamp(h + 52f + 10f + 20f, 110f, 600f));
+        }
     }
 }

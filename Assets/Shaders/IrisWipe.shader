@@ -26,6 +26,9 @@ Shader "UI/IrisWipe"
         _Softness ("Suavizado del borde",            Range(0.01, 0.5))    = 0.22
         _ScaleX   ("Escala horizontal (oval)",       Range(0.1, 4.0))     = 1.0
         _ScaleY   ("Escala vertical   (oval)",       Range(0.1, 4.0))     = 1.0
+        _Mode          ("Modo (0 = iris, 1 = parpadeo, 2 = fundido)", Float)    = 0
+        _BlinkSoftness ("Parpadeo: difuminado del parpado",  Range(0.01, 0.5)) = 0.2
+        _BlinkCurve    ("Parpadeo: curvatura del parpado",   Range(0, 0.9))    = 0.35
 
         // UI internals — no tocar
         [HideInInspector] _StencilComp     ("Stencil Comparison", Float) = 8
@@ -95,6 +98,9 @@ Shader "UI/IrisWipe"
             float     _Softness;
             float     _ScaleX;
             float     _ScaleY;
+            float     _Mode;
+            float     _BlinkSoftness;
+            float     _BlinkCurve;
 
             v2f vert(appdata_t v)
             {
@@ -130,6 +136,26 @@ Shader "UI/IrisWipe"
                 // Alpha: 0 dentro del agujero (visible), 1 fuera (color del tint).
                 // El ancho de la zona de transicion es _Softness -> mas alto = mas difuminado.
                 float irisAlpha = smoothstep(holeRadius, holeRadius + _Softness, dist);
+
+                // PARPADEO (_Mode = 1): dos párpados (arriba y abajo) con borde curvo y muy difuminado que se
+                // juntan en el centro, más un ligero oscurecimiento de las esquinas: como cerrar los ojos.
+                // FUNDIDO (_Mode = 2): toda la pantalla se oscurece por igual (con las esquinas un poco antes).
+                if (_Mode > 1.5)
+                {
+                    float corners = smoothstep(0.25, 0.75, length(uv));
+                    irisAlpha = saturate(_Progress * (1.0 + 0.35 * corners));
+                }
+                else if (_Mode > 0.5)
+                {
+                    float x    = uv.x * 2.0;                                   // -1 … 1
+                    float lid  = saturate(1.0 - _BlinkCurve * x * x);          // forma de ojo (más abierto en el centro)
+                    float open = (0.5 + _BlinkSoftness) / max(0.05, 1.0 - _BlinkCurve);
+                    float halfH = lerp(-_BlinkSoftness * 1.6, open, 1.0 - _Progress);
+                    float edge = halfH * lid;
+                    float lids = smoothstep(edge, edge + _BlinkSoftness, abs(uv.y));
+                    float vig  = smoothstep(0.3, 0.75, length(uv)) * _Progress;
+                    irisAlpha  = max(lids, vig);
+                }
 
                 float4 color = IN.color;
                 color.a *= irisAlpha;

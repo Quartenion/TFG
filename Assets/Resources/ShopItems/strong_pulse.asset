@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: strong_pulse
   displayName: Pulso fuerte
-  description: "Cada acierto devuelve m\xE1s sangre al coraz\xF3n."
+  description: "Cada acierto recupera m\xE1s sangre."
   levelDescriptions:
   - +15 % por acierto
   - +30 % por acierto

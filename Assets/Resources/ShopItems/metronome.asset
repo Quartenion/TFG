@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: metronome
   displayName: "Metr\xF3nomo"
-  description: "Un \xABtic\xBB en cada beat (m\xE1s agudo al empezar cada comp\xE1s)
-    para no perder el ritmo. [M] lo enciende o apaga."
+  description: "Suena un \xABtic\xBB en cada beat. [M] lo activa o desactiva."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.2, g: 0.5, b: 0.9, a: 1}

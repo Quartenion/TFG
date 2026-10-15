@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using static SimpleUI;
 
@@ -21,148 +20,42 @@ using static SimpleUI;
 ///   • ELEGIR → va a la hoja de firma. Firma con el ratón en el recuadro y pulsa FIRMAR: quedan activos
 ///              (máx. ContractCatalog.MaxActive a la vez).
 ///   • RESCINDIR → quitas uno firmado.   • COBRAR → cumplido: te llevas las monedas.
-/// Tamaños en «LAYOUT»; colores y letra en SimpleUI.cs.
+/// Lo común (abrir/cerrar, pestañas, rejilla, pie) está en GridPanel; colores y letra en SimpleUI.cs.
 /// </summary>
-public class ContractUI : MonoBehaviour
+public class ContractUI : GridPanel<ContractUI, ContractUI.Entry>
 {
-    // ── LAYOUT (cámbialo aquí) ────────────────────────────────────────────────
-    private const float PanelW = 1800f, PanelH = 900f;
-    private const float Pad = 30f;
-    private const float HeaderH = 80f;
-    private const float TabH = 50f;
-    private const float FooterH = 90f;
-    private const float DetailW = 460f;
-    private const float Gap = 10f;
-    private const int   Columns = 6;          // cada pestaña ocupa la mitad (3 columnas)
+    // ── LAYOUT propio (el común está en GridPanel) ────────────────────────────
     private const float PadH = 150f;          // alto del recuadro de firma
     private const float MinInk = 120f;        // trazo mínimo para que cuente como firma
 
-    // ── Abrir / cerrar ────────────────────────────────────────────────────────
-    public static bool IsOpen => _instance != null;
-    private static ContractUI _instance;
-    private static int   _closedFrame = -10;
-    private static float _closedTime  = -10f;
-
-    /// <summary>¿Se acaba de cerrar? (para que el Esc de cerrar no abra la pausa).</summary>
-    public static bool ClosedRecently => Time.frameCount - _closedFrame <= 5 || Time.unscaledTime - _closedTime < 0.6f;
-
-    private Action _onClosed;
-    private CursorLockMode _prevLock;
-    private bool _prevVisible;
-
-    public static ContractUI Open(Action onClosed = null)
-    {
-        if (_instance != null) return _instance;
-        _instance = new GameObject("ContractUI").AddComponent<ContractUI>();
-        _instance._onClosed = onClosed;
-        return _instance;
-    }
-
-    public void Close()
-    {
-        CursorRestorer.Restore(_prevLock, _prevVisible);
-        if (_instance == this) _instance = null;
-        _closedFrame = Time.frameCount;
-        _closedTime  = Time.unscaledTime;
-        Destroy(gameObject);
-        Action cb = _onClosed;
-        _onClosed = null;
-        cb?.Invoke();
-    }
-
     // ── Estado ────────────────────────────────────────────────────────────────
 
-    private class Entry { public ContractDef def; public Image bg; public TextMeshProUGUI state; }
+    public class Entry : GridPanelCell { public ContractDef def; }
 
     private const int ClaimedTab = 1;         // 0 = Contratos (por hacer / firmados / por cobrar), 1 = Cobrados
-    private float _cell;
-    private Entry _sel;
-    private readonly List<Entry> _entries = new List<Entry>();
-    private readonly List<Image> _tabs = new List<Image>();
     private readonly List<string> _chosen = new List<string>();   // elegidos, pendientes de firmar
 
-    private TextMeshProUGUI _wallet, _toast;
-    private RectTransform _grid;
+    private TextMeshProUGUI _wallet;
     private TextMeshProUGUI _dName, _dInfo, _dDesc, _dState, _dActionLabel, _sheet, _signLabel;
     private Button _dAction, _sign;
     private SignaturePad _pad;
-    private float _toastT;
-
-    private void Awake()
-    {
-        _prevLock    = Cursor.lockState;
-        _prevVisible = Cursor.visible;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible   = true;
-
-        UIKit.EnsureEventSystem();
-        Build();
-        PlayerProgress.OnChanged += Refresh;
-        ShowTab(0);
-    }
-
-    private void OnDestroy()
-    {
-        PlayerProgress.OnChanged -= Refresh;
-        if (_instance == this) _instance = null;
-    }
-
-    private void Update()
-    {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) { Close(); return; }
-        if (_toastT > 0f) { _toastT -= Time.unscaledDeltaTime; if (_toastT <= 0f) _toast.text = ""; }
-    }
 
     // ── Construcción ──────────────────────────────────────────────────────────
 
-    private void Build()
+    protected override string CanvasName => "ContractCanvas";
+    protected override string Title      => Loc.T("CONTRATOS", "CONTRACTS");
+    protected override float  ToastWidth => 650f;
+
+    protected override List<string> TabNames() =>
+        new List<string> { Loc.T("Contratos", "Contracts"), Loc.T("Cobrados", "Claimed") };
+
+    protected override void BuildHeader(Transform p)
     {
-        Canvas canvas = UIKit.CreateCanvas("ContractCanvas", 1000, transform);
-        Stretch(Box("Back", canvas.transform, Back).rectTransform, 0f, 0f, 0f, 0f);
-
-        var panel = Box("Panel", canvas.transform, PanelCol);
-        Place(panel.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(PanelW, PanelH));
-        Transform p = panel.transform;
-
-        var title = Lbl("Title", p, Loc.T("CONTRATOS", "CONTRACTS"), FontBig, TextAlignmentOptions.Left);
-        PlaceTopLeft(title.rectTransform, Pad, Pad, 400f, 50f);
         _wallet = Lbl("Wallet", p, "", FontMid, TextAlignmentOptions.Right);
         PlaceTopRight(_wallet.rectTransform, Pad, Pad, 1000f, 50f);
-
-        // Pestañas + rejilla (izquierda)
-        float leftW = PanelW - Pad * 3f - DetailW;
-        float top = Pad + HeaderH;
-        _cell = (leftW - Gap * (Columns - 1)) / Columns;
-        string[] names = { Loc.T("Contratos", "Contracts"), Loc.T("Cobrados", "Claimed") };
-        int perTab = Columns / names.Length;
-        float tabW = _cell * perTab + Gap * (perTab - 1);
-        for (int i = 0; i < names.Length; i++)
-        {
-            int tab = i;
-            var b = Btn("Tab" + i, p, names[i], out _);
-            PlaceTopLeft((RectTransform)b.transform, Pad + i * (tabW + Gap), top, tabW, TabH);
-            b.onClick.AddListener(() => ShowTab(tab));
-            _tabs.Add(b.image);
-        }
-        var gridBox = UIKit.Node("GridBox", p);
-        float gridTop = top + TabH + Gap;
-        PlaceTopLeft(gridBox, Pad, gridTop, leftW, PanelH - gridTop - FooterH);
-        _grid = MakeGrid(gridBox, _cell, Gap, Columns);
-
-        // Ficha + hoja de firma (derecha)
-        var detail = Box("Detail", p, BoxCol);
-        PlaceTopRight(detail.rectTransform, Pad, top, DetailW, PanelH - top - FooterH);
-        BuildDetail(detail.transform);
-
-        // Pie
-        var exit = Btn("Exit", p, Loc.T("Salir (Esc)", "Exit (Esc)"), out _);
-        Place((RectTransform)exit.transform, new Vector2(0.5f, 0f), new Vector2(0f, 20f), new Vector2(300f, 50f), new Vector2(0.5f, 0f));
-        exit.onClick.AddListener(Close);
-        _toast = Lbl("Toast", p, "", FontMid, TextAlignmentOptions.Left);
-        PlaceBottomLeft(_toast.rectTransform, Pad, 20f, 650f, 50f);
     }
 
-    private void BuildDetail(Transform d)
+    protected override void BuildDetail(Transform d)
     {
         float w = DetailW - 40f;
         _dName = Lbl("Name", d, "", FontBig, TextAlignmentOptions.TopLeft);
@@ -199,12 +92,8 @@ public class ContractUI : MonoBehaviour
 
     // ── Pestañas y rejilla ────────────────────────────────────────────────────
 
-    private void ShowTab(int tab)
+    protected override void FillTab(int tab)
     {
-        for (int i = 0; i < _tabs.Count; i++) _tabs[i].color = i == tab ? SelCol : BtnCol;
-        foreach (Transform c in _grid) Destroy(c.gameObject);
-        _entries.Clear();
-
         // «Contratos»: los de ESTE nivel + los cumplidos de otros niveles que falten por cobrar.
         // «Cobrados»: todos los ya cobrados (de cualquier nivel).
         int lv = ContractCatalog.CurrentLevel;
@@ -217,22 +106,12 @@ public class ContractUI : MonoBehaviour
                 bool show = tab == ClaimedTab ? claimed : !claimed && (d.level == lv || claimable);
                 if (show) AddEntry(d);
             }
-
-        _sel = _entries.Count > 0 ? _entries[0] : null;
-        Refresh();
     }
 
     private void AddEntry(ContractDef d)
     {
-        var e = new Entry { def = d, bg = Box("Item", _grid, ItemCol) };
-        e.bg.gameObject.AddComponent<Button>().onClick.AddListener(() => { _sel = e; Refresh(); });
         string title = d.level == ContractCatalog.CurrentLevel ? d.title : Loc.T($"{d.title}\n(nivel {d.level})", $"{d.title}\n(level {d.level})");
-        var label = Lbl("Name", e.bg.transform, title, FontSmall + 2f, TextAlignmentOptions.Center);
-        Stretch(label.rectTransform, 10f, 10f, 10f, 45f);
-        e.state = Lbl("State", e.bg.transform, "", FontSmall, TextAlignmentOptions.Center);
-        e.state.color = DimText;
-        Stretch(e.state.rectTransform, 6f, 6f, _cell - 45f, 8f);
-        _entries.Add(e);
+        AddEntry(new Entry { def = d }, title);
     }
 
     // ── Refresco ──────────────────────────────────────────────────────────────
@@ -249,7 +128,7 @@ public class ContractUI : MonoBehaviour
         return "+" + d.reward;
     }
 
-    private void Refresh()
+    protected override void Refresh()
     {
         _chosen.RemoveAll(id => PlayerProgress.IsContractActive(id) || PlayerProgress.IsContractDone(id));
         int active = ActiveCount, toClaim = 0;
@@ -260,7 +139,7 @@ public class ContractUI : MonoBehaviour
         foreach (Entry e in _entries)
         {
             bool claimed = PlayerProgress.IsContractDone(e.def.id) && !PlayerProgress.IsContractClaimable(e.def.id);
-            e.bg.color = e == _sel ? SelCol : claimed ? LockCol : ItemCol;
+            e.bg.color = e == _selected ? SelCol : claimed ? LockCol : ItemCol;
             e.state.text = State(e.def, _chosen.Contains(e.def.id));
         }
         RefreshDetail(active);
@@ -269,10 +148,10 @@ public class ContractUI : MonoBehaviour
 
     private void RefreshDetail(int active)
     {
-        _dAction.gameObject.SetActive(_sel != null);
-        if (_sel == null) { _dName.text = _dInfo.text = _dDesc.text = _dState.text = ""; return; }
+        _dAction.gameObject.SetActive(_selected != null);
+        if (_selected == null) { _dName.text = _dInfo.text = _dDesc.text = _dState.text = ""; return; }
 
-        ContractDef d = _sel.def;
+        ContractDef d = _selected.def;
         bool chosen = _chosen.Contains(d.id);
         _dName.text = d.title;
         _dInfo.text = Loc.T($"Nivel {d.level} · {ContractDef.TierName(d.tier)} · paga {d.reward} monedas", $"Level {d.level} · {ContractDef.TierName(d.tier)} · pays {d.reward} coins")
@@ -306,8 +185,8 @@ public class ContractUI : MonoBehaviour
 
     private void OnAction()
     {
-        if (_sel == null) return;
-        ContractDef d = _sel.def;
+        if (_selected == null) return;
+        ContractDef d = _selected.def;
         string id = d.id;
 
         if (PlayerProgress.IsContractClaimable(id))
@@ -349,5 +228,4 @@ public class ContractUI : MonoBehaviour
         Refresh();
     }
 
-    private void Toast(string msg) { _toast.text = msg; _toastT = 2.5f; }
 }

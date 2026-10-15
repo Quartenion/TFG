@@ -77,7 +77,7 @@ public partial class BossController
     [SerializeField] private GazeSwitch[] _phase3GazeSwitches = new GazeSwitch[3];
     [Tooltip("Beats que hay que mantener la mirada en la parte para destruirla.")]
     [SerializeField] private float _gazeHoldBeats = 2f;
-    [Tooltip("Beats de mirada para eliminar un BloodSucker generado por código (los de prefab usan el suyo).")]
+    [Tooltip("Beats de mirada para eliminar un BloodSucker (también los de prefab). 1 = justo un beat.")]
     [SerializeField] private float _suckerGazeBeats = 1f;
     [Tooltip("Distancia máxima de la mirada (el jefe va lejos, por delante).")]
     [SerializeField] private float _gazeMaxDistance = 160f;
@@ -238,6 +238,7 @@ public partial class BossController
 
             case Phase3Sub.Suckers:
                 UpdateP3Shield(now);
+                UpdateP3SpawnQueue();   // van saliendo de uno en uno, uno por beat
                 UpdateP3Suckers();
                 if (AllSuckersTurned()) ExposeP3Part();   // todos girados contra el jefe → cae el escudo
                 break;
@@ -514,12 +515,22 @@ public partial class BossController
 
     // BloodSuckers ──────────────────────────────────────────────────────────
 
+    // La oleada NO sale de golpe: los BloodSuckers aparecen DE UNO EN UNO, uno por beat, y van llenando la pantalla.
+    // Cada uno se elimina (se vuelve contra el jefe) mirándolo UN beat. Antes salían todos a la vez y, chupando
+    // juntos, dejaban al jugador sin sangre antes de que pudiera mirarlos.
+    private readonly Queue<(Vector3 offset, bool life)> _p3SpawnQueue = new Queue<(Vector3, bool)>();
+    private readonly List<Vector3> _p3PlannedOffsets = new List<Vector3>();
+    private double _p3NextSpawnDsp;
+
+    /// <summary>Planifica la oleada (huecos bien repartidos) y la va soltando de uno en uno con UpdateP3SpawnQueue.</summary>
     private void SpawnP3Suckers(int n)
     {
         n = Mathf.Max(1, n);
         if (n % 2 == 0) n++;   // siempre IMPAR: la diadema queda simétrica con uno justo encima del jefe
         _p3Suckers.Clear();
         _p3SuckerOffsets.Clear();
+        _p3SpawnQueue.Clear();
+        _p3PlannedOffsets.Clear();
 
         // Una vez en la Fase 3: uno de los huecos de BloodSucker lo ocupa el ORBE DE VIDA (míralo → vida extra).
         // Se añade un hueco más para que los BloodSuckers sigan siendo impares (la diadema queda simétrica).
@@ -530,35 +541,60 @@ public partial class BossController
         for (int i = 0; i < slots; i++)
         {
             Vector3 offset = PickSuckerOffset(i, slots);
-            if (i == lifeIdx)
-            {
-                _p3LifeSpawned = true;
-                Vector3 off = offset;
-                if (_p3LifeOrb != null) Destroy(_p3LifeOrb.gameObject);
-                _p3LifeOrb = BossLifeOrb.Create(() => SuckerWorld(off), LifeColor, _lifeOrbGazeSeconds, _gazeMaxDistance,
-                                                PlayerCamera(), () => GiveExtraLife(Loc.T("¡Orbe de vida!", "Life orb!")),
-                                                PlayerT, _p3Kayak != null ? _p3Kayak.transform : null);
-                continue;   // (ocupa su propia franja: los BloodSuckers se reparten en las demás)
-            }
-            Vector3 pos = SuckerWorld(offset);
-
-            GameObject go = _bloodSuckerPrefab != null
-                ? Instantiate(_bloodSuckerPrefab, pos, Quaternion.identity)
-                : BuildCodeSucker(pos);
-
-            BloodSucker bs = go.GetComponentInChildren<BloodSucker>();
-            if (bs == null) bs = go.AddComponent<BloodSucker>();
-            // Chupan sangre DE VERDAD, como los originales (con el drenaje de su prefab / valor por defecto).
-            // Al MIRARLOS no mueren: se giran hacia el escudo y le chupan la sangre al JEFE.
-            bs.SetBasePosition(pos);
-            bs.SetConvertTarget(SuckerTarget());
-
-            GazeSwitch gz = go.GetComponentInChildren<GazeSwitch>();
-            if (gz != null) gz.Configure(-1f, _gazeMaxDistance);   // el tiempo de mirada lo decide su prefab
-
-            _p3Suckers.Add(bs);
-            _p3SuckerOffsets.Add(offset);
+            _p3PlannedOffsets.Add(offset);
+            _p3SpawnQueue.Enqueue((offset, i == lifeIdx));
         }
+
+        // El primero en el próximo beat; los demás, uno por beat.
+        BeatManager bm = _beatManager;
+        _p3NextSpawnDsp = bm != null && bm.HasClock
+            ? bm.DspAtBeat(System.Math.Floor(bm.ClockBeats) + 1.0)
+            : AudioSettings.dspTime;
+        UpdateP3SpawnQueue();
+    }
+
+    /// <summary>Suelta los BloodSuckers pendientes cuyo beat ya ha llegado (uno por beat).</summary>
+    private void UpdateP3SpawnQueue()
+    {
+        while (_p3SpawnQueue.Count > 0 && AudioSettings.dspTime >= _p3NextSpawnDsp)
+        {
+            var (offset, life) = _p3SpawnQueue.Dequeue();
+            SpawnOneP3Sucker(offset, life);
+            _p3NextSpawnDsp += BeatDuration;
+        }
+    }
+
+    private void SpawnOneP3Sucker(Vector3 offset, bool life)
+    {
+        if (life)
+        {
+            _p3LifeSpawned = true;
+            Vector3 off = offset;
+            if (_p3LifeOrb != null) Destroy(_p3LifeOrb.gameObject);
+            _p3LifeOrb = BossLifeOrb.Create(() => SuckerWorld(off), LifeColor, _lifeOrbGazeSeconds, _gazeMaxDistance,
+                                            PlayerCamera(), () => GiveExtraLife(Loc.T("¡Orbe de vida!", "Life orb!")),
+                                            PlayerT, _p3Kayak != null ? _p3Kayak.transform : null);
+            return;
+        }
+        Vector3 pos = SuckerWorld(offset);
+
+        GameObject go = _bloodSuckerPrefab != null
+            ? Instantiate(_bloodSuckerPrefab, pos, Quaternion.identity)
+            : BuildCodeSucker(pos);
+
+        BloodSucker bs = go.GetComponentInChildren<BloodSucker>();
+        if (bs == null) bs = go.AddComponent<BloodSucker>();
+        // Chupan sangre DE VERDAD, como los originales (con el drenaje de su prefab / valor por defecto).
+        // Al MIRARLOS no mueren: se giran hacia el escudo y le chupan la sangre al JEFE.
+        bs.SetBasePosition(pos);
+        bs.SetConvertTarget(SuckerTarget());
+
+        // Mirarlo EXACTAMENTE un beat (_suckerGazeBeats) lo elimina, también en los de prefab.
+        GazeSwitch gz = go.GetComponentInChildren<GazeSwitch>();
+        if (gz != null) gz.Configure(_suckerGazeBeats * BeatDuration, _gazeMaxDistance);
+
+        _p3Suckers.Add(bs);
+        _p3SuckerOffsets.Add(offset);
         RefreshGazeHUD();
     }
 
@@ -581,7 +617,7 @@ public partial class BossController
                                        Random.Range(_suckerAreaHeight.x, _suckerAreaHeight.y),
                                        Random.Range(_suckerAreaFront.x, _suckerAreaFront.y));
             float d = float.MaxValue;
-            foreach (Vector3 o in _p3SuckerOffsets) d = Mathf.Min(d, Vector3.Distance(o, cand));
+            foreach (Vector3 o in _p3PlannedOffsets) d = Mathf.Min(d, Vector3.Distance(o, cand));
             if (d > bestD) { bestD = d; best = cand; }
             if (d >= _suckerMinSpacing * 2f) break;                  // ya está muy despejado
         }
@@ -601,7 +637,7 @@ public partial class BossController
     /// <summary>BloodSucker sencillo por código (si no hay prefab): esfera roja con mirada.</summary>
     private GameObject BuildCodeSucker(Vector3 pos)
     {
-        GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);   // trae su SphereCollider (para la mirada)
+        GameObject go = RuntimeMaterials.Primitive(PrimitiveType.Sphere);   // trae su SphereCollider (para la mirada)
         go.name = "BloodSucker (código)";
         go.transform.position   = pos;
         go.transform.localScale = Vector3.one * 1.6f;
@@ -630,6 +666,7 @@ public partial class BossController
     /// <summary>¿Todos los BloodSuckers de la oleada se han vuelto contra el jefe y ya le miran?</summary>
     private bool AllSuckersTurned()
     {
+        if (_p3SpawnQueue.Count > 0) return false;   // aún faltan por salir
         foreach (BloodSucker bs in _p3Suckers)
         {
             if (bs == null) continue;   // (si alguno se destruyó por otra vía, no bloquea)
@@ -643,6 +680,8 @@ public partial class BossController
     private void ClearP3Suckers()
     {
         foreach (BloodSucker bs in _p3Suckers) if (bs != null) bs.DisintegrateNow();
+        _p3SpawnQueue.Clear();
+        _p3PlannedOffsets.Clear();
         _p3Ring.Clear();
         _p3RingPolar.Clear();
         _p3Suckers.Clear();
@@ -743,7 +782,7 @@ public partial class BossController
             }
         }
 
-        _p3Shield = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        _p3Shield = RuntimeMaterials.Primitive(PrimitiveType.Sphere);
         _p3Shield.name = "BossShield";
         Destroy(_p3Shield.GetComponent<Collider>());   // sin collider: no bloquea la mirada ni al kayak
         var mr = _p3Shield.GetComponent<Renderer>();
@@ -779,7 +818,7 @@ public partial class BossController
 
     private bool IsTorsoPart(Renderer r) => r == _p3TorsoRenderer;
 
-    private bool IsTridentPart(Transform t) => _tailSweep != null && t.IsChildOf(_tailSweep.transform);
+    private bool IsTridentPart(Transform t) => _tridentSweep != null && t.IsChildOf(_tridentSweep.transform);
 
     private bool IsP3TargetPart(Transform t)
     {
@@ -988,8 +1027,8 @@ public partial class BossController
     private BossFistSlam FistOf(Transform part)
     {
         if (part == null) return null;
-        if (_leftFist  != null && BossTailSweep.SameHand(part, _leftFist.transform))  return _leftFist;
-        if (_rightFist != null && BossTailSweep.SameHand(part, _rightFist.transform)) return _rightFist;
+        if (_leftFist  != null && BossTridentSweep.SameHand(part, _leftFist.transform))  return _leftFist;
+        if (_rightFist != null && BossTridentSweep.SameHand(part, _rightFist.transform)) return _rightFist;
         return null;
     }
 
@@ -1213,7 +1252,7 @@ public partial class BossController
         DestroyP3Marker();
         _p3Marker = new GameObject("GazeTargetIndicator");
 
-        GameObject halo = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        GameObject halo = RuntimeMaterials.Primitive(PrimitiveType.Sphere);
         halo.name = "Halo";
         Destroy(halo.GetComponent<Collider>());
         halo.transform.SetParent(_p3Marker.transform, false);
@@ -1221,7 +1260,7 @@ public partial class BossController
         _p3HaloR.material = new Material(Shader.Find("Sprites/Default")) { color = _targetMarkerColor };
         _p3HaloR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
-        GameObject beam = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        GameObject beam = RuntimeMaterials.Primitive(PrimitiveType.Cylinder);
         beam.name = "Beam";
         Destroy(beam.GetComponent<Collider>());
         beam.transform.SetParent(_p3Marker.transform, false);
@@ -1327,16 +1366,16 @@ public partial class BossController
             case P3Step.SpikesRest:
             case P3Step.ThrowRest:
                 if (now < _p3StepEnd) break;
-                if (_p3ThrowsLeft > 0 && _tailSweep != null) StartP3Throw();
+                if (_p3ThrowsLeft > 0 && _tridentSweep != null) StartP3Throw();
                 else StartP3SuckerWave();
                 break;
 
             case P3Step.Throw:
-                if (_tailSweep == null) { _p3ThrowsLeft = 0; _p3Step = P3Step.ThrowRest; _p3StepEnd = now; break; }
-                if (_tailSweep.IsThrowInProgress) _p3ThrowStarted = true;
+                if (_tridentSweep == null) { _p3ThrowsLeft = 0; _p3Step = P3Step.ThrowRest; _p3StepEnd = now; break; }
+                if (_tridentSweep.IsThrowInProgress) _p3ThrowStarted = true;
                 // Termina cuando lo ha cogido la otra mano (encadenado: lo sujeta para el siguiente) o, en el
                 // último, cuando ya está flotando en su sitio. (O si nunca llegó a arrancar.)
-                if ((_p3ThrowStarted && !_tailSweep.IsThrowInProgress) || (!_p3ThrowStarted && now > _p3StepEnd))
+                if ((_p3ThrowStarted && !_tridentSweep.IsThrowInProgress) || (!_p3ThrowStarted && now > _p3StepEnd))
                 {
                     _p3ThrowsLeft--;
                     _p3Step    = P3Step.ThrowRest;
@@ -1360,12 +1399,12 @@ public partial class BossController
 
         Schedule(startAt, () =>
         {
-            if (_state != BossState.Phase3 || _p3sub != Phase3Sub.Attacking || _tailSweep == null) return;
+            if (_state != BossState.Phase3 || _p3sub != Phase3Sub.Attacking || _tridentSweep == null) return;
             GetP3ThrowHands(out Transform throwHand, out Transform catchHand);
             if (_verbose) Debug.Log($"[Boss] F3: lanza con '{(throwHand != null ? throwHand.name : "—")}', " +
                                     $"lo coge '{(catchHand != null ? catchHand.name : "—")}'.");
             // Si quedan más lanzamientos, la mano que lo coge lo SUJETA y lo relanza; solo el último lo deja en su sitio.
-            _tailSweep.Throw(this, contact, SeatedTorsoY() + _throwPassHeightOffset, throwHand, catchHand,
+            _tridentSweep.Throw(this, contact, SeatedTorsoY() + _throwPassHeightOffset, throwHand, catchHand,
                              -1f, _p3ThrowsLeft > 1);
         });
 
@@ -1387,7 +1426,7 @@ public partial class BossController
 
         if (lf == null || rf == null) { throwHand = lf != null ? lf : rf; catchHand = null; return; }
 
-        Vector3 idle = _tailSweep != null ? _tailSweep.IdleWorldPosition : transform.position;
+        Vector3 idle = _tridentSweep != null ? _tridentSweep.IdleWorldPosition : transform.position;
         bool leftCloser = (_leftFist.RestWorldPosition - idle).sqrMagnitude <= (_rightFist.RestWorldPosition - idle).sqrMagnitude;
         throwHand = leftCloser ? lf : rf;
         catchHand = leftCloser ? rf : lf;
@@ -1778,7 +1817,7 @@ public partial class BossController
                 for (int col = 0; col < L[row].Length; col++)
                 {
                     if (L[row][col] != 'X') continue;
-                    GameObject c = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    GameObject c = RuntimeMaterials.Primitive(PrimitiveType.Cube);
                     Destroy(c.GetComponent<Collider>());
                     c.transform.SetParent(root.transform, false);
                     c.transform.localScale    = Vector3.one * cell;

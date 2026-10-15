@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: parachute
   displayName: "Paraca\xEDdas"
-  description: Una vez por nivel, si caes al agua o a la lava, rebotas hacia arriba
-    en vez de morir.
+  description: "Una vez por nivel, rebotas en vez de morir al caer."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.25, g: 0.7, b: 0.35, a: 1}

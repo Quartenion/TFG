@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: drain_guard
   displayName: Piel gruesa
-  description: Los BloodSuckers y los golpes te quitan menos sangre.
+  description: "Pierdes menos sangre por enemigos y golpes."
   levelDescriptions:
   - "\u221225 % de sangre perdida"
   - "\u221250 % de sangre perdida"

@@ -14,9 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: shield
   displayName: Rebobinado
-  description: "Si chocas contra un obst\xE1culo, el tiempo vuelve 4 beats atr\xE1s
-    (a un momento seguro) en vez de morir. Contra ataques del jefe o en el kayak,
-    para el golpe."
+  description: "Al chocar, el tiempo retrocede 4 beats en vez de morir."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.2, g: 0.5, b: 0.9, a: 1}

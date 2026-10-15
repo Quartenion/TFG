@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: coin_magnet
   displayName: "Im\xE1n de monedas"
-  description: Las monedas cercanas vuelan hacia ti.
+  description: "Atrae las monedas cercanas."
   levelDescriptions:
   - radio 5 m
   - radio 9 m

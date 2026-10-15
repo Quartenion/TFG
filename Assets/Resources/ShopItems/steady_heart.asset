@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: steady_heart
   displayName: "Coraz\xF3n firme"
-  description: "Mientras mantienes el clic, el coraz\xF3n no pierde sangre pasivamente."
+  description: "Mant\xE9n el clic para no perder sangre."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.78, g: 0.1, b: 0.16, a: 1}

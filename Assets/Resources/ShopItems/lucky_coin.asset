@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: lucky_coin
   displayName: Moneda de la suerte
-  description: Cada moneda que recoges tiene un 10 % de probabilidad de valer el
-    doble.
+  description: "Cada moneda tiene un 10 % de probabilidad de valer el doble."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.95, g: 0.72, b: 0.15, a: 1}

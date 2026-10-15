@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: second_wind
   displayName: Segundo aliento
-  description: "Con menos del 20 % de energ\xEDa, cada acierto devuelve el DOBLE
-    de sangre."
+  description: "Por debajo del 20 % de energ\xEDa, los aciertos recuperan el doble."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.78, g: 0.1, b: 0.16, a: 1}

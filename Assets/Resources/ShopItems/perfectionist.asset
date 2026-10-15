@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopItem
   id: perfectionist
   displayName: Perfeccionista
-  description: "Un Perfect devuelve \xD72 de sangre (en vez de \xD71.5)."
+  description: "Los Perfect recuperan \xD72 de sangre."
   levelDescriptions: []
   icon: {fileID: 0}
   color: {r: 0.2, g: 0.5, b: 0.9, a: 1}
