@@ -170,6 +170,7 @@ public class PauseMenuManager : MonoBehaviour
         if (_rhythmInput    != null) _rhythmInput.enabled    = false;
 
         if (_pauseMenuPanel != null) _pauseMenuPanel.SetActive(true);
+        UpdateMenuButtonLabel();
         if (_pauseMenuGroup != null)
         {
             _pauseMenuGroup.alpha = 1f;
@@ -275,11 +276,53 @@ public class PauseMenuManager : MonoBehaviour
         IsPaused = false;
     }
 
+    /// <summary>
+    /// (Nivel tutorial) Si devuelve true, el botón MENÚ PRINCIPAL pasa a ser «VOLVER A LA SALA»: al repetir el tutorial
+    /// o una parte desde una puerta de la sala, se puede dejar a medias y volver a ella. Lo ponen CourseBuilder.
+    /// </summary>
+    public static System.Func<bool> BackToRoomAvailable;
+    public static System.Action BackToRoom;
+
+    /// <summary>Texto del botón de menú principal según se pueda volver a la sala o no.</summary>
+    private void UpdateMenuButtonLabel()
+    {
+        if (_pauseMenuPanel == null) return;
+        bool room = BackToRoomAvailable != null && BackToRoomAvailable();
+        foreach (Button b in _pauseMenuPanel.GetComponentsInChildren<Button>(true))
+        {
+            bool isMenu = false;
+            for (int i = 0; i < b.onClick.GetPersistentEventCount(); i++)
+                if (b.onClick.GetPersistentMethodName(i) == nameof(GoToMainMenu)) isMenu = true;
+            if (!isMenu) continue;
+            var tmp = b.GetComponentInChildren<TMPro.TMP_Text>(true);
+            if (tmp == null) continue;
+            var lt = tmp.GetComponent<LocalizedText>();
+            if (!_menuLabelSaved) { _menuLabelSaved = true; _menuEs = lt != null ? lt.spanish : tmp.text; _menuEn = lt != null ? lt.english : tmp.text; }
+            string es = room ? "VOLVER A LA SALA" : _menuEs, en = room ? "BACK TO THE ROOM" : _menuEn;
+            if (lt != null) { lt.spanish = es; lt.english = en; lt.Apply(); }
+            else tmp.text = Loc.T(es, en);
+        }
+    }
+    private bool _menuLabelSaved;
+    private string _menuEs, _menuEn;
+
     /// <summary>Engancha al boton MENU PRINCIPAL.</summary>
     public void GoToMainMenu()
     {
+        // Nivel tutorial, repitiendo una parte desde la sala: se vuelve a la sala (no al menú ni se abandona la prueba).
+        if (BackToRoomAvailable != null && BackToRoomAvailable() && BackToRoom != null)
+        {
+            CloseConfirm();
+            IsPaused = false;
+            _isPaused = false;
+            UnmuteGameAudio();
+            Time.timeScale = 1f;
+            AudioListener.pause = false;
+            BackToRoom();
+            return;
+        }
         // Modo prueba: salir a mitad descalifica. Se avisa antes.
-        if (StudySession.InLevel && !AbandonDialog.IsOpen) { ShowAbandonConfirm(); return; }
+        if (StudySession.InSession && !AbandonDialog.IsOpen) { ShowAbandonConfirm(); return; }   // (también en el tutorial y la sala)
         LoadMainMenu();
     }
 

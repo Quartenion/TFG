@@ -170,6 +170,8 @@ public class KayakController : MonoBehaviour
              "lo eleve o lo hunda de golpe. El balanceo visual (roll/pitch) no se ve afectado por ser\n" +
              "rotación y no posición.")]
     public bool lockYInWater = true;
+    [Tooltip("Rapidez con la que vuelve a la superficie si se ha hundido un poco al caer al agua (1/s).")]
+    public float pinSettleSpeed = 8f;
 
     [Tooltip("Coeficiente de arrastre lateral del agua.\n" +
              "Controla con qué rapidez la velocidad lateral decae a 0 al dejar de remar.\n" +
@@ -306,9 +308,6 @@ public class KayakController : MonoBehaviour
     private bool  _exhausted = false;
     private float _prevZ     = float.MinValue;
 
-    // Corriente de agua
-    private WaterCurrentZone _activeCurrentZone = null;
-
     // Salto voluntario
     private float _designedYRot;
     private float _playerJumpedTimer;
@@ -329,6 +328,16 @@ public class KayakController : MonoBehaviour
     private int        _obstacleLayer = -1;
     private bool       _crashed       = false;   // true tras un choque letal / rotura
     private Collider[] _kayakColliders;
+    private float _lethalSince = -1f;
+
+    [Tooltip("Segundos de margen desde que el kayak (con el jugador dentro) toca un obstáculo letal hasta que se " +
+             "estrella: si en ese rato el jugador salta, se libra (la esquina del ataúd en diagonal tocaba antes del beat).")]
+    public float lethalGrace = 0.18f;
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (_obstacleLayer != -1 && collision.gameObject.layer == _obstacleLayer) _lethalSince = -1f;
+    }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -413,6 +422,10 @@ public class KayakController : MonoBehaviour
     {
         // Restaurar la matriz de colisiones de layers al destruir el objeto,
         // para no afectar a otros scripts que puedan necesitar la colisión agua-Default.
+        // (Si queda OTRO kayak en la escena —nivel tutorial: se borra la sección del primero con el segundo ya
+        //  creado— no se restaura: el otro seguiría necesitando ignorar el agua.)
+        foreach (KayakController k in FindObjectsByType<KayakController>())
+            if (k != this) return;
         for (int i = 0; i < 32; i++)
             if (((int)waterLayerMask & (1 << i)) != 0)
                 Physics.IgnoreLayerCollision(gameObject.layer, i, false);
@@ -450,7 +463,6 @@ public class KayakController : MonoBehaviour
                 bool pinY = lockYInWater && _waterFound;
                 if (!pinY) ApplyBuoyancy();
                 ApplyWaterDrag();
-                ApplyCurrent();
                 ApplyWaterBounds();
                 if (pinY) PinToWaterSurface();   // fija la Y a la superficie (anti-pop lateral)
                 break;
@@ -548,7 +560,10 @@ public class KayakController : MonoBehaviour
     private void PinToWaterSurface()
     {
         Vector3 p = _rb.position;
-        p.y = _waterSurfaceY + floatHeight;
+        float target = _waterSurfaceY + floatHeight;
+        // Si ha caído por debajo (al entrar en el agua), sube SUAVE hasta la superficie en vez de teletransportarse.
+        float dy = target - p.y;
+        p.y = Mathf.Abs(dy) > 0.03f ? p.y + dy * (1f - Mathf.Exp(-pinSettleSpeed * Time.fixedDeltaTime)) : target;
         _rb.position = p;
 
         Vector3 v = _rb.linearVelocity;
@@ -562,13 +577,6 @@ public class KayakController : MonoBehaviour
         float latSpd = Vector3.Dot(_rb.linearVelocity, _rightDir);
         if (Mathf.Abs(latSpd) > 0.001f)
             _rb.AddForce(-_rightDir * latSpd * waterDrag, ForceMode.Acceleration);
-    }
-
-    /// <summary>Empuja el kayak con la corriente de agua activa.</summary>
-    private void ApplyCurrent()
-    {
-        if (_activeCurrentZone != null)
-            _rb.AddForce(_rightDir * _activeCurrentZone.SignedStrength, ForceMode.Acceleration);
     }
 
     /// <summary>
@@ -637,7 +645,9 @@ public class KayakController : MonoBehaviour
             ? Vector3.Dot(_rb.linearVelocity, _rightDir)
             : 0f;
         float smoothK = 1f - Mathf.Exp(-lateralVisualSmoothing * Time.deltaTime);
-        _lateralVelocity = Mathf.Lerp(_lateralVelocity, rawLateral, smoothK);
+        // (Tutorial frenando o parado: la inclinación/giro visual se queda como estaba. Si no, el roce con el obstáculo
+        //  o la física a cámara lenta daban velocidades laterales falsas y el ataúd se giraba hacia el otro lado.)
+        if (!TutorialGate.Busy) _lateralVelocity = Mathf.Lerp(_lateralVelocity, rawLateral, smoothK);
 
         // Durante PlayerJumped la rotación la fija MoveRotation en FixedUpdate: NO
         // escribimos transform.rotation desde Update para no romper la interpolación
@@ -805,13 +815,6 @@ public class KayakController : MonoBehaviour
             _waterFound    = true;
         }
 
-        // Corriente activa
-        _activeCurrentZone = null;
-        foreach (WaterCurrentZone zone in WaterCurrentZone.All)
-        {
-            if (zone.Contains(transform.position)) { _activeCurrentZone = zone; break; }
-        }
-
         // Endpoint
         if (endPoint != null && !_exhausted)
         {
@@ -825,7 +828,7 @@ public class KayakController : MonoBehaviour
         _prevZ = transform.position.z;
 
         // Salto voluntario
-        if (_player != null && Keybinds.Pressed(Keybinds.Bind.Jump))
+        if (_player != null && Keybinds.Pressed(Keybinds.Bind.Jump) && TutorialGate.Allows(TutorialKey.Jump))
         {
             HandleJumpOff();
             return;
@@ -927,6 +930,7 @@ public class KayakController : MonoBehaviour
 
         _prevPlayerY       = _player.transform.position.y;
         _player = null;
+        _lethalSince = -1f;
 
         // Ataúd vacío → plataforma CINEMÁTICA conducida en FixedUpdate con MovePosition/
         // MoveRotation. Con interpolación activa, se mueve perfectamente fluido respecto a
@@ -1028,6 +1032,7 @@ public class KayakController : MonoBehaviour
 
         _player = _cachedPlayer;
         _player.EnterKayak();
+        _lethalSince = -1f;
         PlaySound(woodSound);
 
         // Cancelar velocidad lateral al reembarcar
@@ -1126,6 +1131,15 @@ public class KayakController : MonoBehaviour
         if (_obstacleLayer == -1) return;
         if (collision.gameObject.layer != _obstacleLayer) return;
 
+        // Kayak VACÍO (el jugador ha saltado): pasa por debajo del obstáculo sin chocar, para que el jugador vuelva a
+        // caer dentro al otro lado (es lo que se pide en los tramos de saltos del kayak).
+        if (_state == KayakState.PlayerJumped && !_exhausted)
+        {
+            if (_kayakColliders != null)
+                foreach (Collider kc in _kayakColliders) if (kc != null) Physics.IgnoreCollision(kc, collision.collider, true);
+            return;
+        }
+
         int count = collision.contactCount;
         if (count == 0) return;
 
@@ -1175,6 +1189,14 @@ public class KayakController : MonoBehaviour
                       $"noseRam={noseRam} lethalCfg=({lethal}) -> {outcome}", this);
         }
 
+        // MARGEN con el jugador dentro: girado o en diagonal, la esquina del ataúd toca el obstáculo un poco antes de
+        // que llegue el beat del salto. Si en ese margen el jugador salta, el kayak queda vacío y pasa sin chocar.
+        if ((frontalLethal || otherLethal) && _player != null && lethalGrace > 0f)
+        {
+            if (_lethalSince < 0f) _lethalSince = Time.time;
+            if (Time.time - _lethalSince < lethalGrace) return;
+        }
+
         if (frontalLethal || otherLethal)
         {
             // REBOBINADO (tienda): con el jugador dentro, el tiempo (y el kayak) vuelve 4 beats atrás.
@@ -1191,6 +1213,13 @@ public class KayakController : MonoBehaviour
     /// Rompe el kayak tras un choque letal. Si el jugador va dentro → Game Over.
     /// Si el jugador ya había saltado (kayak vacío) → sólo se rompe con sonido.
     /// </summary>
+    /// <summary>GameOverManager (el del inspector o, si el kayak se ha creado por código sin él, el de la escena).</summary>
+    private GameOverManager GameOverRef()
+    {
+        if (gameOverManager == null) gameOverManager = FindAnyObjectByType<GameOverManager>();
+        return gameOverManager;
+    }
+
     private void CrashKayak()
     {
         _crashed = true;
@@ -1208,16 +1237,21 @@ public class KayakController : MonoBehaviour
         if (_player != null)
         {
             // Jugador dentro → muere.
-            gameOverManager?.TriggerGameOver(Loc.T("Te has estrellado con el kayak", "You crashed the kayak"));
+            GameOverRef()?.TriggerGameOver(Loc.T("Te has estrellado con el kayak", "You crashed the kayak"));
         }
         else
         {
             // Jugador fuera → el ataúd vacío sólo se rompe: se detiene y queda inerte.
+            // (Si el jugador había SALTADO de él y aún no ha vuelto a caer dentro, se ha quedado sin kayak en mitad del
+            //  agua: no puede seguir. Antes se quedaba quieto y sin poder moverse; ahora muere y vuelve al checkpoint.)
+            bool strandedPlayer = _state == KayakState.PlayerJumped && !_exhausted && _cachedPlayer != null;
             SetKayakSolidForPlayer(false);   // restaurar ignore (deja de ser plataforma)
             _exhausted      = true;
             forwardSpeed    = 0f;
             _rb.isKinematic = true;
             _state          = KayakState.Vertical;
+            if (strandedPlayer)
+                GameOverRef()?.TriggerGameOver(Loc.T("El kayak se ha estrellado mientras saltabas", "The kayak crashed while you were jumping"));
         }
     }
 
@@ -1686,12 +1720,9 @@ public class KayakController : MonoBehaviour
         string lateralInfo = Application.isPlaying && (_state == KayakState.Floating || _state == KayakState.PlayerJumped)
             ? $"  lateral {_lateralVelocity:F1} m/s"
             : "";
-        string currentInfo = Application.isPlaying && _activeCurrentZone != null
-            ? $"  corriente {_activeCurrentZone.direction} {_activeCurrentZone.strength:F1} m/s"
-            : "";
         UnityEditor.Handles.Label(
             transform.position + Vector3.up * 1.8f,
-            $"KAYAK [{_state}]  {forwardSpeed} m/s fwd{lateralInfo}{currentInfo}", style);
+            $"KAYAK [{_state}]  {forwardSpeed} m/s fwd{lateralInfo}", style);
 #endif
     }
 #endif

@@ -57,6 +57,18 @@ public class MenuFireBackground : MonoBehaviour
         _glow     = NewGlow("Resplandor", _glowHeight, 1f);
         _glowCore = NewGlow("Resplandor (núcleo)", _glowHeight * 0.45f, 0.8f);
 
+        BuildSparks();
+    }
+
+    /// <summary>
+    /// Crea las chispas. También se llama si se pierden: al recompilar un script con el juego en marcha, Unity recarga los
+    /// componentes y el array de chispas (no serializable) vuelve vacío → NullReferenceException en Spawn.
+    /// </summary>
+    private void BuildSparks()
+    {
+        Transform old = transform.Find("Chispas");
+        if (old != null) Destroy(old.gameObject);
+        if (_dotTex == null) _dotTex = MakeDotTexture();
         var sparkRoot = NewChild("Chispas");
         _sparks = new Spark[Mathf.Max(1, _maxSparks)];
         for (int i = 0; i < _sparks.Length; i++)
@@ -74,6 +86,9 @@ public class MenuFireBackground : MonoBehaviour
 
     private void Update()
     {
+        if (_rt == null) _rt = (RectTransform)transform;
+        if (_sparks == null) BuildSparks();   // (recompilado con el juego en marcha)
+        if (_glow == null || _glowCore == null) return;
         float dt = Time.unscaledDeltaTime, t = Time.unscaledTime;
 
         // Parpadeo del fuego: mezcla de dos ondas + ruido.

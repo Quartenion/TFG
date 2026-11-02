@@ -1,0 +1,36 @@
+INF-HARTO — Licencias del proyecto / Project licenses
+=====================================================
+
+1. CÓDIGO FUENTE / SOURCE CODE (Assets/Scripts y demás archivos .cs y .shader propios)
+   Licencia MIT / MIT License:
+
+   Copyright (c) 2026 Quartenion
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+2. CONTENIDO PROPIO / ORIGINAL CONTENT (música, modelos 3D, texturas e imágenes creados para el juego)
+   © 2026 Quartenion. Todos los derechos reservados / All rights reserved.
+
+3. RECURSOS DE TERCEROS / THIRD-PARTY ASSETS
+   Mantienen su propia licencia y no están cubiertos por este archivo. Los que no se
+   pueden redistribuir no están incluidos en este repositorio (ver .gitignore); la lista
+   completa, con autor, origen y licencia, está en la memoria del TFG (apéndice D).
+   Atribuciones obligatorias (CC BY):
+   - "Heartbeat loop" by .name — https://freesound.org/s/418866/ — CC BY 4.0
+   - "Free Pack - Rocks Stylized" by PolyOne Studio — https://sketchfab.com/3d-models/free-pack-rocks-stylized-7c60b4d1b8ab4187965f30c5e0212fc0 — CC BY

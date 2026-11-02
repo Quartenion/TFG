@@ -18,11 +18,24 @@ public class LobbyMusic : MonoBehaviour
     [Header("Música")]
     [Tooltip("Canción que suena en esta sección intermedia (freeroam).")]
     public AudioClip music;
+    /// <summary>Suena aunque no se esté en freeroam (sala final del tutorial: desde que acaba la balanza).</summary>
+    [System.NonSerialized] public bool forcePlay;
+    /// <summary>
+    /// Solo suena con forcePlay (no por estar en freeroam). Nivel tutorial: al empezar, el jugador está un momento en
+    /// freeroam antes del 3-2-1 y sonaba la música de la sala; ahí solo debe sonar en la sala final.
+    /// </summary>
+    [System.NonSerialized] public bool onlyWhenForced;
     [Range(0f, 1f)] public float musicVolume = 0.6f;
     [Tooltip("BPM de la canción del lobby (para que los pasos vayan a su ritmo).")]
     public float bpm = 120f;
     [Tooltip("Segundos desde el inicio del clip hasta el primer beat (si la canción tiene silencio al principio).")]
     public float firstBeatOffset = 0f;
+    [Tooltip("Beats por compás de la canción (3 = 3/4: FUERTE-débil-débil). El paso del primer beat suena más fuerte.")]
+    [Min(1)] public int beatsPerBar = 4;
+    [Tooltip("Beat (desde el inicio del clip, contando desde 0) en el que cae el primer tiempo fuerte.")]
+    [Min(0)] public int downbeatOffsetBeats = 0;
+    [Tooltip("Volumen de los pasos en los tiempos débiles (el fuerte va a footstepVolume).")]
+    [Range(0f, 1f)] public float weakStepScale = 0.6f;
     [Tooltip("Segundos del fade de entrada / de salida de la música.")]
     public float fadeIn = 1.5f, fadeOut = 0.8f;
 
@@ -107,7 +120,7 @@ public class LobbyMusic : MonoBehaviour
 
     private void Update()
     {
-        bool freeroam = _pm != null && _pm.IsFreeroam;
+        bool freeroam = forcePlay || (!onlyWhenForced && _pm != null && _pm.IsFreeroam);
 
         if (freeroam && !_playing) StartMusic();
         else if (!freeroam && _playing && _wasFreeroam) StopMusic();
@@ -191,9 +204,13 @@ public class LobbyMusic : MonoBehaviour
         if (clip == null) return;
         AudioSource src = _steps[_nextStep];
         _nextStep = (_nextStep + 1) % _steps.Length;
+        // Acento del compás: el paso del tiempo fuerte, más alto (y un pelín más grave); los débiles, más suaves.
+        long beatIdx = idx / Mathf.Max(1, stepsPerBeat);
+        bool onBeat  = idx % Mathf.Max(1, stepsPerBeat) == 0;
+        bool strong  = onBeat && ((beatIdx - downbeatOffsetBeats) % Mathf.Max(1, beatsPerBar) + beatsPerBar) % Mathf.Max(1, beatsPerBar) == 0;
         src.clip   = clip;
-        src.volume = footstepVolume;
-        src.pitch  = 1f + Random.Range(-pitchVariance, pitchVariance);
+        src.volume = footstepVolume * (strong ? 1f : weakStepScale);
+        src.pitch  = (strong ? 0.94f : 1f) + Random.Range(-pitchVariance, pitchVariance);
         src.PlayScheduled(at);
     }
 

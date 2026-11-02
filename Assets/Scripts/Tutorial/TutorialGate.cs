@@ -18,6 +18,12 @@ public static class TutorialGate
     /// <summary>Acción que se está pidiendo mientras está parado (None = ninguna: solo ENTER para seguir).</summary>
     public static TutorialKey Expected { get; set; }
 
+    /// <summary>
+    /// Acción que se va a explicar mientras el tiempo FRENA hacia la parada: no se puede hacer antes de ver el mensaje
+    /// (antes, saltar mientras frenaba —p. ej. en el kayak— se saltaba la explicación).
+    /// </summary>
+    public static TutorialKey HoldBack { get; set; }
+
     private static int _locked;   // máscara de acciones aún no enseñadas
 
     public static void Lock(TutorialKey k)   => _locked |= 1 << (int)k;
@@ -28,6 +34,7 @@ public static class TutorialGate
     public static bool Allows(TutorialKey k)
     {
         if (IsLocked(k)) return false;
+        if (HoldBack != TutorialKey.None && (k == HoldBack || (k == TutorialKey.Jump && HoldBack == TutorialKey.DoubleJump))) return false;
         if (!Frozen) return true;
         return k == Expected || (k == TutorialKey.Jump && Expected == TutorialKey.DoubleJump);
     }

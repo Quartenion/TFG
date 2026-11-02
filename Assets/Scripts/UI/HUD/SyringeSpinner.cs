@@ -24,11 +24,14 @@ public class SyringeSpinner : MonoBehaviour
         _baseRotation = transform.localRotation;
     }
 
+    private int _index = -1;   // 0 = la roja (izquierda), 1 = la azul (derecha): para SyringeHighlight
+
     private void Update()
     {
-        if (_crosshair == null) return;
-
-        float angle = _crosshair.CurrentRotationAngle * _angleMultiplier;
+        if (_index < 0) _index = name.Contains("Blue") ? 1 : 0;
+        float angle = _crosshair != null ? _crosshair.CurrentRotationAngle * _angleMultiplier : 0f;
+        // (Tutorial: mientras se explica esta jeringuilla, además da vueltas sobre su eje.)
+        angle += SyringeHighlight.ExtraAngle(_index);
         transform.localRotation = _baseRotation * Quaternion.AngleAxis(angle, _axis.normalized);
     }
 }

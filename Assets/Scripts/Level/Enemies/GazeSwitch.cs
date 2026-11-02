@@ -76,6 +76,17 @@ public class GazeSwitch : MonoBehaviour
     private MaterialPropertyBlock _mpb;
     private static readonly int EmissionColorID = Shader.PropertyToID("_EmissionColor");
 
+    /// <summary>Interruptores activos en la escena (los que se crean al jugar también: los lee GazeChargeUI).</summary>
+    public static readonly System.Collections.Generic.List<GazeSwitch> All = new System.Collections.Generic.List<GazeSwitch>();
+
+    private void OnEnable()
+    {
+        if (!All.Contains(this)) All.Add(this);
+        GazeChargeUI.Ensure();   // (escenas sin aro de carga en el HUD: se crea uno)
+    }
+
+    private void OnDisable() => All.Remove(this);
+
     private void Awake()
     {
         if (_playerCamera == null) _playerCamera = Camera.main;

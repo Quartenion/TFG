@@ -12,7 +12,7 @@ using UnityEngine.InputSystem;
 ///      Pasivo       -> la barra sube sola (EnergyManager.Update).
 ///  - Modo azul (bonus):
 ///      Perfect/Good -> HitBlue(): la barra sube (acumula riesgo).
-///      Miss         -> MissBlueAndInject(): inyeccion masiva + boost + vuelta al rojo.
+///      Miss         -> LoseBlue(): se pierde toda la sangre azul y se vuelve al rojo.
 ///
 /// El timing lo evalua BeatManager.EvaluateClickTiming() (con compensacion de latencia). OnTimingResult avisa a la
 /// UI de feedback (PERFECT / GOOD / MISS). Anti-spam: ver EnterSlot / ProcessClick.
@@ -36,7 +36,7 @@ public class RhythmInput : MonoBehaviour
     public UnityEvent<int> OnComboChanged;
     public UnityEvent OnBonusActivated;
     public UnityEvent OnBonusDeactivated;
-    public UnityEvent<float> OnBlueInjection;
+    public UnityEvent<float> OnBlueLost;
 
     [Header("Eventos - timing (nuevo)")]
     [Tooltip("Se dispara con cada click. Conecta TimingFeedbackUI.Show() aqui para " +
@@ -271,9 +271,9 @@ public class RhythmInput : MonoBehaviour
 
         if (wasBonus)
         {
-            // Fallo en azul: inyeccion masiva con boost de velocidad/salto.
-            float boost = em != null ? em.MissBlueAndInject() : 0f;
-            if (boost > 0f) OnBlueInjection?.Invoke(boost);
+            // Fallo en azul: se pierde toda la sangre azul.
+            float lost = em != null ? em.LoseBlue() : 0f;
+            if (lost > 0f) OnBlueLost?.Invoke(lost);
             em?.ExitBlueMode();
             IsBonusActive = false;
             OnBonusDeactivated?.Invoke();

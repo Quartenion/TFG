@@ -149,6 +149,9 @@ public class StartSequenceManager : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetIntroMemory() => s_introPlayedScenes.Clear();
 
+    /// <summary>(Mediciones / pruebas) Salta siempre la intro del nivel. Lo activa ClockComparisonLogger.</summary>
+    public static bool ForceSkipIntro { get; set; }
+
     // ── Estado de instancia ───────────────────────────────────────────────
 
     private float _testSongOffset = 0f;  // offset de canción calculado en modo test
@@ -314,6 +317,10 @@ public class StartSequenceManager : MonoBehaviour
             hit = Mouse.current.leftButton.wasPressedThisFrame;
 
         if (hit) HandleHit();
+#if UNITY_EDITOR
+        if (Time.unscaledDeltaTime > 0.05f)
+            Debug.Log($"[StartSequence] Tirón: fotograma de {Time.unscaledDeltaTime * 1000f:F0} ms (aciertos {_hitsOk})");
+#endif
     }
 
     // =========================================================================
@@ -364,7 +371,7 @@ public class StartSequenceManager : MonoBehaviour
 
         // ── Flujo normal: intro + secuencia ──────────────────────────────────
         string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        if (!_debugSkipIntro && !s_introPlayedScenes.Contains(scene) && _introSource != null && _introSource.clip != null)
+        if (!_debugSkipIntro && !ForceSkipIntro && !s_introPlayedScenes.Contains(scene) && _introSource != null && _introSource.clip != null)
         {
             _introSource.Play();
             yield return null;

@@ -182,10 +182,10 @@ public class BeatManager : MonoBehaviour
     public int CurrentBeatIndex => BeatDuration > 0f ? Mathf.FloorToInt(CorrectedTime / BeatDuration) : 0;
 
     /// <summary>Ventana Perfect en segundos.</summary>
-    public float PerfectWindow => _perfectWindow * WindowMultiplier;
+    public float PerfectWindow => _perfectWindow * WindowMultiplier * EnergyManager.GraceWindowMultiplier;   // («Respiro»)
 
     /// <summary>Ventana Good en segundos.</summary>
-    public float GoodWindow => _goodWindow * WindowMultiplier;
+    public float GoodWindow => _goodWindow * WindowMultiplier * EnergyManager.GraceWindowMultiplier;
 
     /// <summary>Mejora «Oído fino» de la tienda: +15 % de ventana por nivel (Perfect y Good).</summary>
     public static float WindowMultiplier => 1f + 0.15f * PlayerProgress.GetLevel(ShopIds.WideWindow);
@@ -415,13 +415,22 @@ public class BeatManager : MonoBehaviour
         _paused = false; _stopped = false;
         if (_audioSource == null) return;
 
-        float safeOffset = _audioSource.clip != null
-            ? Mathf.Clamp(songTimeOffset, 0f, _audioSource.clip.length - 0.1f)
-            : Mathf.Max(0f, songTimeOffset);
+        // Canción EN BUCLE (nivel tutorial / estudio): el reloj sigue contando sin cortes (beat 300, 400…) y el clip
+        // empieza en la posición equivalente dentro de la vuelta. La duración del clip debe ser un número exacto de beats.
+        bool looping = _audioSource.loop && _audioSource.clip != null && _audioSource.clip.length > 0.5f;
+        float safeOffset = looping ? Mathf.Max(0f, songTimeOffset)
+            : _audioSource.clip != null
+                ? Mathf.Clamp(songTimeOffset, 0f, _audioSource.clip.length - 0.1f)
+                : Mathf.Max(0f, songTimeOffset);
+        float clipOffset = looping ? Mathf.Repeat(safeOffset, _audioSource.clip.length) : safeOffset;
 
         _audioSource.Stop();
         _audioSource.pitch = 1f;   // (por si venía de un rebobinado con pitch negativo)
-        _audioSource.time = safeOffset;
+        // (Posición en MUESTRAS: con «time» en clips comprimidos el salto no es exacto y la música quedaba unos
+        //  milisegundos desfasada del reloj al reaparecer lejos del principio, p. ej. al saltar una sección.)
+        if (_audioSource.clip != null && _audioSource.clip.frequency > 0)
+            _audioSource.timeSamples = Mathf.Clamp((int)System.Math.Round((double)clipOffset * _audioSource.clip.frequency), 0, _audioSource.clip.samples - 1);
+        else _audioSource.time = clipOffset;
         _audioSource.PlayScheduled(dspTime);
 
         ScheduledStartDSP = dspTime - (double)safeOffset;

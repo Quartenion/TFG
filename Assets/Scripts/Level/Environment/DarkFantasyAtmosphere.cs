@@ -22,6 +22,9 @@ public class DarkFantasyAtmosphere : MonoBehaviour
     [Tooltip("Niebla azul oscura.")]                                           public bool fogEnabled = true;
     [Tooltip("Luces direccionales convertidas en luna tenue y fría.")]        public bool moonLight = true;
     [Tooltip("Fondo de la cámara azul muy oscuro (en vez del cielo).")]       public bool darkBackground = true;
+    [Tooltip("Sin fondo oscuro: la cámara muestra el SKYBOX de la escena (Lighting → Skybox Material), aunque la del " +
+             "jugador venga con fondo de color sólido. Lo activa solo el nivel tutorial.")]
+    public bool skyboxBackground = false;
     [Tooltip("Linterna de casco del jugador (con parpadeos al beat).")]       public bool helmetLamp = true;
     [Tooltip("Luz roja del corazón que late al beat.")]                       public bool heartLight = true;
 
@@ -150,7 +153,9 @@ public class DarkFantasyAtmosphere : MonoBehaviour
         for (int i = 0; i < _cams.Length; i++)
         {
             if (_cams[i] == null) continue;
-            _cams[i].clearFlags      = darkBackground ? CameraClearFlags.SolidColor : _camFlags[i];
+            _cams[i].clearFlags      = darkBackground ? CameraClearFlags.SolidColor
+                                     : skyboxBackground && RenderSettings.skybox != null ? CameraClearFlags.Skybox
+                                     : _camFlags[i];
             _cams[i].backgroundColor = darkBackground ? cameraBackground : _camColors[i];
         }
 

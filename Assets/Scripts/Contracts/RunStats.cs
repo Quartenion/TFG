@@ -22,6 +22,18 @@ public static class RunStats
     public static int Wallruns     { get; private set; }
     public static int BlueEntries  { get; private set; }
     public static int HelpsUsed    { get; private set; }   // vidas extra, Adrenalina, Paracaídas, checkpoints, rebobinados
+    /// <summary>Muertes en ESTE nivel desde que se empezó (se conservan al reintentar; se ponen a cero al completarlo o
+    /// al cambiar de nivel). Las ayudas usadas (HelpsUsed) también se conservan entre intentos.</summary>
+    public static int Deaths       { get; private set; }
+
+    private static string _levelScene = "";
+    private static bool   _levelCompleted;
+
+    /// <summary>El jugador ha muerto (game over) en el nivel.</summary>
+    public static void Death() { Deaths++; OnChanged?.Invoke(); }
+
+    /// <summary>Nivel superado: si se vuelve a jugar, todo empieza de cero (estadísticas, muertes, ayudas, monedas).</summary>
+    public static void LevelCompleted() => _levelCompleted = true;
 
     public static event System.Action OnChanged;
 
@@ -69,10 +81,19 @@ public static class RunStats
     }
     private static PlayerMovement _pm;
 
+    /// <summary>Todo a cero (partida nueva o nivel nuevo).</summary>
     public static void Reset()
     {
+        Deaths = HelpsUsed = 0;
+        _levelCompleted = false;
+        ResetAttempt();
+    }
+
+    /// <summary>Solo lo del intento (al reintentar el MISMO nivel tras morir): las muertes y ayudas se conservan.</summary>
+    private static void ResetAttempt()
+    {
         HeartPresses = Hits = Misses = Perfects = Streak = BestStreak = 0;
-        Jumps = Dashes = Slides = Wallruns = BlueEntries = HelpsUsed = 0;
+        Jumps = Dashes = Slides = Wallruns = BlueEntries = 0;
         OnChanged?.Invoke();
     }
 
@@ -89,6 +110,9 @@ public static class RunStats
         if (m != LoadSceneMode.Single) return;
         _pm = null;
         if (CheckpointSystem.PendingRespawn) return;   // reaparición en checkpoint: misma partida
-        Reset();
+        // Reintento del mismo nivel sin haberlo completado: nuevo intento (las muertes se siguen contando).
+        // Nivel distinto, o ya completado: todo de cero.
+        if (s.name == _levelScene && !_levelCompleted) ResetAttempt();
+        else { Reset(); _levelScene = s.name; }
     }
 }

@@ -28,6 +28,18 @@ public class Metronome : MonoBehaviour
 
     public static bool Owned => PlayerProgress.GetLevel(ShopIds.Metronome) > 0;
 
+    /// <summary>
+    /// Metrónomo SIEMPRE encendido, aunque no se haya comprado (nivel tutorial: lo activa CourseBuilder mientras dura
+    /// la escena). Con él activo, [M] no lo apaga.
+    /// </summary>
+    public static bool ForceOn { get; private set; }
+
+    public static void SetForced(bool on)
+    {
+        ForceOn = on;
+        if (on) EnsureIfOwned();
+    }
+
     // ── Aparición automática ──────────────────────────────────────────────────
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -38,7 +50,7 @@ public class Metronome : MonoBehaviour
 
     private static void EnsureIfOwned()
     {
-        if (_instance != null || !Owned) return;
+        if (_instance != null || (!Owned && !ForceOn)) return;
         if (BeatManager.Instance == null) return;   // solo en escenas con música (niveles)
         new GameObject("Metronome").AddComponent<Metronome>();
     }
@@ -61,7 +73,7 @@ public class Metronome : MonoBehaviour
 
     private void Update()
     {
-        if (Keybinds.Pressed(Keybinds.Bind.Metronome))
+        if (Keybinds.Pressed(Keybinds.Bind.Metronome) && !ForceOn)
         {
             _on = !_on;
             PlayerPrefs.SetInt(PrefKey, _on ? 1 : 0);
@@ -71,8 +83,9 @@ public class Metronome : MonoBehaviour
         if (_toastT > 0f) _toastT -= Time.unscaledDeltaTime;
 
         BeatManager bm = BeatManager.Instance;
-        if (!Owned) return;   // (p. ej. modificadores suspendidos en la pelea del jefe)
-        if (!_on || bm == null || !bm.IsPlaying || !bm.HasClock || bm.BeatDuration <= 0f) return;
+        if (!Owned && !ForceOn) return;   // (p. ej. modificadores suspendidos en la pelea del jefe)
+        if (TutorialGate.Busy) { _lastScheduledBeat = long.MinValue; return; }   // (cámara lenta del tutorial: sin tics)
+        if ((!_on && !ForceOn) || bm == null || !bm.IsPlaying || !bm.HasClock || bm.BeatDuration <= 0f) return;
 
         // Programar el PRÓXIMO beat con un pelín de antelación (en su instante DSP exacto).
         double beatDur = bm.BeatDuration;

@@ -74,6 +74,16 @@ public class RhythmHUDController : MonoBehaviour
         }
 
         rhythmInput.OnTimingResult.AddListener(HandleTimingResult);
+
+        // ORDEN DE DIBUJO: el aro del crosshair («Ring», gris) estaba por ENCIMA del contenedor de las notas, así que
+        // cuando una nota llegaba al punto de mira su aro blanco («hittable») quedaba tapado por el gris del crosshair.
+        // Las notas pasan a dibujarse justo encima de ese aro.
+        if (crosshair != null && ringContainer != null)
+        {
+            Transform xr = crosshair.transform.Find("Ring");
+            if (xr != null && xr.parent == ringContainer.parent && ringContainer.GetSiblingIndex() < xr.GetSiblingIndex())
+                ringContainer.SetSiblingIndex(xr.GetSiblingIndex());   // (queda justo después del aro)
+        }
     }
 
     private void OnDestroy()
@@ -106,6 +116,47 @@ public class RhythmHUDController : MonoBehaviour
         if (rew) return;
 
         EnsureUpcomingRings();
+        HoldRingWhileFrozen();
+    }
+
+    /// <summary>
+    /// Tutorial parado justo en un beat: la nota de ESE beat se queda en el punto de mira, en «hittable» (blanca), para
+    /// que se vea que es el momento del latido. (Si aún no existe, se crea.)
+    /// </summary>
+
+    private bool NearBeat()
+    {
+        float bd = beatManager.BeatDuration;
+        if (bd <= 0f) return false;
+        float now = beatManager.CorrectedTimeUnclamped;
+        return Mathf.Abs(now - Mathf.Round(now / bd) * bd) <= beatManager.GoodWindow;
+    }
+
+
+    private void HoldRingWhileFrozen()
+    {
+        bool hold = TutorialGate.Frozen && beatManager != null && ringPrefab != null && ringContainer != null;
+        if (!hold) return;
+        if (PlayerProgress.GetLevel(ShopIds.RhythmSight) <= 0) return;
+        float beatDur = beatManager.BeatDuration;
+        if (beatDur <= 0f) return;
+        float now = beatManager.CorrectedTimeUnclamped;
+        float arrival = Mathf.Round(now / beatDur) * beatDur;
+        if (Mathf.Abs(now - arrival) > beatManager.GoodWindow) return;   // (parado lejos de un beat: nada)
+        RhythmRingVisual ring = null;
+        foreach (RhythmRingVisual r in _activeRings)
+            if (r != null && Mathf.Abs(r.ArrivalSongTime - arrival) < 0.01f) { ring = r; break; }
+        if (ring == null)
+        {
+            ring = Instantiate(ringPrefab, ringContainer);
+            ring.Init(startDiameter, targetDiameter, beatsAhead * beatDur, beatManager, crosshair);
+            ring.SetArrival(arrival);
+            _activeRings.Add(ring);
+            RhythmRingVisual created = ring;
+            ring.OnExpired += () => _activeRings.Remove(created);
+        }
+        if (ring.transform.GetSiblingIndex() != ring.transform.parent.childCount - 1) ring.transform.SetAsLastSibling();   // (encima de la siguiente nota)
+        ring.HoldHittable();
     }
 
     private void ClearRings()
@@ -137,6 +188,9 @@ public class RhythmHUDController : MonoBehaviour
             if (HasRingFor(arrival)) continue;
             bool half = Mathf.Abs(n - Mathf.Round(n)) > 0.01f;
             RhythmRingVisual ring = Instantiate(ringPrefab, ringContainer);
+            // La nota nueva va DEBAJO de las anteriores: su aro (gris, «lejos») tiene el tamaño del punto de mira y,
+            // dibujada encima, tapaba el aro blanco de la nota que estaba llegando («hittable»).
+            ring.transform.SetAsFirstSibling();
             ring.Init(startDiameter, targetDiameter, travel, beatManager, crosshair);
             if (half) ring.MakeHalfBeat(halfBeatSpikeScale);
             ring.SetArrival(arrival);

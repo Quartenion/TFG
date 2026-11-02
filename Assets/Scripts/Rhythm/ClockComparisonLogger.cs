@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// EXPERIMENTO DE SINCRONIZACIÓN (para la memoria). Compara, fotograma a fotograma, cuatro formas de saber
@@ -13,13 +14,58 @@ using UnityEngine;
 /// Para cada uno guarda la diferencia con el reloj DSP y si se ha quedado CONGELADO (mismo valor que en el
 /// fotograma anterior). Al terminar escribe un CSV y un resumen en la consola.
 ///
-/// USO: pon este componente en cualquier objeto de un nivel y juega. Empieza solo cuando arranca la canción y
-/// termina a los 'maxSeconds' (o al salir del modo Play). No hagas pausa durante la medición.
+/// USO: menú «Tools/Debug: Medir relojes» (se marca con ✓) → en cada nivel se añade solo. También se puede poner a mano
+/// en cualquier objeto. Empieza cuando arranca la canción y termina a los 'maxSeconds' (o al salir del modo Play).
+/// Mientras mide, el jugador es INVULNERABLE y está en GOD MODE (nada lo mata, la energía no se acaba y la canción no se
+/// corta): basta con dejarlo correr.
+/// El archivo se llama «Sincronizacion_Relojes_<escena>_<fecha-hora>.csv» (uno por medición, no se sobrescriben).
+/// No hagas pausa ni actives el tutorial durante la medición.
 /// </summary>
 public class ClockComparisonLogger : MonoBehaviour
 {
     [SerializeField] private float maxSeconds = 120f;
-    [SerializeField] private string fileName = "Sincronizacion_Relojes.csv";
+    [Tooltip("Principio del nombre del archivo; se le añaden la escena y la fecha-hora.")]
+    [SerializeField] private string fileName = "Sincronizacion_Relojes";
+    [Tooltip("Mientras mide, nada mata al jugador (para que la canción suene entera sin tener que jugar).")]
+    [SerializeField] private bool invulnerable = true;
+    private bool _tutorialWarned;
+    private bool _prevGodMode, _godModeSet;
+
+#if UNITY_EDITOR
+    private const string PrefKey = "ClockLogger.On";
+    private const string MenuPath = "Tools/Debug: Medir relojes";
+
+    [UnityEditor.MenuItem(MenuPath)]
+    private static void Toggle()
+    {
+        bool on = !UnityEditor.EditorPrefs.GetBool(PrefKey, false);
+        UnityEditor.EditorPrefs.SetBool(PrefKey, on);
+        UnityEditor.Menu.SetChecked(MenuPath, on);
+        Debug.Log(on ? "[Relojes] Medición ACTIVADA: se añade sola en cada nivel." : "[Relojes] Medición desactivada.");
+    }
+
+    [UnityEditor.MenuItem(MenuPath, true)]
+    private static bool ToggleValidate()
+    {
+        UnityEditor.Menu.SetChecked(MenuPath, UnityEditor.EditorPrefs.GetBool(PrefKey, false));
+        return true;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void Boot()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
+    }
+
+    private static void OnSceneLoaded(Scene s, LoadSceneMode m)
+    {
+        if (!UnityEditor.EditorPrefs.GetBool(PrefKey, false) || !s.name.StartsWith("Level")) return;
+        if (FindAnyObjectByType<ClockComparisonLogger>() != null) return;
+        new GameObject("ClockComparisonLogger").AddComponent<ClockComparisonLogger>();
+    }
+#endif
 
     private BeatManager _bm;
     private bool _running, _done;
@@ -50,6 +96,13 @@ public class ClockComparisonLogger : MonoBehaviour
         {
             if (dsp <= 0.0) return;          // la canción aún no ha empezado
             _running = true;
+            if (invulnerable)
+            {
+                GameOverManager.DebugInvulnerable = true;
+                EnergyManager em = EnergyManager.Instance;   // God Mode: la energía no se gasta ni se acaba
+                if (em != null) { _prevGodMode = em.godMode; em.godMode = true; _godModeSet = true; }
+            }
+            Debug.Log($"[Relojes] Midiendo {maxSeconds:0} s en «{SceneManager.GetActiveScene().name}»…");
             _frameClock = dsp;               // los cuatro relojes empiezan alineados
             _prevDsp = _prevAudio = _prevSamples = -1.0;
             _csv.AppendLine("frame;delta_ms;dsp_s;audio_time_s;samples_s;frames_s;err_audio_ms;err_samples_ms;err_frames_ms");
@@ -78,16 +131,39 @@ public class ClockComparisonLogger : MonoBehaviour
             _frameClock.ToString("0.0000", Inv),
             _lastErr[1].ToString("0.00", Inv), _lastErr[2].ToString("0.00", Inv), _lastErr[3].ToString("0.00", Inv)));
 
+        if (TutorialGate.Busy && !_tutorialWarned)
+        {
+            _tutorialWarned = true;
+            Debug.LogWarning("[Relojes] El tutorial está controlando el reloj: esta medición NO es válida. Desactiva el tutorial (Ajustes → TUTORIAL: NO).");
+        }
+
         if (dsp >= maxSeconds) Finish();
     }
 
     private void OnDisable() { if (_running && !_done) Finish(); }
+    private void Awake() => StartSequenceManager.ForceSkipIntro = true;   // (medición: sin la intro del nivel)
+    private void OnDestroy()
+    {
+        StartSequenceManager.ForceSkipIntro = false;
+        RestoreProtection();
+    }
+
+    private void RestoreProtection()
+    {
+        if (!invulnerable) return;
+        GameOverManager.DebugInvulnerable = false;
+        if (_godModeSet && EnergyManager.Instance != null) EnergyManager.Instance.godMode = _prevGodMode;
+        _godModeSet = false;
+    }
 
     private void Finish()
     {
         _done = true;
+        RestoreProtection();
         string dir = Application.isEditor ? Path.GetDirectoryName(Application.dataPath) : Application.persistentDataPath;
-        string path = Path.Combine(dir, fileName);
+        string load = _bm != null && _bm.CurrentSource != null && _bm.CurrentSource.clip != null ? _bm.CurrentSource.clip.loadType.ToString() : "?";
+        string outName = $"{Path.GetFileNameWithoutExtension(fileName)}_{SceneManager.GetActiveScene().name}_{load}_{System.DateTime.Now:yyyyMMdd_HHmmss}.csv";
+        string path = Path.Combine(dir, outName);
         File.WriteAllText(path, _csv.ToString());
 
         var sb = new StringBuilder($"[Relojes] {_frames} fotogramas medidos. CSV: {path}\n");

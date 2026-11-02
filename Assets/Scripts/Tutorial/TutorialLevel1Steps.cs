@@ -19,6 +19,14 @@ public static class TutorialLevel1Steps
         public string text, en;
         public string highlight;
         public int side;
+        /// <summary>Objeto que se ilumina (lo usa el nivel tutorial, que crea los obstáculos en tiempo de ejecución).</summary>
+        public UnityEngine.Transform target;
+        /// <summary>Al pararse, la vista gira sola hacia el objetivo (interruptor de mirada, tirolina).</summary>
+        public bool look;
+        /// <summary>Explicación que sale JUSTO DESPUÉS de hacer la acción, sin reanudar (p. ej. moverse en la tirolina).</summary>
+        public string follow;
+        /// <summary>Parte del HUD de la que habla la explicación (se resalta mientras está parado).</summary>
+        public SyringeHighlight.Side hud;
     }
 
     /// <summary>Hasta este beat dura el tutorial (después el nivel sigue normal).</summary>
@@ -113,20 +121,26 @@ public static class TutorialLevel1Steps
     public const float EnergyBeat = 3f;
 
     public static string EnergyText => Loc.T(
-        "Haz clic al ritmo de la música para que tu corazón siga latiendo.\n" +
-        "Cada acción (saltar, deslizarte, hacer dash…) gasta energía: la sangre de tu corazón pasa a la jeringuilla roja (izquierda). " +
-        "Si la jeringuilla roja se llena del todo, te quedas sin energía y es GAME OVER.",
-        "Click to the beat of the music to keep your heart beating.\n" +
-        "Every action (jumping, sliding, dashing…) costs energy: blood leaves your heart and fills the red syringe (left). " +
-        "If the red syringe fills up completely, you run out of energy and it's GAME OVER.");
+        "Tu corazón pierde sangre poco a poco: va pasando a la jeringuilla roja (izquierda), y cada acción (saltar, deslizarte, hacer dash…) " +
+        "hace que pase más. Si la jeringuilla roja se llena del todo, te quedas sin energía y es GAME OVER.\n" +
+        "Haz clic AL RITMO de la música para devolver sangre al corazón. No es obligatorio hacer clic en todos los beats: " +
+        "si no haces clic, solo pierdes sangre poco a poco.",
+        "Your heart slowly loses blood: it flows into the red syringe (left), and every action (jumping, sliding, dashing…) " +
+        "makes more of it flow. If the red syringe fills up completely, you run out of energy and it's GAME OVER.\n" +
+        "Click ON THE BEAT of the music to send blood back to your heart. You don't have to click on every beat: " +
+        "if you don't click, you only lose blood slowly.");
 
     public static string MissText => Loc.T(
-        "Has fallado el latido. Cada vez que fallas un clic pierdes energía: entra más sangre en la jeringuilla roja.",
-        "You missed the beat. Every missed click costs energy: more blood goes into the red syringe.");
+        "Has fallado el latido. Cada clic fuera de ritmo te hace perder más sangre de golpe. " +
+        "Si no estás seguro, mejor no hagas clic: sin clic solo pierdes sangre poco a poco.",
+        "You missed the beat. Every off-beat click makes you lose extra blood at once. " +
+        "If you're not sure, it's better not to click: without clicking you only lose blood slowly.");
 
     public static string BlueText => Loc.T(
-        "¡Sangre azul! Tu corazón está lleno, así que los aciertos ahora acumulan sangre azul: energía extra para hacer más acciones.",
-        "Blue blood! Your heart is full, so hits now build up blue blood: extra energy for more actions.");
+        "¡Sangre azul! Tu corazón está lleno, así que los aciertos ahora llenan la jeringuilla azul: energía extra para hacer más acciones. " +
+        "Si la llenas del todo entras en SOBRECARGA: durante 4 beats las acciones no gastan energía.",
+        "Blue blood! Your heart is full, so hits now fill the blue syringe: extra energy for more actions. " +
+        "If you fill it completely you enter OVERLOAD: for 4 beats your actions cost no energy.");
 
     public static string BlueMissText => Loc.T(
         "Cuidado: si fallas el beat con sangre azul, la pierdes toda de golpe.",

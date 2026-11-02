@@ -149,6 +149,9 @@ public class GameOverManager : MonoBehaviour
 
     public bool IsDead => _isDead;
 
+    /// <summary>¿La última muerte fue por un obstáculo / caída (true) o por quedarse sin sangre (false)?</summary>
+    public bool IsObstacleDeath => _isObstacleDeath;
+
     // =========================================================================
     // INICIO
     // =========================================================================
@@ -303,12 +306,14 @@ public class GameOverManager : MonoBehaviour
     private void HandleDeath(bool isObstacle)
     {
         if (_isDead) return;
+        if (DebugInvulnerable) return;   // (medición de relojes: la canción no debe pararse)
         if (LevelEndManager.Finished) return;   // (ya en la meta)
 
         // Muerte por SANGRE con vida extra comprada → no hay game over: se vuelve en el siguiente beat.
         if (!isObstacle && TryRevive()) return;
         _isDead          = true;
         _isObstacleDeath = isObstacle;
+        RunStats.Death();   // (intentos: la pantalla final los cuenta y bajan la puntuación)
         StudyTelemetry.EndAttempt(isObstacle ? "muerte_obstaculo" : "muerte_energia");   // (modo prueba)
 
         if (_verbose)
@@ -318,10 +323,18 @@ public class GameOverManager : MonoBehaviour
         if (_rhythmInput      != null) _rhythmInput.enabled      = false;
         if (_lowHealthEffects != null) _lowHealthEffects.enabled = false;
 
+        // Nivel tutorial / estudio (checkpoints gratis): pantalla de GAME OVER normal, con el botón «Volver al último
+        // checkpoint» en lugar de «Reintentar» (ver ShowGameOverPanel / Restart).
+        if (CheckpointSystem.FreeRespawn && CheckpointSystem.HasActive)
+        {
+            StartCoroutine(IrisCloseAndFreeze());
+            return;
+        }
+
         // ¿Checkpoint? (consumible de la tienda): se gasta uno y se recarga el nivel desde el último que pasaste.
         if (CheckpointSystem.TryRespawn())
         {
-            RunStats.HelpUsed();
+            if (!CheckpointSystem.FreeRespawn) RunStats.HelpUsed();   // (los checkpoints gratis del nivel tutorial no son una ayuda)
             StartCoroutine(CheckpointRespawn());
             return;
         }
@@ -336,7 +349,9 @@ public class GameOverManager : MonoBehaviour
         StopLevelMusic();
         int left = PlayerProgress.GetCount(ShopIds.Checkpoint);
         if (_verbose) Debug.Log($"[GameOver] Checkpoint: volviendo al último (quedan {left}).");
-        ReviveFX.ShowMessage("CHECKPOINT", left > 0 ? Loc.T($"Te quedan {left}", $"{left} left") : Loc.T("Era el último", "That was the last one"), new Color(0.25f, 0.7f, 0.35f, 0.55f));
+        string sub = CheckpointSystem.FreeRespawn ? Loc.T("Vuelves al último punto de control", "Back to the last checkpoint")   // (nivel tutorial: infinitos)
+                   : left > 0 ? Loc.T($"Te quedan {left}", $"{left} left") : Loc.T("Era el último", "That was the last one");
+        ReviveFX.ShowMessage("CHECKPOINT", sub, new Color(0.25f, 0.7f, 0.35f, 0.55f));
 
         // La escena se empieza a cargar YA, en segundo plano, mientras se cierra el iris (antes: primero el iris y
         // luego una carga de golpe que congelaba el juego unos segundos).
@@ -478,6 +493,8 @@ public class GameOverManager : MonoBehaviour
         HudHider.Hide(_gameOverPanel);   // fuera mirilla, barra, monedas, avisos…
         if (_gameOverPanel != null) _gameOverPanel.SetActive(true);
         ShowReason();
+        SetRestartLabel(CheckpointSystem.FreeRespawn && CheckpointSystem.HasActive);
+        ShowSkipButton(SkipAvailable != null && SkipAvailable());
 
         if (_gameOverPanelGroup != null)
         {
@@ -515,9 +532,13 @@ public class GameOverManager : MonoBehaviour
     /// Golpe LETAL de un obstáculo / ataque. Si tienes ESCUDO lo para (el obstáculo se rompe) y devuelve false;
     /// si no, game over (o checkpoint) y devuelve true.
     /// </summary>
+    /// <summary>(Solo para mediciones / pruebas) Nada mata al jugador mientras esté activo.</summary>
+    public static bool DebugInvulnerable { get; set; }
+
     public bool TryKillByObstacle(GameObject source)
     {
         if (_isDead) return true;
+        if (DebugInvulnerable) return false;
         if (LevelEndManager.Finished) return false;
         if (TimeRewinder.IsRewinding) return false;   // (volviendo atrás en el tiempo: nada mata)
 
@@ -540,6 +561,7 @@ public class GameOverManager : MonoBehaviour
     public void ForceGameOver(string title = null, string subtitle = null)
     {
         if (_isDead) return;
+        if (DebugInvulnerable) return;
         if (LevelEndManager.Finished) return;
         _isDead          = true;
         _isObstacleDeath = true;
@@ -591,6 +613,98 @@ public class GameOverManager : MonoBehaviour
     }
 
     private TMPro.TextMeshProUGUI _reasonText;
+
+    // ── «Saltar sección» (nivel tutorial / estudio: tras morir 3 veces en la misma sección) ──
+    /// <summary>¿Se puede saltar a la siguiente sección? (lo pone CourseBuilder).</summary>
+    public static System.Func<bool> SkipAvailable;
+    /// <summary>Deja activo el siguiente checkpoint (lo pone CourseBuilder). Después se reaparece en él.</summary>
+    public static System.Action SkipSection;
+    private Button _skipButton;
+
+    /// <summary>
+    /// Botón «SALTAR SECCIÓN» (copia del de reintentar, entre él y el de salir): lleva al SIGUIENTE checkpoint. Para que
+    /// nadie abandone la prueba atascado en un obstáculo.
+    /// </summary>
+    private void ShowSkipButton(bool show)
+    {
+        if (_gameOverPanel == null || !show || _skipButton != null) return;
+        Button restart = null, quit = null;
+        foreach (Button b in _gameOverPanel.GetComponentsInChildren<Button>(true))
+            for (int i = 0; i < b.onClick.GetPersistentEventCount(); i++)
+            {
+                if (b.onClick.GetPersistentMethodName(i) == nameof(Restart)) restart = b;
+                if (b.onClick.GetPersistentMethodName(i) == nameof(Quit)) quit = b;
+            }
+        if (restart == null) return;
+        var rt0 = (RectTransform)restart.transform;
+        float step = rt0.sizeDelta.y + 30f;
+        _skipButton = Instantiate(restart, restart.transform.parent);
+        _skipButton.name = "SkipSectionButton";
+        _skipButton.onClick = new Button.ButtonClickedEvent();   // (sin la llamada a Restart copiada)
+        _skipButton.onClick.AddListener(SkipSectionPressed);
+        var rt = (RectTransform)_skipButton.transform;
+        rt.anchoredPosition = rt0.anchoredPosition - new Vector2(0f, step);
+        if (quit != null)
+        {
+            var qt = (RectTransform)quit.transform;
+            if (qt.anchoredPosition.y > rt.anchoredPosition.y - step) qt.anchoredPosition = rt.anchoredPosition - new Vector2(0f, step);
+        }
+        const string es = "SALTAR SECCIÓN", en = "SKIP SECTION";
+        var tmp = _skipButton.GetComponentInChildren<TMPro.TMP_Text>(true);
+        if (tmp != null)
+        {
+            var lt = tmp.GetComponent<LocalizedText>();
+            if (lt != null) { lt.spanish = es; lt.english = en; lt.Apply(); }
+            else tmp.text = Loc.T(es, en);
+        }
+        else
+        {
+            var legacy = _skipButton.GetComponentInChildren<Text>(true);
+            if (legacy != null) legacy.text = Loc.T(es, en);
+        }
+    }
+
+    private void SkipSectionPressed()
+    {
+        if (_restarting) return;
+        _restarting = true;
+        SkipSection?.Invoke();                 // (el siguiente checkpoint pasa a ser el activo)
+        CheckpointSystem.TryRespawn();         // (y se reaparece en él)
+        if (_verbose) Debug.Log("[GameOver] Saltar sección.");
+        StartCoroutine(RestartRoutine());
+    }
+
+    /// <summary>
+    /// Texto del botón que llama a Restart: «Volver al último checkpoint» (checkpoints gratis del nivel tutorial /
+    /// estudio) o el suyo de siempre. El botón se busca por su llamada a Restart en el panel.
+    /// </summary>
+    private void SetRestartLabel(bool checkpoint)
+    {
+        if (_gameOverPanel == null || !checkpoint) return;
+        foreach (Button b in _gameOverPanel.GetComponentsInChildren<Button>(true))
+        {
+            bool isRestart = false;
+            for (int i = 0; i < b.onClick.GetPersistentEventCount(); i++)
+                if (b.onClick.GetPersistentMethodName(i) == nameof(Restart)) isRestart = true;
+            if (!isRestart) continue;
+            const string es = "VOLVER AL ÚLTIMO CHECKPOINT", en = "BACK TO THE LAST CHECKPOINT";
+            var tmp = b.GetComponentInChildren<TMPro.TMP_Text>(true);
+            if (tmp != null)
+            {
+                var lt = tmp.GetComponent<LocalizedText>();
+                if (lt != null) { lt.spanish = es; lt.english = en; lt.Apply(); }
+                else tmp.text = Loc.T(es, en);
+                tmp.enableAutoSizing = true;          // (texto más largo: que quepa en el botón)
+                tmp.fontSizeMin = 8f;
+                tmp.fontSizeMax = Mathf.Max(tmp.fontSize, 12f);
+            }
+            else
+            {
+                var legacy = b.GetComponentInChildren<Text>(true);
+                if (legacy != null) { legacy.text = Loc.T(es, en); legacy.resizeTextForBestFit = true; }
+            }
+        }
+    }
 
     /// <summary>Texto con la razón, debajo del título del game over (con la fuente del juego).</summary>
     private void ShowReason()
@@ -698,6 +812,14 @@ public class GameOverManager : MonoBehaviour
     public void Restart()
     {
         if (_restarting) return;   // (doble clic)
+        // Nivel tutorial / estudio: el botón es «Volver al último checkpoint» → se recarga desde él (sin límite).
+        if (CheckpointSystem.FreeRespawn && CheckpointSystem.TryRespawn())
+        {
+            _restarting = true;
+            if (_verbose) Debug.Log("[GameOver] Volver al último checkpoint.");
+            StartCoroutine(RestartRoutine());
+            return;
+        }
         if (StudySession.OnRestartRequested()) return;   // (modo prueba: sin intentos → siguiente parte)
         _restarting = true;
         CheckpointSystem.Clear();   // reinicio manual: desde el principio
@@ -732,7 +854,7 @@ public class GameOverManager : MonoBehaviour
     public void Quit()
     {
         // Modo prueba: salir a mitad descalifica. Mismo aviso que al volver al menú desde la pausa.
-        if (StudySession.InLevel) { AbandonDialog.Show(Loc.T("Volver", "Back")); return; }
+        if (StudySession.InSession) { AbandonDialog.Show(Loc.T("Volver", "Back")); return; }   // (también en el tutorial y la sala)
         // Práctica libre del modo prueba: SALIR vuelve al menú (a elegir qué hacer), no cierra el juego.
         if (StudySession.InFreePlay)
         {

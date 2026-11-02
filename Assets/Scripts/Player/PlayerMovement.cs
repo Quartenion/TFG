@@ -204,6 +204,9 @@ public class PlayerMovement : MonoBehaviour
     public UnityEvent<Vector3> OnDashStarted;
     public UnityEvent OnDashBlocked;
     public UnityEvent OnJumpExecuted;
+    /// <summary>Salto DESDE EL KAYAK (no invoca OnJumpExecuted para no disparar el efecto de cámara del salto a pie).
+    /// Lo usa el tutorial para dar por hecho el salto.</summary>
+    public UnityEvent OnKayakJump;
     public UnityEvent OnJumpBlocked;
     public UnityEvent OnSlideStarted;
     public UnityEvent OnSlideEnded;
@@ -642,7 +645,14 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     public void RegisterKayakColliders(Collider[] cols)
     {
-        _kayakIgnoreColliders = cols;
+        // Se ACUMULAN (sin los ya destruidos): con dos kayaks a la vez (nivel tutorial) el segundo borraba la lista
+        // del primero y el CC del jugador chocaba con ese ataúd y lo hundía.
+        var list = new System.Collections.Generic.List<Collider>();
+        if (_kayakIgnoreColliders != null)
+            foreach (Collider c in _kayakIgnoreColliders) if (c != null && !list.Contains(c)) list.Add(c);
+        if (cols != null)
+            foreach (Collider c in cols) if (c != null && !list.Contains(c)) list.Add(c);
+        _kayakIgnoreColliders = list.ToArray();
         ApplyKayakIgnores();
     }
 
@@ -687,6 +697,9 @@ public class PlayerMovement : MonoBehaviour
     /// El CC se re-habilita dentro del bloque de impulso pendiente — misma
     /// garantía atómica que ExitKayakWithJump.
     /// </summary>
+    /// <summary>(Tutorial) Pide un salto como si se acabara de pulsar la tecla (se hace en cuanto se pueda).</summary>
+    public void BufferJump() => _jumpBufferTimer = Mathf.Max(_jumpBufferTimer, JumpBufferDuration);
+
     public void ExitKayakWithPlayerJump(Vector3 horizontalImpulse)
     {
         if (!_isOnKayak) return;
@@ -699,6 +712,7 @@ public class PlayerMovement : MonoBehaviour
         _pendingKayakImpulse    = new Vector3(horizontalImpulse.x, JumpPower, horizontalImpulse.z);
         _hasPendingKayakImpulse = true;
         _isKayakPlayerJump      = true;
+        OnKayakJump?.Invoke();
     }
 
     public void ScheduleStart(double dspTime)
@@ -1392,15 +1406,120 @@ public class PlayerMovement : MonoBehaviour
         _cc.Move(Vector3.up * diff);
     }
 
+    // ── Mirada guiada (tutorial): con el juego parado, la vista gira sola y suave hacia algo ──
+    private bool _guideOn, _guideReturn;
+    private Vector3 _guidePoint;
+    private float _guideFromX, _guideFromY, _guideVelX, _guideVelY;
+    private const float GuideSmooth = 0.35f;   // segundos (tiempo real) que tarda más o menos en girar
+
+    /// <summary>
+    /// (Tutorial) Gira la vista suavemente hacia 'point' (también con el juego parado). Con null se suelta: si
+    /// 'returnAfter', vuelve suave a donde miraba antes (hasta que el jugador mueva el ratón).
+    /// </summary>
+    public void SetGuideLook(Vector3? point, bool returnAfter = false)
+    {
+        if (point.HasValue)
+        {
+            if (!_guideOn) { _guideFromX = _rotationX; _guideFromY = _rotationY; }
+            _guideOn = true; _guideReturn = false;
+            _guidePoint = point.Value;
+            return;
+        }
+        if (!_guideOn) return;
+        _guideOn = false;
+        _guideReturn = returnAfter;
+        _guideVelX = _guideVelY = 0f;
+    }
+
+    /// <summary>Aplica la mirada guiada. Devuelve true si manda ella (no se lee el ratón).</summary>
+    private bool GuideLook(Vector2 look)
+    {
+        float dt = Time.unscaledDeltaTime;
+        if (_guideOn && playerCamera != null)
+        {
+            Vector3 d = _guidePoint - playerCamera.transform.position;
+            float yaw = Mathf.DeltaAngle(_initialYRotation, Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg);
+            if (!_freeroamMode) yaw = Mathf.Clamp(yaw, -90f, 90f);
+            float pitch = Mathf.Clamp(-Mathf.Atan2(d.y, new Vector2(d.x, d.z).magnitude) * Mathf.Rad2Deg, -lookXLimit, lookXLimit);
+            _rotationY = Mathf.SmoothDampAngle(_rotationY, yaw, ref _guideVelY, GuideSmooth, Mathf.Infinity, dt);
+            _rotationX = Mathf.SmoothDampAngle(_rotationX, pitch, ref _guideVelX, GuideSmooth, Mathf.Infinity, dt);
+            return true;
+        }
+        if (_guideReturn)
+        {
+            if (look.sqrMagnitude > 0.01f) { _guideReturn = false; return false; }   // (el jugador ya mueve la vista)
+            _rotationY = Mathf.SmoothDampAngle(_rotationY, _guideFromY, ref _guideVelY, GuideSmooth, Mathf.Infinity, dt);
+            _rotationX = Mathf.SmoothDampAngle(_rotationX, _guideFromX, ref _guideVelX, GuideSmooth, Mathf.Infinity, dt);
+            if (Mathf.Abs(Mathf.DeltaAngle(_rotationY, _guideFromY)) < 0.3f && Mathf.Abs(_rotationX - _guideFromX) < 0.3f) _guideReturn = false;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Solo la CÁMARA con el ratón, aunque el componente esté desactivado (p. ej. mientras el final del nivel lleva al
+    /// jugador andando hasta la sala tras practicar una parte del tutorial).
+    /// </summary>
+    public void LookOnly()
+    {
+        bool could = _canMove;
+        _canMove = true;
+        HandleLook();
+        _canMove = could;
+    }
+
+    // ── Salto de la mirada al capturar el ratón ──
+    // Al recuperar el foco, al cambiar el bloqueo del cursor o con el PRIMER clic tras ello (en el editor el cursor no
+    // se bloquea de verdad hasta que haces clic en la vista de juego), el ratón se recoloca en el centro de la ventana
+    // y ese fotograma llega un 'delta' enorme: la cámara pegaba un salto (sobre todo hacia arriba). Se ignora la mirada
+    // esos pocos fotogramas.
+    private int  _lookSkipFrames = 3;
+    private bool _lookPrimed;
+    private CursorLockMode _lastLock;
+
+    private void OnEnable()
+    {
+        // Al volver a activarse (tras una pantalla con el cursor libre): sin restos del muelle de la cámara y sin el salto
+        // de la mirada al recolocarse el ratón en el centro.
+        _bobPitch = _bobRoll = _bobPitchVel = _bobRollVel = 0f;
+        _bobOffset = Vector3.zero;
+        _lookSkipFrames = 5;
+    }
+
+    private void OnApplicationFocus(bool focus)
+    {
+        _lookSkipFrames = 3;
+        if (!focus) _lookPrimed = false;
+    }
+
+    /// <summary>Fotograma en el que se ignoró la mirada por el salto del ratón (lo usa también el balanceo de la mano).</summary>
+    public static int LookSpikeFrame = -1;
+
+    private bool LookSpike()
+    {
+        if (Cursor.lockState != _lastLock) { _lastLock = Cursor.lockState; _lookSkipFrames = 5; _lookPrimed = false; }
+        if (Cursor.lockState != CursorLockMode.Locked) { LookSpikeFrame = Time.frameCount; return true; }   // (cursor libre: no se mira)
+        Mouse m = Mouse.current;
+        if (!_lookPrimed && m != null && (m.leftButton.wasPressedThisFrame || m.rightButton.wasPressedThisFrame))
+        {
+            _lookPrimed = true;
+            _lookSkipFrames = Mathf.Max(_lookSkipFrames, 3);
+        }
+        if (_lookSkipFrames > 0) { _lookSkipFrames--; LookSpikeFrame = Time.frameCount; return true; }
+        return false;
+    }
+
     private void HandleLook()
     {
         if (!_canMove) return;
 
         Vector2 look = _lookAction.ReadValue<Vector2>();
+        if (LookSpike()) look = Vector2.zero;
         if (TutorialGate.Busy) look *= Time.timeScale;   // (tutorial a cámara lenta: la cámara también va lenta; parado = quieta)
         float   sens = 0.1f * GameSettings.Sensitivity;   // (ajuste del jugador: menú / pausa)
 
-        if (!_freeroamMode && !GameSettings.CameraLookActive)
+        if (GuideLook(look)) look = Vector2.zero;
+        else if (!_freeroamMode && !GameSettings.CameraLookActive)
         {
             // Ajustes → «Cámara con ratón: NO»: durante el nivel la vista mira siempre al frente (vuelve suave).
             // (En la zona de inicio sí se mueve: hay que mirar la tienda, los contratos y la pared para empezar.)
@@ -1482,6 +1601,9 @@ public class PlayerMovement : MonoBehaviour
     private void OnBobBeat()
     {
         if (headBobIntensity < 0.01f) return;
+        // Con el componente desactivado (p. ej. en la sala, mientras se responde el cuestionario) Update no integra el
+        // muelle: los golpes se acumulaban y, al reactivarlo, se soltaban de golpe → la cámara saltaba con rebote.
+        if (!isActiveAndEnabled) return;
 
         // Solo ejecutar si el jugador esta corriendo en el suelo.
         // !_isOnKayak es CLAVE: con el CC desactivado en el kayak, isGrounded conserva su
@@ -1510,16 +1632,27 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     private void UpdateHeadBob()
     {
-        float dt    = Time.deltaTime;
         float omega = headBobSpringHz * Mathf.PI * 2f;
         float damp  = headBobDamping * 2f * omega;    // coeficiente de amortiguacion critica
 
         // F = -k*x - c*v  (muelle amortiguado)
-        _bobPitchVel += (-omega * omega * _bobPitch - damp * _bobPitchVel) * dt;
-        _bobPitch    += _bobPitchVel * dt;
+        // Se integra en SUBPASOS de como mucho 1/240 s: con fotogramas largos (portátil sin enchufar, tirones de
+        // carga…) un solo paso grande hace el muelle INESTABLE: oscila cada vez más (cámara loca) hasta dar NaN.
+        float remaining = Mathf.Min(Time.deltaTime, 0.25f);
+        while (remaining > 0f)
+        {
+            float dt = Mathf.Min(remaining, 1f / 240f);
+            remaining -= dt;
+            _bobPitchVel += (-omega * omega * _bobPitch - damp * _bobPitchVel) * dt;
+            _bobPitch    += _bobPitchVel * dt;
+            _bobRollVel  += (-omega * omega * _bobRoll - damp * _bobRollVel) * dt;
+            _bobRoll     += _bobRollVel * dt;
+        }
 
-        _bobRollVel  += (-omega * omega * _bobRoll - damp * _bobRollVel) * dt;
-        _bobRoll     += _bobRollVel * dt;
+        // Seguridad: si algo llega a NaN/infinito, se reinicia el muelle en vez de romper la cámara.
+        if (!float.IsFinite(_bobPitch) || !float.IsFinite(_bobRoll) ||
+            !float.IsFinite(_bobPitchVel) || !float.IsFinite(_bobRollVel))
+            _bobPitch = _bobRoll = _bobPitchVel = _bobRollVel = 0f;
 
         // _bobOffset.y = pitch (grados), _bobOffset.x = roll (grados) → HandleLook
         _bobOffset = new Vector3(_bobRoll, _bobPitch, 0f);

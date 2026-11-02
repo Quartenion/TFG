@@ -47,6 +47,18 @@ public class HandAnimationController : MonoBehaviour
         _clickAction.Enable();
     }
 
+    // El PRIMER apretón creaba en ese momento la salpicadura de sangre (sistema de partículas, malla, material y su
+    // shader): ese fotograma tardaba mucho y la cámara daba un tirón con el primer clic (p. ej. en el 3-2-1).
+    // Se prepara ya al empezar, con una gota invisible, para que el primer clic vaya tan fluido como los demás.
+    private System.Collections.IEnumerator Start()
+    {
+        for (float t = 0f; t < 10f; t += Time.unscaledDeltaTime)
+        {
+            if (heartAnimator != null && heartAnimator.isActiveAndEnabled) { HeartBloodFX.Prewarm(heartAnimator); yield break; }
+            yield return null;
+        }
+    }
+
     void OnDisable()
     {
         if (handAnimator  != null) handAnimator.speed  = 1f;

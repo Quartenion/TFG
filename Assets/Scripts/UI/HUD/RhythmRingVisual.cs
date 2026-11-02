@@ -166,9 +166,24 @@ public class RhythmRingVisual : MonoBehaviour
     // UPDATE
     // =========================================================================
 
+    /// <summary>
+    /// (Tutorial parado justo en el beat) La nota se queda en el punto de mira en su estado «hittable» (blanca), sin
+    /// avanzar ni desvanecerse, mientras RhythmHUDController lo pida (cada fotograma).
+    /// </summary>
+    public void HoldHittable()
+    {
+        if (_consumed) return;
+        _holdFrame = Time.frameCount;
+        ApplySpikeOffset(0f);
+        ApplyFrame(2);
+        SetAllColor(Color.white, 1f);
+    }
+    private int _holdFrame = -10;
+
     private void Update()
     {
         if (_consumed) return;
+        if (_holdFrame >= Time.frameCount - 1) { RotateSpikes(Time.deltaTime); return; }   // (sujeta por HoldHittable)
 
         if (ArrivalSongTime >= 0f) SyncToSong();      // (guiada por la canción)
         else _elapsed += Time.deltaTime;
@@ -209,7 +224,10 @@ public class RhythmRingVisual : MonoBehaviour
         ApplyFrame(FrameIndex());
 
         if (_elapsed >= _travelDuration)
+        {
             _inPhase2 = true;
+            ApplyFrame(2);   // (llega al punto de mira: estado «hittable», aunque haya llegado de un salto)
+        }
     }
 
     // ── Fase 2: llegaron → se quedan y se desvanecen (NO siguen al centro) ────
@@ -219,6 +237,7 @@ public class RhythmRingVisual : MonoBehaviour
         if (t >= 1f) { Expire(); return; }
 
         ApplySpikeOffset(0f);                    // en el hit-zone, sobre el crosshair
+        ApplyFrame(2);                           // (sigue en «hittable»: p. ej. con el tutorial parado justo en el beat)
         SetAllAlpha(Mathf.Lerp(1f, 0f, t));      // fade en el sitio
     }
 

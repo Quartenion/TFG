@@ -6,8 +6,9 @@ using static SimpleUI;
 
 /// <summary>
 /// NOTAS QUE CAEN EN EL MONITOR DEL CORAZÓN (las usan el tutorial y las pistas).
-/// Cada nota es un recuadro con la tecla («ESPACIO», «A+SHIFT»…) que baja desde arriba y llega al recuadro del monitor
-/// justo en su beat. Acertada → se pone verde y crece; pasada sin hacerla → se apaga.
+/// Cada nota es una TECLA DE TECLADO dibujada (o varias: «A + SHIFT»): una tecla clara con su canto oscuro debajo y un
+/// borde del color de la nota (azul = con explicación, amarillo = normal). Baja desde arriba y llega al recuadro del
+/// monitor justo en su beat. Acertada → se pone verde y crece; pasada sin hacerla → se apaga.
 /// Se dibujan en un Canvas propio ('canvas'), encima del HUD.
 /// </summary>
 public class HeartMonitorNotes
@@ -17,8 +18,8 @@ public class HeartMonitorNotes
     private class Note
     {
         public RectTransform rt;
-        public Image bg;
-        public TextMeshProUGUI label;
+        public CanvasGroup group;
+        public readonly List<Image> faces = new List<Image>();
         public float beat;
         public float hitT = -1f;   // tiempo (real) desde que se acertó
         public bool fading;
@@ -34,22 +35,75 @@ public class HeartMonitorNotes
     public float BeatOf(int id) => _notes.TryGetValue(id, out Note n) ? n.beat : float.NaN;
     public IEnumerable<int> Ids => _notes.Keys;
 
-    /// <summary>Crea la nota 'id' (si no existe). 'sibling' ≥ 0 la coloca en esa posición dentro del Canvas.</summary>
+    // Aspecto de las teclas.
+    private const float KeyH = 54f, KeyMinW = 54f, KeyEdge = 7f, KeyBorder = 4f, KeyGap = 10f;
+    private static readonly Color KeyFace = new Color(0.93f, 0.92f, 0.9f, 1f);
+    private static readonly Color KeyEdgeCol = new Color(0.42f, 0.4f, 0.38f, 1f);
+    private static readonly Color KeyText = new Color(0.12f, 0.1f, 0.1f, 1f);
+
+    /// <summary>
+    /// Crea la nota 'id' (si no existe): una tecla por cada parte de 'label' separada por «+» («A+SHIFT» → [A] + [SHIFT]).
+    /// 'sibling' ≥ 0 la coloca en esa posición dentro del Canvas.
+    /// </summary>
     public void Spawn(int id, float beat, string label, Color color, int sibling = -1)
     {
         if (_notes.ContainsKey(id)) return;
-        var bg = Box("Nota", _canvas, new Color(color.r, color.g, color.b, 0.95f));
-        bg.sprite = UIKit.RoundedSprite();
-        bg.type = Image.Type.Sliced;
-        bg.raycastTarget = false;
-        var rt = bg.rectTransform;
+        var rootGo = new GameObject("Nota", typeof(RectTransform), typeof(CanvasGroup));
+        var rt = (RectTransform)rootGo.transform;
+        rt.SetParent(_canvas, false);
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = new Vector2(Mathf.Max(110f, 22f * label.Length + 40f), 46f);
-        var t = Lbl("Tecla", bg.transform, label, FontMid, TextAlignmentOptions.Center);
-        t.color = new Color(0.1f, 0.05f, 0.05f);
-        Stretch(t.rectTransform, 4f, 4f, 2f, 2f);
+        var note = new Note { rt = rt, group = rootGo.GetComponent<CanvasGroup>(), beat = beat };
+        note.group.blocksRaycasts = false; note.group.interactable = false;
+
+        string[] keys = (label ?? "").Split('+');
+        var widths = new float[keys.Length];
+        float total = 0f;
+        for (int i = 0; i < keys.Length; i++)
+        {
+            keys[i] = keys[i].Trim().ToUpperInvariant();
+            widths[i] = Mathf.Max(KeyMinW, 17f * keys[i].Length + 26f);
+            if (keys[i] == "ESPACIO" || keys[i] == "SPACE") widths[i] = Mathf.Max(widths[i], 180f);   // (barra espaciadora: larga)
+            total += widths[i] + (i > 0 ? KeyGap + 22f : 0f);
+        }
+        rt.sizeDelta = new Vector2(total, KeyH + KeyEdge);
+
+        float x = -total * 0.5f;
+        for (int i = 0; i < keys.Length; i++)
+        {
+            if (i > 0)
+            {
+                // «+» entre teclas.
+                var plus = Lbl("Mas", rt, "+", FontMid, TextAlignmentOptions.Center);
+                plus.color = Color.white;
+                plus.raycastTarget = false;
+                Place(plus.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(x + (KeyGap + 22f) * 0.5f, 0f), new Vector2(22f, KeyH), new Vector2(0.5f, 0.5f));
+                x += KeyGap + 22f;
+            }
+            float w = widths[i], cx = x + w * 0.5f;
+            // Borde del color de la nota, canto oscuro (la tecla «tiene altura») y la cara de la tecla con su letra.
+            Img(rt, "Borde", new Color(color.r, color.g, color.b, 1f), new Vector2(cx, -KeyEdge * 0.5f), new Vector2(w + KeyBorder * 2f, KeyH + KeyEdge + KeyBorder * 2f));
+            Img(rt, "Canto", KeyEdgeCol, new Vector2(cx, -KeyEdge * 0.5f), new Vector2(w, KeyH + KeyEdge));
+            Image face = Img(rt, "Tecla", KeyFace, new Vector2(cx, 0f), new Vector2(w, KeyH));   // (el canto asoma por debajo)
+            note.faces.Add(face);
+            var t = Lbl("Letra", face.transform, keys[i], keys[i].Length <= 2 ? FontMid + 6f : FontMid, TextAlignmentOptions.Center);
+            t.color = KeyText;
+            t.raycastTarget = false;
+            t.enableAutoSizing = true; t.fontSizeMin = 10f; t.fontSizeMax = keys[i].Length <= 2 ? FontMid + 6f : FontMid;
+            Stretch(t.rectTransform, 4f, 4f, 2f, 2f);
+            x += w;
+        }
         if (sibling >= 0) rt.SetSiblingIndex(sibling);
-        _notes[id] = new Note { rt = rt, bg = bg, label = t, beat = beat };
+        _notes[id] = note;
+    }
+
+    private static Image Img(RectTransform parent, string name, Color c, Vector2 pos, Vector2 size)
+    {
+        var img = Box(name, parent, c);
+        img.sprite = UIKit.RoundedSprite();
+        img.type = Image.Type.Sliced;
+        img.raycastTarget = false;
+        Place(img.rectTransform, new Vector2(0.5f, 0.5f), pos, size, new Vector2(0.5f, 0.5f));
+        return img;
     }
 
     /// <summary>Acertada: verde y desaparece.</summary>
@@ -115,15 +169,14 @@ public class HeartMonitorNotes
                 n.hitT += Time.unscaledDeltaTime;
                 float k = Mathf.Clamp01(n.hitT / 0.35f);
                 n.rt.localScale = Vector3.one * (1f + 0.6f * k);
-                n.bg.color = new Color(0.3f, 1f, 0.4f, 1f - k);
-                n.label.color = new Color(1f, 1f, 1f, 1f - k);
+                foreach (Image f in n.faces) if (f != null) f.color = Color.Lerp(KeyFace, new Color(0.3f, 1f, 0.4f, 1f), Mathf.Clamp01(k * 3f));
+                n.group.alpha = 1f - k;
                 gone = k >= 1f;
             }
             else if (n.fading)
             {
-                Color c = n.bg.color; c.a = Mathf.MoveTowards(c.a, 0f, Time.unscaledDeltaTime * 3f);
-                n.bg.color = c; n.label.color = new Color(n.label.color.r, n.label.color.g, n.label.color.b, c.a);
-                gone = c.a <= 0f;
+                n.group.alpha = Mathf.MoveTowards(n.group.alpha, 0f, Time.unscaledDeltaTime * 3f);
+                gone = n.group.alpha <= 0f;
             }
             else
             {

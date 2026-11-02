@@ -7,12 +7,13 @@ using UnityEngine.UI;
 ///   • muestra el que más cargado esté (el que estás mirando),
 ///   • se vacía si dejas de mirar (mientras el switch se descarga),
 ///   • se oculta al completarse (switch activado) o cuando no estás cargando ninguno.
+/// Los interruptores se leen de <see cref="GazeSwitch.All"/>, así que también valen los que aparecen al jugar
+/// (nivel tutorial, jefe). Si la escena no tiene aro, el primer GazeSwitch crea uno (<see cref="Ensure"/>).
 ///
-/// SETUP:
+/// SETUP (opcional: si no lo pones, se crea solo):
 ///   1. En el Canvas del HUD crea una Image centrada (donde el crosshair): Image Type = Filled,
 ///      Fill Method = Radial 360, con un sprite de aro. Ponle Fill Amount = 0.
 ///   2. Añade este componente (al Canvas o a un objeto del HUD) y arrastra esa Image a "Ring".
-///   3. Los GazeSwitch se localizan solos.
 /// </summary>
 [AddComponentMenu("HUD/Gaze Charge UI")]
 public class GazeChargeUI : MonoBehaviour
@@ -33,21 +34,22 @@ public class GazeChargeUI : MonoBehaviour
     [Tooltip("Velocidad con la que el aro sigue al progreso real. 0 = instantáneo.")]
     [SerializeField] private float _followSpeed = 0f;
 
-    private GazeSwitch[] _switches;
     private CanvasGroup  _group;
     private float        _shown;   // valor mostrado (para suavizado)
+    private static GazeChargeUI _instance;
 
-    private void Start()
+    private void OnEnable()  { if (_instance == null) _instance = this; }
+    private void OnDisable() { if (_instance == this) _instance = null; }
+
+    private void Start() => SetupRing();
+
+    private void SetupRing()
     {
-        _switches = FindObjectsByType<GazeSwitch>();
-
-        if (_ring != null)
-        {
-            _group = _ring.GetComponent<CanvasGroup>();
-            if (_group == null) _group = _ring.gameObject.AddComponent<CanvasGroup>();
-            _group.alpha = 0f;
-            _ring.fillAmount = 0f;
-        }
+        if (_ring == null) return;
+        _group = _ring.GetComponent<CanvasGroup>();
+        if (_group == null) _group = _ring.gameObject.AddComponent<CanvasGroup>();
+        _group.alpha = 0f;
+        _ring.fillAmount = 0f;
     }
 
     private void LateUpdate()
@@ -56,13 +58,10 @@ public class GazeChargeUI : MonoBehaviour
 
         // Progreso objetivo = el del switch más cargado que aún NO se ha activado.
         float target = 0f;
-        if (_switches != null)
+        foreach (GazeSwitch s in GazeSwitch.All)
         {
-            foreach (GazeSwitch s in _switches)
-            {
-                if (s == null || s.IsActivated) continue;
-                if (s.Progress > target) target = s.Progress;
-            }
+            if (s == null || s.IsActivated) continue;
+            if (s.Progress > target) target = s.Progress;
         }
 
         // Seguir el objetivo (instantáneo o suavizado).
@@ -73,12 +72,56 @@ public class GazeChargeUI : MonoBehaviour
 
         _ring.fillAmount = _shown;
         if (_colorLerp) _ring.color = Color.Lerp(_colorStart, _colorFull, _shown);
-        if (_group != null) _group.alpha = _shown > _showThreshold ? 1f : 0f;
+        if (_group != null) _group.alpha = _shown > _showThreshold && !HudHider.IsHidden ? 1f : 0f;
     }
 
-    /// <summary>Re-escanea los GazeSwitch (útil si instancias interruptores en runtime).</summary>
-    public void RefreshSwitches()
+    /// <summary>(Compatibilidad) Ya no hace falta: los interruptores se leen de GazeSwitch.All.</summary>
+    public void RefreshSwitches() { }
+
+    /// <summary>Si la escena no tiene aro de carga, crea uno en el centro de la pantalla (aro generado por código).</summary>
+    public static void Ensure()
     {
-        _switches = FindObjectsByType<GazeSwitch>();
+        if (_instance != null || !Application.isPlaying) return;
+        _instance = FindAnyObjectByType<GazeChargeUI>();
+        if (_instance != null) return;
+
+        Canvas c = UIKit.CreateCanvas("AroMiradaCanvas", 60, null);
+        var go = new GameObject("AroMirada", typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(c.transform, false);
+        var rt = (RectTransform)go.transform;
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(84f, 84f);
+        var img = go.GetComponent<Image>();
+        img.sprite = RingSprite();
+        img.type = Image.Type.Filled;
+        img.fillMethod = Image.FillMethod.Radial360;
+        img.fillOrigin = (int)Image.Origin360.Top;
+        img.fillClockwise = true;
+        img.raycastTarget = false;
+
+        _instance = c.gameObject.AddComponent<GazeChargeUI>();
+        _instance._ring = img;
+        _instance.SetupRing();
+    }
+
+    private static Sprite _ringSprite;
+
+    public static Sprite RingSprite()
+    {
+        if (_ringSprite != null) return _ringSprite;
+        const int N = 128;
+        var tex = new Texture2D(N, N, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+        var px = new Color32[N * N];
+        for (int y = 0; y < N; y++)
+        for (int x = 0; x < N; x++)
+        {
+            float dx = (x + 0.5f) / N * 2f - 1f, dy = (y + 0.5f) / N * 2f - 1f;
+            float d = Mathf.Sqrt(dx * dx + dy * dy);
+            float a = Mathf.Clamp01((1f - d) * N * 0.5f) * Mathf.Clamp01((d - 0.78f) * N * 0.5f);   // aro de 0,78 a 1
+            px[y * N + x] = new Color32(255, 255, 255, (byte)(255 * a));
+        }
+        tex.SetPixels32(px); tex.Apply(false);
+        _ringSprite = Sprite.Create(tex, new Rect(0, 0, N, N), new Vector2(0.5f, 0.5f), 100f);
+        return _ringSprite;
     }
 }

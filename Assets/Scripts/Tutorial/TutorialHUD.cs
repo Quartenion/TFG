@@ -34,7 +34,7 @@ public class TutorialHUD : MonoBehaviour
         ($"{K(Keybinds.Bind.Forward)} {K(Keybinds.Bind.Left)} {K(Keybinds.Bind.Back)} {K(Keybinds.Bind.Right)}", Loc.T("Moverse (en la zona de inicio) y apartarse de lado", "Move (in the start area) and sidestep")),
         (K(Keybinds.Bind.Interact),           Loc.T("Interactuar: tienda, contratos, empezar", "Interact: shop, contracts, start")),
         (K(Keybinds.Bind.Metronome),          Loc.T("Metrónomo: activar / desactivar (si lo tienes)", "Metronome: on / off (if you have it)")),
-        (Loc.T("CLIC EN EL KAYAK", "CLICK IN THE KAYAK"), Loc.T("Clic izq.: remar a la derecha · clic dcho.: a la izquierda", "Left click: paddle right · right click: paddle left")),
+        (Loc.T("CLIC EN EL KAYAK", "CLICK IN THE KAYAK"), Loc.T("Clic izq.: ir a la derecha · clic dcho.: ir a la izquierda (al ritmo)", "Left click: go right · right click: go left (on the beat)")),
         ("ESC / P",                           Loc.T("Pausa (Ajustes → Controles: cambiar teclas)", "Pause (Settings → Controls: change keys)")),
         ("TAB",                               Loc.T("Mostrar / esconder este panel", "Show / hide this panel")),
     };

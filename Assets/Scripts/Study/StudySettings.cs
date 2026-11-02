@@ -43,8 +43,9 @@ public static class StudySettings
     public const int RequestTimeoutSeconds = 15;
 
     // ── Sesión ────────────────────────────────────────────────────────────────
-    public const int MaxAttemptsPerPart = 3;   // muertes permitidas por parte; después se pasa a la siguiente
-    public const string Version = "estudio-2";
+    public const int MaxAttemptsPerPart = 3;   // muertes permitidas por parte; después se pasa a la siguiente (niveles 1-3)
+    public const int ShopBudget = 600;         // monedas que se dan antes de la parte de la tienda (además de las ganadas)
+    public const string Version = "estudio-5";
 }
 
 /// <summary>

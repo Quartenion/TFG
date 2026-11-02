@@ -43,8 +43,16 @@ public class EnergyManager : MonoBehaviour
     [Header("Modo azul (bonus)")]
     [Tooltip("Sangre azul que se anade a la jeringuilla por cada acierto en bonus")]
     [SerializeField] private float _bluePerHit = 12f;
-    [Tooltip("Multiplicador del boost: boost = bluePercent * multiplier")]
-    [SerializeField] private float _blueBoostMultiplier = 1.5f;
+
+    [Header("Sobrecarga (jeringuilla azul llena)")]
+    [Tooltip("Beats en los que las acciones NO gastan energía al llenar la jeringuilla azul del todo.")]
+    [SerializeField] private float _overloadBeats = 4f;
+
+    [Header("Respiro (tras perder la sangre azul)")]
+    [Tooltip("Beats en los que las ventanas de acierto son más amplias después de perder la sangre azul.")]
+    [SerializeField] private float _graceBeats = 3f;
+    [Tooltip("Aumento máximo de las ventanas (0,5 = +50 %) si se pierde la jeringuilla azul LLENA; proporcional a lo perdido.")]
+    [SerializeField] private float _graceMaxBonus = 0.5f;
 
     [Header("Debug / Diseño de nivel")]
     [Tooltip("God Mode: las acciones no gastan energía y la jeringuilla no se llena pasivamente.\n" +
@@ -58,7 +66,12 @@ public class EnergyManager : MonoBehaviour
     public UnityEvent OnEnergyFull;
     public UnityEvent<float> OnRedHit;
     public UnityEvent<float> OnRedMiss;
-    public UnityEvent<float> OnBlueInjection;
+    public UnityEvent<float> OnBlueLost;   // fallo con sangre azul: se pierde toda (cantidad perdida)
+
+    /// <summary>Empieza la Sobrecarga (duración en beats). Lo usa el efecto visual.</summary>
+    public static event System.Action<float> OverloadStarted;
+    /// <summary>Empieza el Respiro (fracción de sangre azul perdida 0..1, duración en beats).</summary>
+    public static event System.Action<float, float> GraceStarted;
     public UnityEvent OnBlueDepleted;
     public UnityEvent<float> OnBlueModeEntered;
 
@@ -102,6 +115,7 @@ public class EnergyManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        if (GetComponent<OverloadFX>() == null) gameObject.AddComponent<OverloadFX>();   // (efecto de Sobrecarga / Respiro)
         _baseMaxSyringe = _maxSyringe;
         ApplyShopUpgrades();
         // Todos los niveles empiezan con la jeringuilla VACÍA: ni sangre roja ni azul (energía al 100 %).
@@ -313,17 +327,58 @@ public class EnergyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Fallo en modo bonus: inyecta toda la sangre azul de golpe y devuelve el boost.
+    /// Fallo en modo bonus: se PIERDE toda la sangre azul (sin ningún impulso) y empieza el «Respiro»: durante
+    /// unos beats las ventanas de acierto son más amplias, más cuanta más sangre azul se haya perdido.
+    /// Devuelve la cantidad perdida.
     /// </summary>
-    public float MissBlueAndInject()
+    public float LoseBlue()
     {
         if (!_isBlueMode) return 0f;
-        float bluePercent = SyringePercent;
-        float boost = bluePercent * _blueBoostMultiplier;
-        StudyTelemetry.BlueLost(_syringe);
+        float lost = _syringe;
+        float frac = _maxSyringe > 0f ? Mathf.Clamp01(lost / _maxSyringe) : 0f;
+        StudyTelemetry.BlueLost(lost);
+        _overloadUntil = double.NegativeInfinity;   // (fallar corta la Sobrecarga)
         ChangeSyringe(-_syringe);
-        OnBlueInjection?.Invoke(boost);
-        return boost;
+        if (frac > 0f)
+        {
+            _graceFrac = frac;
+            _graceUntil = SongBeat() + _graceBeats;
+            GraceStarted?.Invoke(frac, _graceBeats);
+        }
+        OnBlueLost?.Invoke(lost);
+        return lost;
+    }
+
+    // ── Sobrecarga y Respiro ───────────────────────────────────────────────
+    private double _overloadUntil = double.NegativeInfinity;
+    private double _graceUntil = double.NegativeInfinity;
+    private float _graceFrac;
+
+    /// <summary>Beat actual de la canción (el reloj del BeatManager); muy negativo si no hay canción.</summary>
+    private static double SongBeat()
+    {
+        BeatManager bm = BeatManager.Instance;
+        return bm != null && bm.HasClock ? bm.ClockBeats : double.NegativeInfinity;
+    }
+
+    /// <summary>¿Está en Sobrecarga? (jeringuilla azul llenada del todo hace menos de _overloadBeats beats)</summary>
+    public bool IsOverloaded => SongBeat() < _overloadUntil;
+
+    /// <summary>Multiplicador de las ventanas de acierto por el «Respiro» (1 = normal).</summary>
+    public static float GraceWindowMultiplier
+    {
+        get
+        {
+            EnergyManager em = Instance;
+            if (em == null || SongBeat() >= em._graceUntil) return 1f;
+            return 1f + em._graceMaxBonus * em._graceFrac;
+        }
+    }
+
+    private void StartOverload()
+    {
+        _overloadUntil = SongBeat() + _overloadBeats;
+        OverloadStarted?.Invoke(_overloadBeats);
     }
 
     /// <summary>Sale del modo bonus sin inyectar.</summary>
@@ -339,6 +394,7 @@ public class EnergyManager : MonoBehaviour
     public bool TrySpend(float amount)
     {
         if (amount <= 0f) return true;
+        if (IsOverloaded) return true;   // Sobrecarga: las acciones no gastan energía
         // Antes de empezar el nivel (freeroam / 3-2-1-¡YA!) el EnergyManager está desactivado: las acciones no gastan.
         if (!isActiveAndEnabled || _paused) return true;
         amount *= ActionCostMultiplier * StudyConfig.ActionCostMult;   // «Metabolismo eficiente» (tienda) · modo prueba
@@ -467,6 +523,19 @@ public class EnergyManager : MonoBehaviour
     /// </summary>
     public void SetPaused(bool paused) => _paused = paused;
 
+    /// <summary>
+    /// Coloca la jeringuilla directamente (fin del nivel tutorial: se vacía animada, la roja y la azul).
+    /// 'blue' = sigue en modo azul (con value &gt; 0).
+    /// </summary>
+    public void SetSyringeDirect(float value, bool blue)
+    {
+        _syringe = Mathf.Clamp(value, 0f, _maxSyringe);
+        _isBlueMode = blue && _syringe > 0f;
+        if (!_isBlueMode) _overloadUntil = double.NegativeInfinity;
+        OnSyringeChanged?.Invoke(SyringePercent);
+        OnEnergyChanged?.Invoke(EnergyPercent);
+    }
+
     // =========================================================================
     // Internals
     // =========================================================================
@@ -482,6 +551,9 @@ public class EnergyManager : MonoBehaviour
         {
             OnSyringeChanged?.Invoke(SyringePercent);
             OnEnergyChanged?.Invoke(EnergyPercent);
+
+            // Jeringuilla AZUL llena del todo → Sobrecarga.
+            if (_isBlueMode && _syringe >= _maxSyringe && prev < _maxSyringe) StartOverload();
 
             // OnSyringeFull = muerte. Solo dispara en modo rojo.
             // En modo azul (bonus), llenar la jeringuilla NO mata al jugador.

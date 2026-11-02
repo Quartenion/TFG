@@ -102,8 +102,8 @@ public static class PlayerProgress
     /// </summary>
     public static int GetLevel(string id)
     {
-        // Modo prueba: el CROSSHAIR RÍTMICO va siempre puesto, en todas las partes (los demás perks como siempre).
-        if (id == ShopIds.RhythmSight && StudySession.Active) return Mathf.Max(1, Get(Data.upgrades, id));
+        // Modo prueba y nivel tutorial: el CROSSHAIR RÍTMICO va siempre puesto (los demás perks como siempre).
+        if (id == ShopIds.RhythmSight && (StudySession.Active || (CourseBuilder.Instance != null && !LevelEndManager.Finished))) return Mathf.Max(1, Get(Data.upgrades, id));
         return _suspended || !Data.equippedUpgrades.Contains(id) ? 0 : Get(Data.upgrades, id);
     }
 

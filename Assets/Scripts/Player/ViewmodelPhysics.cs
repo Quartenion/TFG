@@ -344,6 +344,7 @@ public class ViewmodelPhysics : MonoBehaviour
         Vector2 delta = Mouse.current != null
             ? Mouse.current.delta.ReadValue()
             : Vector2.zero;
+        if (PlayerMovement.LookSpikeFrame >= Time.frameCount - 1) delta = Vector2.zero;   // (recolocación del ratón al capturarlo)
 
         // La mano se inclina en SENTIDO CONTRARIO al movimiento del raton
         //   Mouse derecha -> roll izquierda (como en Valorant)

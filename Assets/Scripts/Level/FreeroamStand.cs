@@ -16,6 +16,8 @@ public abstract class FreeroamStand : MonoBehaviour
     [SerializeField] protected Collider[] _colliders;
     [Tooltip("Distancia máxima (m) al mirarlo para que aparezca el aviso.")]
     [SerializeField] protected float _maxDistance = 4f;
+    /// <summary>Distancia máxima a la que se puede usar (mirándolo).</summary>
+    public float MaxDistance => _maxDistance;
     [Tooltip("Texto del aviso.")]
     [SerializeField] protected string _promptText = "[ E ]";
     [SerializeField] protected string _promptTextEn = "[ E ]";
@@ -47,6 +49,41 @@ public abstract class FreeroamStand : MonoBehaviour
     protected abstract Color  GizmoColor { get; }
     protected abstract string GizmoLabel { get; }
 
+    /// <summary>
+    /// Configura el puesto desde código (puestos creados al jugar, p. ej. en la sala final del nivel tutorial). Hay que
+    /// llamarlo justo después de AddComponent, antes de su Start.
+    /// </summary>
+    public void Configure(string promptEs, string promptEn, Color blockColor, Vector3 blockSize, float maxDistance = 4f, bool showLabel = true)
+    {
+        _showLabel = showLabel;
+        _promptText = promptEs; _promptTextEn = promptEn;
+        _blockColor = blockColor; _blockSize = blockSize;
+        _maxDistance = maxDistance;
+        _onlyInFreeroam = true;
+    }
+
+    /// <summary>
+    /// Tiendas cerradas en toda la escena (nivel tutorial: ni en el tutorial ni en el estudio se compran mejoras).
+    /// La pone CourseBuilder; se reinicia al cambiar de escena.
+    /// </summary>
+    public static bool ShopsClosed;
+
+    /// <summary>¿Hay algún puesto/puerta al que se esté mirando y se pueda usar ahora? (lo usa la mirilla de la sala)</summary>
+    public static bool AnyTargeted
+    {
+        get
+        {
+            foreach (FreeroamStand s in All) if (s != null && s.isActiveAndEnabled && s._inRange) return true;
+            return false;
+        }
+    }
+    private static readonly System.Collections.Generic.List<FreeroamStand> All = new System.Collections.Generic.List<FreeroamStand>();
+    protected virtual void OnEnable()  { if (!All.Contains(this)) All.Add(this); }
+    protected virtual void OnDisable() { All.Remove(this); _inRange = false; }
+
+    /// <summary>¿Se puede usar ahora? Por defecto: no en el modo prueba (salvo partes con tienda) ni con las tiendas cerradas.</summary>
+    protected virtual bool AllowedNow => !ShopsClosed && !(StudySession.Active && !StudySession.ShopAllowed);
+
     // ── Ciclo de vida ─────────────────────────────────────────────────────────
 
     private void Start()
@@ -61,7 +98,7 @@ public abstract class FreeroamStand : MonoBehaviour
     {
         _inRange = false;
         if (ShopUI.IsOpen || ShopUI.ClosedRecently || ContractUI.IsOpen || ContractUI.ClosedRecently) return;
-        if (StudySession.Active && !StudySession.ShopAllowed) return;   // (modo prueba: tienda y contratos solo en las partes 4-5)
+        if (!AllowedNow) return;
         if (_onlyInFreeroam && (_pm == null || !_pm.IsFreeroam)) return;
 
         Camera cam = Camera.main;

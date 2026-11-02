@@ -109,3 +109,36 @@ InitTestScene*.unity*
 # Clave privada de verificación de la telemetría del estudio (no subir)
 /[Aa]ssets/[Rr]esources/StudyKey.txt
 /[Aa]ssets/[Rr]esources/StudyKey.txt.meta
+
+# ── Recursos de terceros que NO se pueden redistribuir en un repositorio público ──
+# (Se usan en el juego exportado, que sí lo permite. Ver Memoria, apéndice D, para descargarlos.)
+# Unity Asset Store (EULA: no se pueden publicar los archivos originales)
+/[Aa]ssets/AllSkyFree/
+/[Aa]ssets/AllSkyFree.meta
+/[Aa]ssets/SpaceSkies Free/
+/[Aa]ssets/SpaceSkies Free.meta
+/[Aa]ssets/IgniteCoders/
+/[Aa]ssets/IgniteCoders.meta
+/[Aa]ssets/3D/Fantasy Props MegaKit*/
+/[Aa]ssets/3D/Fantasy Props MegaKit*.meta
+# ithappy Free Library (prohíbe redistribuir «tal cual») y CGTrader (Royalty Free)
+/[Aa]ssets/Shaders/Lava/
+/[Aa]ssets/Shaders/Lava.meta
+/[Aa]ssets/3D/Trident/
+/[Aa]ssets/3D/Trident.meta
+# Efectos de sonido de Pixabay y SoundJay (no se pueden distribuir sueltos)
+/[Aa]ssets/SFX/*BPM.wav*
+/[Aa]ssets/SFX/Coffin*
+/[Aa]ssets/SFX/Coin*
+/[Aa]ssets/SFX/Dash*
+/[Aa]ssets/SFX/Jump.wav*
+/[Aa]ssets/SFX/Move-Not-Allowed*
+/[Aa]ssets/SFX/Step-*
+/[Aa]ssets/SFX/Sudo-Footstep*
+/[Aa]ssets/SFX/Zipline-*
+/[Aa]ssets/SFX/rock-smash-*
+/[Aa]ssets/SFX/row*
+/[Aa]ssets/SFX/underwater-ambience*
+/[Aa]ssets/SFX/Flatline*
+# Archivo de prueba de 24 MB que no usa el juego
+/[Aa]ssets/StreamingAssets/test.wav*

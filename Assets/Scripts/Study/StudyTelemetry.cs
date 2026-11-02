@@ -8,7 +8,8 @@ using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// REGISTRO DE DATOS del modo prueba. Solo funciona con StudySession.Active.
+/// REGISTRO DE DATOS del modo prueba: durante la prueba (StudySession.Active) y, después de completarla, también en el
+/// modo normal y en la práctica libre (StudySession.PostStudyPlay), con el mismo código y la parte «libre».
 /// Un «intento» va desde que empieza a sonar la música del nivel hasta que el jugador llega a la meta, muere o sale.
 /// Por cada intento (y por cada cuestionario dentro del juego) se genera UNA línea de texto separada por «;» que:
 ///   1. se añade a un CSV local (Application.persistentDataPath/Estudio/&lt;código&gt;.csv) y
@@ -22,7 +23,12 @@ public class StudyTelemetry : MonoBehaviour
         "precision_sync;latidos;aciertos;perfect;good;fallos;mejor_racha;desfase_medio_ms;desfase_abs_medio_ms;desfase_sd_ms;" +
         "energia_gastada_acciones;energia_perdida_fallos;energia_perdida_azul;energia_recuperada;energia_media;energia_min;" +
         "tiempo_azul_s;entradas_azul;saltos;dashes;slides;wallruns;monedas;mejoras_equipadas;" +
-        "monedas_recogidas;monedas_nivel_total;contratos_activos;contratos_fallados" + RowTail;
+        "monedas_recogidas;monedas_nivel_total;contratos_activos;contratos_fallados;ronda;obstaculo;orden_obstaculos" + RowTail;
+
+    /// <summary>Obstáculo en el que está el jugador ahora (lo pone CourseBuilder): con qué se ha chocado al morir.</summary>
+    public static string CurrentObstacle = "";
+    /// <summary>Orden de los obstáculos del recorrido de esta parte (lo pone CourseBuilder; vacío en el tutorial).</summary>
+    public static string CourseOrder = "";
 
     public const string QHeader = "tipo;participante;fecha_utc;version;parte;nivel;config;orden;p1;p2;p3;p4;p5;p6;p7;p8;preferencia" + RowTail;
 
@@ -53,6 +59,7 @@ public class StudyTelemetry : MonoBehaviour
     private static int _runCoins, _levelCoins; private static string _contracts = "", _broken = "";
 
     public static bool IsOpen => _open;
+    private static string _part = "";
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
@@ -97,9 +104,9 @@ public class StudyTelemetry : MonoBehaviour
 
         var f = new List<string>
         {
-            "intento", StudySession.Participant, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
-            (StudySession.Step + 1).ToString(Inv), _level, StudyConfig.Current.ToString(),
-            StudySession.OrderAB ? "AB" : "BA", StudySession.Attempts.ToString(Inv), result,
+            "intento", Who, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
+            _part, _level, StudyConfig.Current.ToString(),
+            OrderLabel, StudySession.Attempts.ToString(Inv), result,
             F(dur), F(beats), accuracy >= 0f ? F(accuracy) : "",
             _presses.ToString(Inv), (_perf + _good).ToString(Inv), _perf.ToString(Inv), _good.ToString(Inv),
             _miss.ToString(Inv), _bestStreak.ToString(Inv), F(mean), F(meanAbs), F(sd),
@@ -108,17 +115,31 @@ public class StudyTelemetry : MonoBehaviour
             F(_blueTime), _blueEntries.ToString(Inv), _jumps.ToString(Inv), _dashes.ToString(Inv),
             _slides.ToString(Inv), _wallruns.ToString(Inv), _coins.ToString(Inv), _equipped,
             _runCoins.ToString(Inv), _levelCoins.ToString(Inv), _contracts, _broken,
+            StudySession.Active && !Extra ? StudySession.Current.round.ToString(Inv) : "", Clean(CurrentObstacle), Clean(CourseOrder),
         };
         Submit(string.Join(";", f), Header);
     }
+
+    // ── Quién, qué parte y si se registra ──
+    /// <summary>¿Se registra ahora? Durante la prueba (no en su práctica libre) o jugando después de completarla.</summary>
+    private static bool Recording => (StudySession.Active && !StudySession.FreePlay) || StudySession.PostStudyPlay;
+    private static bool Extra => StudySession.PostStudyPlay;
+    private static string Who => StudySession.Active && !string.IsNullOrEmpty(StudySession.Participant)
+                                 ? StudySession.Participant : StudySession.SavedParticipant;
+    private static string PartLabel => Extra ? "libre" : (StudySession.Step + 1).ToString(Inv);
+    private static string OrderLabel => StudySession.Active ? (StudySession.OrderAB ? "AB" : "BA") : StudySession.SavedOrder;
+    private static bool Simulated => StudySession.Active ? StudySession.Simulated
+                                     : (StudySession.SavedSimulated || Who.StartsWith("TEST-"));
+
+    private static string Clean(string s) => (s ?? "").Replace(";", ",");
 
     /// <summary>Respuestas del cuestionario corto del juego (1-7) tras una parte.</summary>
     public static void Questionnaire(int part, string level, StudyConfig.Profile cfg, int[] answers, string preference)
     {
         var f = new List<string>
         {
-            "cuestionario", StudySession.Participant, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
-            part.ToString(Inv), level, cfg.ToString(), StudySession.OrderAB ? "AB" : "BA",
+            "cuestionario", Who, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
+            part.ToString(Inv), level, cfg.ToString(), OrderLabel,
         };
         for (int i = 0; i < 8; i++) f.Add(i < answers.Length && answers[i] > 0 ? answers[i].ToString(Inv) : "");
         f.Add(preference ?? "");
@@ -128,15 +149,31 @@ public class StudyTelemetry : MonoBehaviour
     /// <summary>Contratos (partes 4-5): firmar, rescindir, cumplido y cobrar.</summary>
     public static void ContractEvent(string evt, string id)
     {
-        if (!StudySession.Active || StudySession.FreePlay) return;   // (la práctica libre no se registra)
+        if (!Recording) return;
         ContractDef c = ContractCatalog.Get(id);
         var f = new List<string>
         {
-            "contrato", StudySession.Participant, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
-            (StudySession.Step + 1).ToString(Inv), SceneManager.GetActiveScene().name, evt, id,
+            "contrato", Who, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
+            PartLabel, SceneManager.GetActiveScene().name, evt, id,
             c != null ? c.tier.ToString(Inv) : "", c != null ? c.reward.ToString(Inv) : "", PlayerProgress.Coins.ToString(Inv),
         };
         Submit(string.Join(";", f), ContractHeader);
+    }
+
+    /// <summary>
+    /// El participante se SALTA una sección (botón del game over tras morir 3 veces en ella): fila «salto_seccion» con
+    /// el nº de checkpoint desde el que salta y el obstáculo en el que estaba.
+    /// </summary>
+    public static void SectionSkipped(int checkpoint, string obstacle)
+    {
+        if (!Recording) return;
+        var f = new List<string>
+        {
+            "salto_seccion", Who, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
+            PartLabel, SceneManager.GetActiveScene().name, StudySession.Attempts.ToString(Inv),
+            checkpoint.ToString(Inv), Clean(obstacle),
+        };
+        Submit(string.Join(";", f), null);
     }
 
     /// <summary>El participante abandona la prueba desde la pausa (queda descalificado).</summary>
@@ -145,7 +182,7 @@ public class StudyTelemetry : MonoBehaviour
         if (!StudySession.Active) return;
         var f = new List<string>
         {
-            "abandono", StudySession.Participant, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
+            "abandono", Who, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
             (StudySession.Step + 1).ToString(Inv), SceneManager.GetActiveScene().name, StudySession.Attempts.ToString(Inv),
         };
         Submit(string.Join(";", f), null);
@@ -154,11 +191,11 @@ public class StudyTelemetry : MonoBehaviour
     /// <summary>Tienda (partes 4-5): abrir/cerrar (con duración), compras, equipar/quitar y muescas.</summary>
     public static void ShopEvent(string evt, string item, int price, float duration = -1f)
     {
-        if (!StudySession.Active || StudySession.FreePlay) return;   // (la práctica libre no se registra)
+        if (!Recording) return;
         var f = new List<string>
         {
-            "tienda", StudySession.Participant, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
-            (StudySession.Step + 1).ToString(Inv), SceneManager.GetActiveScene().name, evt, item, price.ToString(Inv),
+            "tienda", Who, DateTime.UtcNow.ToString("s", Inv), StudySettings.Version,
+            PartLabel, SceneManager.GetActiveScene().name, evt, item, price.ToString(Inv),
             PlayerProgress.Coins.ToString(Inv), Notches.Used.ToString(Inv), Notches.Total.ToString(Inv),
             duration >= 0f ? F(duration) : "",
         };
@@ -171,10 +208,10 @@ public class StudyTelemetry : MonoBehaviour
 
     private void Update()
     {
-        if (!StudySession.Active) return;
+        if (!Recording) { if (_open) EndAttempt("salida"); return; }
         BeatManager bm = BeatManager.Instance;
         EnergyManager em = EnergyManager.Instance;
-        bool playing = bm != null && bm.IsPlaying && !LevelEndManager.Finished && StudySession.InLevel;
+        bool playing = bm != null && bm.IsPlaying && !LevelEndManager.Finished && (StudySession.InLevel || Extra);
 
         if (!_open && playing && !IsFreeroam() && !PlayerDead()) BeginAttempt(bm);
         if (!_open) return;
@@ -224,6 +261,7 @@ public class StudyTelemetry : MonoBehaviour
     {
         _open = true;
         _level = SceneManager.GetActiveScene().name;
+        _part = PartLabel;
         _coins = PlayerProgress.Coins;
         _equipped = PlayerProgress.Suspended ? "" : string.Join("|", PlayerProgress.EquippedUpgrades);
         _levelCoins = FindObjectsByType<Coin>().Length;   // monedas que hay en el nivel (para el % recogido)
@@ -249,22 +287,26 @@ public class StudyTelemetry : MonoBehaviour
     {
         // Sin saltos de línea (cada envío es UNA fila) y con nº de fila + verificación al final.
         line = line.Replace("\r", " ").Replace("\n", " ");
-        if (_rowSession != StudySession.Participant) { _rowSession = StudySession.Participant; _rowSeq = 0; }
+        // (El nº de fila se guarda por código: al volver a abrir el juego para jugar en modo normal sigue contando, así
+        //  no se repite y no parece un duplicado.)
+        string who = Who;
+        if (_rowSession != who) { _rowSession = who; _rowSeq = PlayerPrefs.GetInt("Study.Row." + who, 0); }
         line += ";" + (++_rowSeq).ToString(Inv);
+        PlayerPrefs.SetInt("Study.Row." + who, _rowSeq); PlayerPrefs.Save();
         line += ";" + Sign(line);
 
         try
         {
             string dir = Path.Combine(Application.persistentDataPath, "Estudio");
             Directory.CreateDirectory(dir);
-            string path = Path.Combine(dir, $"{StudySession.Participant}.csv");
+            string path = Path.Combine(dir, $"{who}.csv");
             if (!File.Exists(path)) File.AppendAllText(path, Header + "\n" + QHeader + "\n" + ShopHeader + "\n" + ContractHeader + "\n" + AbandonHeader + "\n");
             File.AppendAllText(path, line + "\n");
         }
         catch (Exception e) { Debug.LogWarning($"[Estudio] No se pudo guardar el CSV: {e.Message}"); }
 
         Debug.Log($"[Estudio] {line}");
-        if (_runner != null && IsSafeUrl(StudySettings.DataFormUrl) && !string.IsNullOrEmpty(StudySettings.DataEntryId))
+        if (!Simulated && _runner != null && IsSafeUrl(StudySettings.DataFormUrl) && !string.IsNullOrEmpty(StudySettings.DataEntryId))
             _runner.StartCoroutine(Post(line));
     }
 

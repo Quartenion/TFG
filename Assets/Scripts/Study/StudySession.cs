@@ -2,16 +2,15 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// MODO PRUEBA (estudio con jugadores). Guía al participante por 5 partes:
-///   1. Nivel 1 de práctica con tutorial (configuración normal; no se compara).
-///   2. Nivel 1 con la configuración A o B.          ┐ el orden (AB / BA) se sortea por participante
-///   3. Nivel 1 con la otra configuración.           ┘ para que aprender el nivel no favorezca siempre a la misma
-///   4. Nivel 2 (configuración normal).               ┐ opcionales: comparan niveles con mecánicas distintas
-///   5. Nivel 3 (configuración normal).               ┘ (kayak; mirada + jefe) y evalúan la TIENDA
-/// Entre partes se vuelve al menú principal, donde StudyHub enseña el cuestionario corto y la siguiente parte.
-/// En las partes 1-3 la tienda y las mejoras no cuentan (todos juegan igual para comparar las configuraciones).
-/// En las partes 4-5 se abre la tienda: el jugador gasta las monedas ganadas y se registra qué compra y equipa.
-/// En las partes 4-5 también se pueden firmar CONTRATOS (bloque rojo): se registran firmas, cumplidos y cobros.
+/// MODO PRUEBA (estudio con jugadores). Todo se juega en la escena «Tutorial» (ver CourseBuilder), a 100 BPM:
+///   0. Tutorial (tras el consentimiento): cada obstáculo 3 veces, con explicaciones. NO es una parte del estudio: no
+///      se registran datos. Al terminarlo, en la sala, empieza el estudio.
+///   1. Recorrido de estudio con la configuración A o B. ┐ el orden (AB / BA) se sortea por participante. Los dos
+///   2. Recorrido con la otra configuración.             ┘ recorridos son EL MISMO (fijo, de fácil a difícil).
+/// Si choca o se queda sin energía reaparece en el último checkpoint (gratis): todos juegan el recorrido completo.
+/// Tras cada parte el jugador vuelve a la SALA del tutorial: allí StudyHub enseña el cuestionario corto y la siguiente
+/// parte, que empieza al cruzar la PUERTA GRANDE. Las puertas pequeñas, la tienda y los contratos están cerrados durante
+/// todo el estudio, y no hay mejoras (todos juegan igual).
 /// </summary>
 public static class StudySession
 {
@@ -22,12 +21,58 @@ public static class StudySession
         public string description => Keybinds.Fix(Loc.T(descEs, descEn));   // (teclas de Ajustes → Controles)
         public StudyConfig.Profile config;
         public bool tutorial, questionnaire, preference, shop;   // tutorial = carteles de consejos (práctica y mecánicas nuevas de los niveles 2 y 3)
+        public CourseMode course;   // qué se construye en la escena «Tutorial» (ver CourseBuilder)
+        public int round;           // nº de recorrido (cambia el orden de los obstáculos)
     }
 
     public const string MenuScene = "MainMenu";
-    public const int MainParts = 3;   // las 3 primeras son obligatorias
+    public const string CourseScene = "Tutorial";   // escena del nivel tutorial / de estudio (CourseBuilder)
+
+    /// <summary>¿Se ha dado ya el presupuesto de la tienda (parte 4)?</summary>
+    public static bool ShopBudgetGiven { get; private set; }
+
+    /// <summary>Parte 4: monedas fijas para que todos puedan comprar algo (además de las ganadas).</summary>
+    public static void GiveShopBudget()
+    {
+        if (ShopBudgetGiven || !Active) return;
+        ShopBudgetGiven = true;
+        PlayerProgress.AddCoins(StudySettings.ShopBudget);
+    }
+    public const int MainParts = 2;   // 2 recorridos (A y B), los dos obligatorios (el tutorial va antes y no cuenta)
 
     public static bool   Active { get; private set; }
+    /// <summary>¿Ha empezado ya el estudio (se ha cruzado la puerta grande para el primer recorrido)? Antes, en la sala
+    /// del tutorial, se pueden practicar los obstáculos por las puertas pequeñas.</summary>
+    public static bool   RunsStarted { get; private set; }
+    /// <summary>¿Ya se ha visto en la sala la pantalla de la primera parte? (Al volver de practicar no se repite.)</summary>
+    public static bool   RoomIntroSeen;
+
+    /// <summary>¿Se ha completado ya la prueba entera en este equipo? (Hasta entonces, el botón JUGAR del menú está en gris.)</summary>
+    public static bool StudyCompleted => PlayerPrefs.GetInt("Study.Completed", 0) == 1;
+    public static void MarkStudyCompleted()
+    {
+        PlayerPrefs.SetInt("Study.Completed", 1);
+        // (El código se guarda: lo que juegue después en el modo normal se registra con el mismo código, parte «libre».)
+        PlayerPrefs.SetString("Study.Participant", Participant);
+        PlayerPrefs.SetInt("Study.Simulated", Simulated ? 1 : 0);
+        PlayerPrefs.SetString("Study.Order", OrderAB ? "AB" : "BA");
+        PlayerPrefs.Save();
+    }
+
+    /// <summary>Código del participante que completó la prueba en este equipo (vacío si no la ha completado).</summary>
+    public static string SavedParticipant => PlayerPrefs.GetString("Study.Participant", "");
+    public static bool   SavedSimulated   => PlayerPrefs.GetInt("Study.Simulated", 0) == 1;
+    public static string SavedOrder       => PlayerPrefs.GetString("Study.Order", "");
+
+    /// <summary>
+    /// Jugando DESPUÉS de completar la prueba (modo normal desde JUGAR), fuera del menú: también se registran datos
+    /// (parte «libre»), con el mismo código. Igual en la práctica libre de dentro de la prueba.
+    /// </summary>
+    public static bool PostStudyPlay =>
+        SceneManager.GetActiveScene().name != MenuScene &&
+        (InFreePlay || (!Active && StudyCompleted && !string.IsNullOrEmpty(SavedParticipant)));
+    /// <summary>En la sala, antes de empezar el estudio y con la pantalla de la primera parte ya vista.</summary>
+    public static bool RoomRunsPending() => Active && !RunsStarted && RoomIntroSeen;
     public static string Participant { get; private set; } = "";
     public static bool   OrderAB { get; private set; }
     public static int    Step { get; private set; } = -1;      // parte actual (0..Plan.Length-1)
@@ -39,6 +84,12 @@ public static class StudySession
 
     /// <summary>Jugando una parte de la prueba (no la práctica libre).</summary>
     public static bool InLevel => Active && AwaitingReturn && !FreePlay && SceneManager.GetActiveScene().name != MenuScene;
+
+    /// <summary>
+    /// Dentro de la prueba fuera del menú: el tutorial, la sala, las prácticas de las puertas y los recorridos. Salir de
+    /// aquí al menú (pausa o SALIR del game over) es ABANDONAR la prueba (ver AbandonDialog).
+    /// </summary>
+    public static bool InSession => Active && !FreePlay && SceneManager.GetActiveScene().name != MenuScene;
 
     /// <summary>
     /// PRÁCTICA LIBRE (tras las 3 partes principales): repetir el último nivel con TODO desbloqueado (tienda con todas
@@ -86,50 +137,46 @@ public static class StudySession
 
     // ── Inicio / fin ──────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Sesión SIMULADA (para probar en el editor desde la escena Tutorial): todo igual, pero el código empieza por
+    /// «TEST-» y los datos NO se envían al formulario (solo se guardan en el CSV local).
+    /// </summary>
+    public static bool Simulated { get; private set; }
+
     /// <summary>Empieza una sesión nueva: código anónimo, orden sorteado y plan de partes.</summary>
-    public static void Begin()
+    public static void Begin(bool simulated = false)
     {
+        Simulated = simulated;
         const string abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // sin 0/O ni 1/I
         var rng = new System.Random();
         char[] code = new char[5];
         for (int i = 0; i < code.Length; i++) code[i] = abc[rng.Next(abc.Length)];
-        Participant = "P-" + new string(code);
+        Participant = (simulated ? "TEST-" : "P-") + new string(code);
         OrderAB = rng.Next(2) == 0;
 
         StudyConfig.Profile first  = OrderAB ? StudyConfig.Profile.Permisiva : StudyConfig.Profile.Exigente;
         StudyConfig.Profile second = OrderAB ? StudyConfig.Profile.Exigente  : StudyConfig.Profile.Permisiva;
         Plan = new[]
         {
-            new Part { scene = "Level1", config = StudyConfig.Profile.Normal, tutorial = true, titleEs = "Práctica: Nivel 1 con tutorial", titleEn = "Practice: Level 1 with tutorial",
-                       descEs = "Juega el Nivel 1 con consejos en pantalla para aprender los controles. Esta partida es solo para practicar.",
-                       descEn = "Play Level 1 with on-screen hints to learn the controls. This run is just for practice." },
-            new Part { scene = "Level1", config = first, questionnaire = true, titleEs = "Nivel 1 · partida 1", titleEn = "Level 1 · run 1",
-                       descEs = "Vuelve a jugar el Nivel 1. Esta vez sin consejos. Al terminar responderás unas preguntas cortas.",
-                       descEn = "Play Level 1 again. This time without hints. When you finish you will answer a few short questions." },
-            new Part { scene = "Level1", config = second, questionnaire = true, preference = true, titleEs = "Nivel 1 · partida 2", titleEn = "Level 1 · run 2",
-                       descEs = "Una última vez el Nivel 1. Puede que notes que la energía funciona algo distinto: juega con normalidad.",
-                       descEn = "Level 1 one last time. You may notice that energy works a bit differently: just play normally." },
-            new Part { scene = "Level2", config = StudyConfig.Profile.Normal, tutorial = true, questionnaire = true, shop = true, titleEs = "Nivel 2", titleEn = "Level 2",
-                       descEn = "A new level with kayak sections: left or right click on the beat to paddle to each side.\n\n" +
-                                "NEW: in the start area there is a SHOP (green block; look at it and press E). Spend the coins you " +
-                                "have earned on upgrades and equip them (each upgrade uses «notches»). Buy whatever you want, or nothing.\n" +
-                                "There is also a CONTRACT stand (red block): optional challenges that give coins if you complete them " +
-                                "(you claim them later at the stand).",
-                       descEs = "Un nivel nuevo con secciones en kayak: clic izquierdo o derecho al ritmo para remar hacia cada lado.\n\n" +
-                                     "NOVEDAD: en la zona de inicio hay una TIENDA (bloque verde; míralo y pulsa E). Gasta las monedas que has " +
-                                     "ganado en mejoras y equípalas (cada mejora ocupa «muescas»). Compra lo que quieras, o nada.\n" +
-                                     "También hay un puesto de CONTRATOS (bloque rojo): retos opcionales que dan monedas si los cumples " +
-                                     "(se cobran luego en el puesto)." },
-            new Part { scene = "Level3", config = StudyConfig.Profile.Normal, tutorial = true, questionnaire = true, shop = true, titleEs = "Nivel 3", titleEn = "Level 3",
-                       descEn = "The last level: there are enemies that you disable by LOOKING AT THEM for a moment, and a final boss.\n\n" +
-                                "The shop and contracts are back in the start area, with new upgrades and challenges. " +
-                                "If you completed any contract in Level 2, claim it here.",
-                       descEs = "El último nivel: hay enemigos que se desactivan MIRÁNDOLOS un momento, y un jefe final.\n\n" +
-                                     "La tienda y los contratos vuelven a estar en la zona de inicio, con mejoras y retos nuevos. " +
-                                     "Si cumpliste algún contrato en el Nivel 2, cóbralo aquí." },
+            new Part { scene = CourseScene, course = CourseMode.Study, round = 1, config = first, questionnaire = true,
+                       titleEs = "Recorrido 1", titleEn = "Run 1",
+                       descEs = "Un recorrido con los obstáculos que has aprendido, ordenados de los más fáciles a los más difíciles. Durante " +
+                                "el recorrido sonará el metrónomo y el monitor del corazón te indicará qué acción toca en cada momento. " +
+                                "Al terminar, responderás unas preguntas cortas.",
+                       descEn = "A run with the obstacles you have learned, from the easiest to the hardest. The metronome will play and " +
+                                "the heart monitor will show you which action comes next. When you finish you will answer a few short questions." },
+            new Part { scene = CourseScene, course = CourseMode.Study, round = 2, config = second, questionnaire = true, preference = true,
+                       titleEs = "Recorrido 2", titleEn = "Run 2",
+                       descEs = "El mismo recorrido otra vez. Es posible que notes que la energía funciona de forma algo distinta, pero " +
+                                "juega con normalidad.",
+                       descEn = "The same run again. You may notice that energy works a bit differently: just play normally." },
         };
         Step = 0;
         Attempts = 0;
+        RunsStarted = false;
+        RoomIntroSeen = false;
+        CourseBuilder.ResetTutorialRun();   // (prueba nueva —p. ej. tras abandonar—: el tutorial vuelve a explicarlo todo)
+        ShopBudgetGiven = false;
         Active = true;
         PlayerProgress.Suspended = true;   // tienda, mejoras y consumibles fuera: todos juegan igual
         Debug.Log($"[Estudio] Sesión {Participant}, orden {(OrderAB ? "AB" : "BA")}.");
@@ -168,13 +215,23 @@ public static class StudySession
     /// <summary>Carga el nivel de la parte actual con su configuración.</summary>
     public static void StartPart()
     {
+        PreparePart();
+        SceneManager.LoadScene(Current.scene);
+    }
+
+    /// <summary>
+    /// Deja lista la parte actual (configuración, intentos…) SIN cargar la escena: en la sala del tutorial la carga la
+    /// puerta grande al cruzarla. En el estudio no hay mejoras ni consumibles (todos juegan igual).
+    /// </summary>
+    public static void PreparePart()
+    {
+        RunsStarted = true;
         Attempts = 0;
         PartCompleted = false;
         AwaitingReturn = true;
         StudyConfig.Current = Current.config;
-        PlayerProgress.Suspended = !Current.shop;   // mejoras solo en las partes con tienda
+        PlayerProgress.Suspended = true;
         CheckpointSystem.Clear();
-        SceneManager.LoadScene(Current.scene);
     }
 
     /// <summary>Pasa a la siguiente parte (o termina). Devuelve false si ya no quedan.</summary>

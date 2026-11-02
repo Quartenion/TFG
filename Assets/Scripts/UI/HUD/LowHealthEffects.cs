@@ -80,6 +80,8 @@ public class LowHealthEffects : MonoBehaviour
     [Header("Pulso de camara (latido)")]
     [SerializeField] private Camera _camera;
     [SerializeField] private float _maxPulseFOV = 5f;
+    [Tooltip("En modo azul (sangre azul / sobrecarga) el latido de la cámara es más suave: × este factor.")]
+    [SerializeField] private float _bluePulseScale = 0.35f;
     [SerializeField] private float _pulseInTime = 0.06f;
     [SerializeField] private float _pulseOutTime = 0.22f;
 
@@ -294,7 +296,7 @@ public class LowHealthEffects : MonoBehaviour
         if (_camera == null) yield break;
 
         // El pulso se SUMA al FOV (lo aplica CameraDashEffect), así no pisa el golpe de FOV del dash ni de la Q.
-        float pulseDelta = -_currentStrength * _maxPulseFOV;
+        float pulseDelta = -_currentStrength * _maxPulseFOV * (_currentIsBlue ? _bluePulseScale : 1f);
         float start = _pulseOffset;
 
         float t = 0f;

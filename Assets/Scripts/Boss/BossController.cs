@@ -355,7 +355,7 @@ public partial class BossController : MonoBehaviour   // la Fase 3 está en Boss
     private void RunSchedule()
     {
         if (_schedule.Count == 0) return;
-        double now = AudioSettings.dspTime;
+        double now = BeatManager.DspNow;   // (mismo «ahora» que el resto del juego)
         var due = new System.Collections.Generic.List<ScheduledAttack>();
         for (int i = _schedule.Count - 1; i >= 0; i--)
             if (_schedule[i].dsp <= now) { due.Add(_schedule[i]); _schedule.RemoveAt(i); }

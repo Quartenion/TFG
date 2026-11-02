@@ -112,7 +112,10 @@ public class MainMenuManager : MonoBehaviour
     // Botones del menu principal
     // -------------------------------------------------------------------------
 
-    /// <summary>Versión de prueba: el botón Play dice «JUGAR» (y abre el consentimiento del modo prueba).</summary>
+    /// <summary>
+    /// Versión de prueba: dos botones. «PRUEBA» (el botón Play de siempre) abre el consentimiento y lleva al tutorial y
+    /// al estudio; «JUGAR» (nuevo, encima) lleva al juego normal (Nivel 1) y está en GRIS hasta que se completa la prueba.
+    /// </summary>
     private void SetupPlaytestButton()
     {
         if (_playButton == null && _mainPanel != null)
@@ -125,8 +128,8 @@ public class MainMenuManager : MonoBehaviour
         {
             // (El botón puede tener LocalizedText: se cambian sus dos textos para que el idioma no lo pise.)
             var lt = tmp.GetComponent<LocalizedText>();
-            if (lt != null) { lt.spanish = "JUGAR"; lt.english = "PLAY"; lt.Apply(); }
-            else tmp.text = Loc.T("JUGAR", "PLAY");
+            if (lt != null) { lt.spanish = "PRUEBA"; lt.english = "TEST"; lt.Apply(); }
+            else tmp.text = Loc.T("PRUEBA", "TEST");
             tmp.enableAutoSizing = true;          // (texto más largo: que quepa en el botón)
             tmp.fontSizeMin = 4f;
             tmp.fontSizeMax = Mathf.Max(tmp.fontSize, 8f);
@@ -134,8 +137,92 @@ public class MainMenuManager : MonoBehaviour
         else
         {
             var legacy = _playButton.GetComponentInChildren<Text>(true);
-            if (legacy != null) { legacy.text = Loc.T("JUGAR", "PLAY"); legacy.resizeTextForBestFit = true; }
+            if (legacy != null) { legacy.text = Loc.T("PRUEBA", "TEST"); legacy.resizeTextForBestFit = true; }
         }
+        CreateGameButton();
+    }
+
+    /// <summary>Botón «JUGAR» (copia del de Play, encima de él): el juego normal. Gris hasta completar la prueba.</summary>
+    private void CreateGameButton()
+    {
+        if (_playButton == null) return;
+        Button game = Instantiate(_playButton, _playButton.transform.parent);
+        game.name = "Jugar";
+        game.onClick = new Button.ButtonClickedEvent();   // (sin la llamada a Play copiada)
+        game.onClick.AddListener(PlayGame);
+        var prt = (RectTransform)_playButton.transform;
+        if (prt.parent != null && prt.parent.GetComponent<LayoutGroup>() != null)
+            game.transform.SetSiblingIndex(prt.GetSiblingIndex());   // (en una lista: justo antes)
+        else
+            RelayoutButtons(game);
+        var tmp = game.GetComponentInChildren<TMPro.TMP_Text>(true);
+        if (tmp != null)
+        {
+            var lt = tmp.GetComponent<LocalizedText>();
+            if (lt != null) { lt.spanish = "JUGAR"; lt.english = "PLAY"; lt.Apply(); }
+            else tmp.text = Loc.T("JUGAR", "PLAY");
+        }
+        else
+        {
+            var legacy = game.GetComponentInChildren<Text>(true);
+            if (legacy != null) legacy.text = Loc.T("JUGAR", "PLAY");
+        }
+        game.interactable = StudySession.StudyCompleted;   // (gris hasta que se complete la prueba)
+    }
+
+    /// <summary>
+    /// Coloca los botones (JUGAR, PRUEBA y los que ya había debajo) repartidos en el MISMO hueco que ocupaban antes
+    /// (desde el de arriba hasta el de abajo), un poco más bajos para que quepan sin tapar el título.
+    /// </summary>
+    private void RelayoutButtons(Button game)
+    {
+        var list = new System.Collections.Generic.List<RectTransform>();
+        foreach (Transform t in _playButton.transform.parent)
+            if (t != game.transform && t.GetComponent<Button>() != null && t.gameObject.activeSelf) list.Add((RectTransform)t);
+        if (list.Count == 0) return;
+        list.Sort((a, b) => b.anchoredPosition.y.CompareTo(a.anchoredPosition.y));   // (de arriba abajo)
+        float top = list[0].anchoredPosition.y, bottom = list[list.Count - 1].anchoredPosition.y;
+        list.Insert(list.IndexOf((RectTransform)_playButton.transform), (RectTransform)game.transform);
+        int n = list.Count;
+        float step = n > 1 ? (top - bottom) / (n - 1) : 0f;
+        float h = ((RectTransform)_playButton.transform).sizeDelta.y;
+        float newH = Mathf.Min(h, step * 0.82f);   // (con hueco entre botones)
+        for (int i = 0; i < n; i++)
+        {
+            RectTransform r = list[i];
+            r.anchoredPosition = new Vector2(r.anchoredPosition.x, top - step * i);
+            r.sizeDelta = new Vector2(r.sizeDelta.x, newH);
+            // (Texto que se ajusta al botón más bajo, sin pasar de su tamaño de antes.)
+            var tmp = r.GetComponentInChildren<TMPro.TMP_Text>(true);
+            if (tmp != null && !tmp.enableAutoSizing)
+            {
+                tmp.fontSizeMax = tmp.fontSize; tmp.fontSizeMin = Mathf.Min(8f, tmp.fontSize);
+                tmp.enableAutoSizing = true;
+            }
+        }
+    }
+
+    /// <summary>Botón JUGAR: el juego normal, desde el Nivel 1 (fuera del modo prueba).</summary>
+    public void PlayGame()
+    {
+        if (StudySession.Active) StudySession.Finish();
+        // La PRIMERA vez que se pulsa JUGAR: partida nueva desde el Nivel 1 (0 monedas, sin mejoras, muescas, consumibles
+        // ni contratos, sin checkpoint). Las siguientes veces se sigue con lo que se lleve.
+        // (El código del participante y «prueba completada» van aparte y se conservan.)
+        PlayerProgress.Suspended = false;
+        if (PlayerPrefs.GetInt("Game.Started", 0) == 0)
+        {
+            PlayerProgress.ResetAll();
+            CheckpointSystem.Clear();
+            RunStats.Reset();
+            PlayerPrefs.SetInt("Game.Started", 1);
+            PlayerPrefs.Save();
+        }
+        _gameSceneName = "Level1";
+        AudioListener.pause  = false;
+        AudioListener.volume = GameSettings.Volume;
+        string scene = Application.CanStreamedLevelBeLoaded(_gameSceneName) ? _gameSceneName : "Level1";
+        SceneManager.LoadScene(scene);
     }
 
     /// <summary>Boton PLAY: carga la escena del juego (en la versión de prueba, abre el consentimiento).</summary>

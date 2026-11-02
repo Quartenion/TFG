@@ -97,6 +97,12 @@ public class StudyHub : MonoBehaviour
     }
 
     private static StudyHub _instance;
+
+    /// <summary>
+    /// Sala del tutorial: el participante ya ha leído la siguiente parte y va a la puerta grande (lo usa CourseBuilder
+    /// para devolverle el control y abrir esa puerta).
+    /// </summary>
+    public static Action RoomPartReady;
     private void Awake() => _instance = this;
     private void OnDestroy() { if (_instance == this) _instance = null; }
 
@@ -111,14 +117,15 @@ public class StudyHub : MonoBehaviour
     private void ShowConsent()
     {
         Transform p = NewScreen(Loc.T("Prueba del juego · Trabajo Fin de Grado", "Game test · Bachelor's Thesis"));
-        Body(p, Loc.English ?
+        var consent = Body(p, Loc.English ?
             "Thank you for taking part. You are going to try a first-person rhythm game that is part of a Bachelor's Thesis " +
             "at the University of Granada.\n\n" +
             "IMPORTANT: this is a PROTOTYPE in development and does NOT represent the final product. Graphics, sound, difficulty " +
             "and balance may change, and there may be bugs.\n\n" +
-            "• Duration: about 30 minutes (3 required parts of about 15 min and 2 optional ones).\n" +
+            "• Duration: about 15 minutes (a tutorial and then two short runs, which are the study).\n" +
             "• While you play, the game records gameplay data (hits, misses, energy, deaths, time). " +
-            "After each part you will answer a few short questions, and at the end a questionnaire on Google Forms.\n" +
+            "After each part you will answer a few short questions, and at the end a questionnaire on Google Forms. " +
+            "If you keep playing the normal mode after the test, the game will also record that data, with the same code.\n" +
             "• Everything is ANONYMOUS: you will be given a code; your name, email or any identifying data are not collected. " +
             "The data will only be used for this thesis.\n" +
             "• Taking part is voluntary and you can stop whenever you want (close the game). You must be 18 or older.\n\n" +
@@ -129,9 +136,10 @@ public class StudyHub : MonoBehaviour
             "de la Universidad de Granada.\n\n" +
             "IMPORTANTE: es un PROTOTIPO en desarrollo y NO representa el producto final. Los gráficos, el sonido, la dificultad " +
             "y el equilibrio pueden cambiar, y puede haber fallos.\n\n" +
-            "• Duración: unos 30 minutos (3 partes obligatorias de unos 15 min y 2 opcionales).\n" +
+            "• Duración: unos 15 minutos (un tutorial y después dos recorridos cortos, que son el estudio).\n" +
             "• Mientras juegas, el juego registra datos de la partida (aciertos, fallos, energía, muertes, tiempo). " +
-            "Después de cada parte responderás unas preguntas cortas, y al final un cuestionario en Google Forms.\n" +
+            "Después de cada parte responderás unas preguntas cortas, y al final un cuestionario en Google Forms. " +
+            "Si después de la prueba sigues jugando al modo normal, también se registrarán esos datos, con el mismo código.\n" +
             "• Todo es ANÓNIMO: se te asignará un código; no se recoge tu nombre, correo ni ningún dato que te identifique. " +
             "Los datos se usarán solo para este TFG.\n" +
             "• Participar es voluntario y puedes dejarlo cuando quieras (cierra el juego). Debes tener 18 años o más.\n\n" +
@@ -139,7 +147,16 @@ public class StudyHub : MonoBehaviour
             "usa AURICULARES CON CABLE (los Bluetooth retrasan el sonido) y juega en un sitio tranquilo. " +
             "Durante la partida, TAB muestra los controles.",
             100f, 620f);
-        Bottom(p, Loc.T("Acepto y quiero participar", "I agree and want to take part"), 40f, () => { StudySession.Begin(); ShowPartIntro(); });
+        // (Si no cabe, la letra se reduce un poco; nunca crece.)
+        consent.fontSizeMax = consent.fontSize; consent.fontSizeMin = 14f; consent.enableAutoSizing = true;
+        // Aceptado: primero el TUTORIAL (no se registra nada); el estudio empieza en su sala, al cruzar la puerta grande.
+        Bottom(p, Loc.T("Acepto y quiero participar", "I agree and want to take part"), 40f, () =>
+        {
+            StudySession.Begin();
+            Destroy(_screen); _screen = null;
+            CheckpointSystem.Clear();
+            SceneManager.LoadScene(StudySession.CourseScene);
+        });
         Bottom(p, Loc.T("Volver", "Back"), 860f, () => { Destroy(_screen); _screen = null; });
     }
 
@@ -147,14 +164,50 @@ public class StudyHub : MonoBehaviour
     {
         StudySession.Part part = StudySession.Current;
         int total = StudySession.Plan.Length;
+        bool course = part.scene == StudySession.CourseScene;
+        if (part.shop) StudySession.GiveShopBudget();   // (presupuesto fijo: todos pueden comprar algo)
         Transform p = NewScreen(Loc.T($"Parte {StudySession.Step + 1} de {total} · {part.title}", $"Part {StudySession.Step + 1} of {total} · {part.title}"));
-        Body(p, part.description +
-                Loc.T($"\n\nSi mueres puedes reintentar (hasta {StudySettings.MaxAttemptsPerPart} intentos); después se pasa a la siguiente parte." +
-                      "\nTAB: controles.   Tu código de participante: ",
-                      $"\n\nIf you die you can retry (up to {StudySettings.MaxAttemptsPerPart} attempts); after that you move on to the next part." +
-                      "\nTAB: controls.   Your participant code: ") + StudySession.Participant,
+        string rules = course
+            ? Loc.T("\n\nSi chocas o te quedas sin energía, podrás volver al último punto de control desde la pantalla de game over, " +
+                    "y al reaparecer verás un consejo sobre el obstáculo.",
+                    "\n\nIf you crash or run out of energy, you can go back to the last checkpoint from the game over screen, " +
+                    "and when you respawn you will see a tip about the obstacle.")
+            : Loc.T($"\n\nSi mueres puedes reintentar (hasta {StudySettings.MaxAttemptsPerPart} intentos); después se pasa a la siguiente parte.",
+                    $"\n\nIf you die you can retry (up to {StudySettings.MaxAttemptsPerPart} attempts); after that you move on to the next part.");
+        string coins = part.shop ? Loc.T($"\nMonedas: {PlayerProgress.Coins}.", $"\nCoins: {PlayerProgress.Coins}.") : "";
+        // En la sala, antes de empezar el estudio: se pueden repetir partes del tutorial por las demás puertas.
+        string practice = !StudySession.RunsStarted && SceneManager.GetActiveScene().name != StudySession.MenuScene
+            ? Loc.T("\n\nAntes de empezar el estudio, puedes volver a jugar cualquier parte del tutorial acercándote a una de las " +
+                    "puertas de la sala. Una vez cruces la puerta grande, el estudio empezará y ya no podrás repetirlas.",
+                    "\n\nBefore the study starts, you can replay any part of the tutorial by going to one of the doors in the room. " +
+                    "Once you go through the big door, the study will start and you will not be able to replay them.")
+            : "";
+        Body(p, part.description + rules + practice + coins +
+                Loc.T("\nTAB: controles.   Tu código de participante: ", "\nTAB: controls.   Your participant code: ") + StudySession.Participant,
              100f, 600f);
-        Bottom(p, Loc.T("Empezar", "Start"), 40f, StudySession.StartPart);
+        if (SceneManager.GetActiveScene().name == StudySession.MenuScene)
+            Bottom(p, Loc.T("Empezar", "Start"), 40f, StudySession.StartPart);
+        else
+            // En la sala del tutorial: la parte empieza al cruzar la PUERTA GRANDE.
+            Bottom(p, Loc.T("Ir a la puerta grande", "Go to the big door"), 40f, () =>
+            {
+                Destroy(_screen); _screen = null;
+                RoomPartReady?.Invoke();
+            });
+        if (part.shop)
+        {
+            // La tienda y los contratos se abren desde aquí (la escena del recorrido no tiene zona de inicio).
+            Bottom(p, Loc.T("Abrir la tienda", "Open the shop"), 450f, () =>
+            {
+                _screen.SetActive(false);
+                ShopUI.Open(() => { Destroy(_screen); _screen = null; ShowPartIntro(); });
+            });
+            Bottom(p, Loc.T("Ver contratos", "See contracts"), 860f, () =>
+            {
+                _screen.SetActive(false);
+                ContractUI.Open(() => { Destroy(_screen); _screen = null; ShowPartIntro(); });
+            });
+        }
     }
 
     private void ShowQuestionnaire()
@@ -192,7 +245,7 @@ public class StudyHub : MonoBehaviour
         string pref = null;
         if (part.preference)
         {
-            var label = Lbl("Pref", p, Loc.T("¿Qué partida del Nivel 1 te ha gustado más?", "Which Level 1 run did you like more?"), FontSmall + 1f, TextAlignmentOptions.MidlineLeft);
+            var label = Lbl("Pref", p, Loc.T("¿Qué recorrido te ha gustado más?", "Which run did you like more?"), FontSmall + 1f, TextAlignmentOptions.MidlineLeft);
             PlaceTopLeft(label.rectTransform, 40f, y + 6f, 600f, 50f);
             string[] opts = { Loc.T("La anterior", "The previous one"), Loc.T("Esta", "This one"), Loc.T("Igual", "Same") };
             var prefButtons = new Image[opts.Length];
@@ -225,7 +278,7 @@ public class StudyHub : MonoBehaviour
     private void AfterPart()
     {
         StudySession.NextPart();
-        if (StudySession.Step >= StudySession.MainParts) { ShowContinueChoice(); return; }
+        if (StudySession.Step >= StudySession.Plan.Length) { StudySession.MarkStudyCompleted(); ShowEnd(); return; }   // (estudio terminado: cuestionario final)
         ShowPartIntro();
     }
 
@@ -267,7 +320,7 @@ public class StudyHub : MonoBehaviour
         Transform p = NewScreen(afterMain ? Loc.T("¡Parte principal terminada!", "Main part finished!")
                                           : Loc.T($"¡{lastName} terminado!", $"{lastName} finished!"));
         string intro = afterMain
-            ? Loc.T("Ya has completado las 3 partes principales. ¡Gracias!\n\n", "You have completed the 3 main parts. Thank you!\n\n")
+            ? Loc.T($"Ya has completado las {StudySession.MainParts} partes. ¡Gracias!\n\n", $"You have completed the {StudySession.MainParts} parts. Thank you!\n\n")
             : "";
         string next = more
             ? Loc.T($"• CONTINUAR: {StudySession.Current.title}. " +
@@ -301,13 +354,27 @@ public class StudyHub : MonoBehaviour
         Body(p, Loc.T("Falta un último paso: un cuestionario corto en Google Forms (unos 3 minutos).\n\n" +
                       $"Tu código de participante es:   {StudySession.Participant}\n\n" +
                       "El botón de abajo abre el cuestionario en el navegador con tu código ya puesto. " +
-                      "Si no se abre, apunta el código y pídele el enlace a quien te pasó el juego.",
+                      "Si no se abre, apunta el código y pídele el enlace a quien te pasó el juego.\n\n" +
+                      "Después, desde el menú, ya puedes jugar al modo normal (JUGAR).",
                       "One last step: a short questionnaire on Google Forms (about 3 minutes).\n\n" +
                       $"Your participant code is:   {StudySession.Participant}\n\n" +
                       "The button below opens the questionnaire in your browser with your code already filled in. " +
-                      "If it does not open, write down the code and ask whoever gave you the game for the link."), 100f, 500f);
+                      "If it does not open, write down the code and ask whoever gave you the game for the link.\n\n" +
+                      "Afterwards, the normal mode (PLAY) is unlocked in the menu."), 100f, 500f);
         string url = string.IsNullOrEmpty(StudySettings.FinalFormUrl) ? null : StudySettings.FinalFormUrl.Replace("CODIGO", Uri.EscapeDataString(StudySession.Participant));
         Bottom(p, Loc.T("Abrir el cuestionario final", "Open the final questionnaire"), 40f, () => { if (url != null && StudyTelemetry.IsSafeUrl(url)) Application.OpenURL(url); });
+        // Volver al menú: la prueba queda terminada y JUGAR (modo normal) ya está desbloqueado.
+        Bottom(p, Loc.T("Volver al menú", "Back to menu"), 450f, () =>
+        {
+            Destroy(_screen); _screen = null;
+            StudySession.Finish();
+            CheckpointSystem.Clear();
+            Time.timeScale = 1f;
+            AudioListener.pause = false;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            SceneManager.LoadScene(StudySession.MenuScene);
+        });
         Bottom(p, Loc.T("Salir del juego", "Quit the game"), 860f, () => { StudySession.Finish(); Application.Quit(); });
     }
 }

@@ -1908160,6 +1908160,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1374954412}
     - target: {fileID: 955155126230159559, guid: b3c4e1dde73833b49a9043869348e647, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 955155126230159559, guid: b3c4e1dde73833b49a9043869348e647, type: 3}
       propertyPath: gameOverManager
       value: 
       objectReference: {fileID: 1139354715}

@@ -160,13 +160,25 @@ public static class CheckpointSystem
     }
 
     /// <summary>Al morir: ¿se puede reaparecer en el checkpoint? (gasta uno). true → recargar el nivel.</summary>
+    /// <summary>
+    /// Checkpoints GRATIS (nivel tutorial / estudio, ver CourseBuilder): al morir siempre se reaparece en el último, sin
+    /// gastar el consumible. Lo activa CourseBuilder en su escena y se apaga al cambiar de escena.
+    /// </summary>
+    public static bool FreeRespawn { get; set; }
+
     public static bool TryRespawn()
     {
         if (!HasActive) return false;
-        if (!PlayerProgress.TryUseConsumable(ShopIds.Checkpoint)) return false;
+        if (!FreeRespawn && !PlayerProgress.TryUseConsumable(ShopIds.Checkpoint)) return false;
         _pending = true;
         return true;
     }
+
+    /// <summary>
+    /// Empezar YA desde el checkpoint activo (sin haber muerto): la escena actual lo recoge en StartSequenceManager.Start.
+    /// Lo usa la práctica de un obstáculo del nivel tutorial.
+    /// </summary>
+    public static void ForcePending() { if (_hasActive) _pending = true; }
 
     /// <summary>La escena recargada recoge el checkpoint pendiente.</summary>
     public static State ConsumePending()
@@ -193,5 +205,15 @@ public static class CheckpointSystem
     private static void OnSceneLoaded(Scene s, LoadSceneMode m)
     {
         if (m == LoadSceneMode.Single && _hasActive && s.name != _active.scene) Clear();   // otro nivel
+        if (m == LoadSceneMode.Single && s.name != _freeScene) FreeRespawn = false;
+    }
+
+    private static string _freeScene;
+
+    /// <summary>Activa los checkpoints gratis en la escena actual (se apagan solos al cambiar de escena).</summary>
+    public static void EnableFreeRespawn()
+    {
+        FreeRespawn = true;
+        _freeScene = SceneManager.GetActiveScene().name;
     }
 }

@@ -42,6 +42,21 @@ public class HeartBloodFX : MonoBehaviour
         fx.Emit();
     }
 
+    /// <summary>Crea ya el efecto y suelta una gota diminuta (casi invisible) para que se prepare su shader.</summary>
+    public static void Prewarm(Animator heartAnimator)
+    {
+        if (heartAnimator == null) return;
+        Transform heart = heartAnimator.transform;
+        Transform parent = heart.parent != null ? heart.parent : heart;
+        Transform t = parent.Find(ObjectName);
+        HeartBloodFX fx = t != null ? t.GetComponent<HeartBloodFX>() : null;
+        if (fx == null) fx = Create(heart, parent);
+        if (fx._ps == null) return;
+        var ep = new ParticleSystem.EmitParams { position = Vector3.zero, startSize = 0.0001f, startLifetime = 0.05f,
+                                                 velocity = Vector3.zero, applyShapeToPosition = false };
+        fx._ps.Emit(ep, 1);
+    }
+
     private static HeartBloodFX Create(Transform heart, Transform parent)
     {
         var go = new GameObject(ObjectName);

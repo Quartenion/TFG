@@ -17,7 +17,7 @@ public class LevelEndManager : MonoBehaviour
 {
     // ── Fases ─────────────────────────────────────────────────────────────────
 
-    public enum Phase { Playing, AutoMoving, Animating, ShowingResults }
+    public enum Phase { Playing, AutoMoving, Animating, ShowingResults, Closed }
 
     // ── Inspector ─────────────────────────────────────────────────────────────
 
@@ -164,6 +164,33 @@ public class LevelEndManager : MonoBehaviour
     /// <summary>Cambia la escena que se carga al terminar (el modo prueba vuelve al menú).</summary>
     public void SetNextScene(string scene) => _nextSceneName = scene;
 
+    /// <summary>
+    /// Paseo final hacia la X del finish point (por defecto va a X = 0). Lo usa el nivel tutorial, cuyo recorrido de
+    /// estudio está en un carril paralelo.
+    /// </summary>
+    [System.NonSerialized] public bool useFinishX;
+
+    /// <summary>
+    /// Si se asigna, al pulsar una tecla en los resultados NO se carga otra escena: se cierran y se llama a esto
+    /// (nivel tutorial: el jugador se queda en la sala final y elige puerta).
+    /// </summary>
+    [System.NonSerialized] public System.Action onResultsClosed;
+
+    /// <summary>El «mirar alrededor» del paseo final no empieza hasta pasar esta Z (nivel tutorial: al entrar en la sala).</summary>
+    [System.NonSerialized] public float lookAroundFromZ = float.NegativeInfinity;
+
+    /// <summary>
+    /// Si se asigna, al llegar a la meta se ejecuta esta animación (en lugar de la de celebración) antes de los
+    /// resultados (nivel tutorial: el corazón en la balanza).
+    /// </summary>
+    [System.NonSerialized] public System.Func<IEnumerator> customArrival;
+    /// <summary>Título de los resultados (null = «NIVEL COMPLETADO»). El nivel tutorial pone «TUTORIAL COMPLETADO».</summary>
+    [System.NonSerialized] public string resultsTitleEs, resultsTitleEn;
+    /// <summary>Sin resultados: tras la llegada (y customArrival) se llama directamente a onResultsClosed.</summary>
+    [System.NonSerialized] public bool skipResults;
+    /// <summary>Llegada RÁPIDA (práctica del nivel tutorial): sin mirar alrededor, más deprisa y sin recolocar la cámara.</summary>
+    [System.NonSerialized] public bool quickArrival;
+
     /// <summary>Lanza YA la secuencia de fin (auto-movimiento + mirar alrededor) hacia 'finishPoint'.</summary>
     public void BeginEnd(Transform finishPoint)
     {
@@ -190,6 +217,7 @@ public class LevelEndManager : MonoBehaviour
     {
         CurrentPhase = Phase.AutoMoving;
         CheckpointSystem.Clear();   // nivel superado
+        RunStats.LevelCompleted();   // (si se vuelve a jugar, estadísticas y monedas recogidas desde cero)
 
         // «Sangre de oro» (tienda): +1 moneda por cada % de energía que quede al terminar.
         if (PlayerProgress.GetLevel(ShopIds.BloodGold) > 0 && EnergyManager.Instance != null)
@@ -243,16 +271,18 @@ public class LevelEndManager : MonoBehaviour
         }
 
         // Target: X=0, Z del finish point. Y fija en la del jugador (no mover verticalmente).
-        Vector3 target = new Vector3(0f, _player.transform.position.y, _finishPoint.position.z);
+        Vector3 target = new Vector3(useFinishX ? _finishPoint.position.x : 0f, _player.transform.position.y, _finishPoint.position.z);
 
         // Mover en XZ (CC desactivado en StartEndSequence)
         _player.transform.position = Vector3.MoveTowards(
-            _player.transform.position, target, _autoMoveSpeed * Time.deltaTime);
+            _player.transform.position, target, _autoMoveSpeed * (quickArrival ? 2.5f : 1f) * Time.deltaTime);
 
         // Rotar cuerpo hacia destino (solo eje Y)
         Vector3 dir     = target - _player.transform.position;
         Vector3 flatDir = new Vector3(dir.x, 0f, dir.z);
-        if (flatDir.sqrMagnitude > 0.01f)
+        // Llegada rápida (práctica): el jugador mira con el ratón mientras le lleva a la sala; no se le gira el cuerpo.
+        if (quickArrival) _player.LookOnly();
+        else if (flatDir.sqrMagnitude > 0.01f)
         {
             _player.transform.rotation = Quaternion.Slerp(
                 _player.transform.rotation,
@@ -262,7 +292,7 @@ public class LevelEndManager : MonoBehaviour
 
         // Look-around: mira hacia arriba y a los lados mientras camina
         Transform cam = GetCamera();
-        if (cam != null)
+        if (cam != null && !quickArrival && _player.transform.position.z >= lookAroundFromZ)
         {
             _lookTimer += Time.deltaTime;
             float t2 = _lookTimer * _lookAroundSpeed * Mathf.PI * 2f;
@@ -295,8 +325,13 @@ public class LevelEndManager : MonoBehaviour
     {
         CurrentPhase = Phase.Animating;
 
+        // (Solo X/Z, como durante el paseo: antes se ponía también la ALTURA del punto de meta y la cámara daba un
+        //  pequeño salto hacia arriba al llegar.)
         if (_finishPoint != null)
-            _player.transform.position = _finishPoint.position;
+        {
+            Vector3 p = _player.transform.position;
+            _player.transform.position = new Vector3(useFinishX ? _finishPoint.position.x : p.x, p.y, _finishPoint.position.z);
+        }
 
         Debug.Log("[LevelEndManager] Jugador llegó al finish point. Reseteando cámara...");
         StartCoroutine(AnimationAndResults());
@@ -311,7 +346,7 @@ public class LevelEndManager : MonoBehaviour
         Quaternion camFrom  = cam != null ? cam.localRotation : Quaternion.identity;
         Quaternion camTo    = Quaternion.identity;
 
-        if (_cameraResetDuration > 0f)
+        if (_cameraResetDuration > 0f && !quickArrival)
         {
             float elapsed = 0f;
             while (elapsed < _cameraResetDuration)
@@ -323,8 +358,27 @@ public class LevelEndManager : MonoBehaviour
                 yield return null;
             }
         }
-        _player.transform.rotation = bodyTo;
-        if (cam != null) cam.localRotation = camTo;
+        if (!quickArrival)   // (llegada rápida: se deja la vista donde la tenga el jugador)
+        {
+            _player.transform.rotation = bodyTo;
+            if (cam != null) cam.localRotation = camTo;
+        }
+
+        // (Animación propia del nivel —p. ej. la balanza del tutorial— en lugar de la celebración.)
+        if (customArrival != null)
+        {
+            yield return StartCoroutine(customArrival());
+            if (skipResults && onResultsClosed != null)
+            {
+                // (Práctica de un obstáculo: sin pantalla de resultados, directo a la sala.)
+                _sceneActivated = true;
+                CurrentPhase = Phase.Closed;
+                onResultsClosed();
+                yield break;
+            }
+            EnterShowingResults();
+            yield break;
+        }
 
         // 2. Disparar animación de celebración
         if (_animator != null && !string.IsNullOrEmpty(_celebrationTrigger))
@@ -346,6 +400,19 @@ public class LevelEndManager : MonoBehaviour
     // ── Phase: ShowingResults ─────────────────────────────────────────────────
 
     private int _coinsBanked;
+
+    // ── Puntuación de la pantalla final ──
+    // Puntuación = precisión al ritmo (0-100) − por cada muerte − por cada mejora usada + por cada contrato cumplido.
+    // La nota (S, A, B…) sale de la puntuación.
+    private const float ScorePerDeath    = 5f;
+    private const float ScorePerUpgrade  = 5f;
+    private const float ScorePerContract = 5f;
+    private int _deaths, _upgradesUsed;
+    private float _score;
+
+    /// <summary>Mejoras usadas en el nivel: las equipadas (muescas) más las ayudas gastadas (vidas extra, escudos…).</summary>
+    private static int UpgradesUsed() =>
+        (PlayerProgress.Suspended ? 0 : PlayerProgress.EquippedUpgrades.Count) + RunStats.HelpsUsed;
     private System.Collections.Generic.List<ContractDef> _contractsDone = new System.Collections.Generic.List<ContractDef>();
 
     private void EnterShowingResults()
@@ -358,6 +425,11 @@ public class LevelEndManager : MonoBehaviour
 
         // Cobrar las monedas de la partida (pasan al monedero; con «Bolsa de oro» ×1.5 si precisión ≥ 80 %).
         _coinsBanked = LevelCoins.BankRun(_accuracy);
+
+        _deaths       = RunStats.Deaths;
+        _upgradesUsed = UpgradesUsed();
+        _score = Mathf.Clamp(_accuracy - ScorePerDeath * _deaths - ScorePerUpgrade * _upgradesUsed
+                             + ScorePerContract * _contractsDone.Count, 0f, 100f);
 
         // «Interés» (tienda): +5 % del monedero (máx. 100).
         if (PlayerProgress.GetLevel(ShopIds.Interest) > 0)
@@ -382,6 +454,13 @@ public class LevelEndManager : MonoBehaviour
 
         // Cualquier tecla carga el siguiente nivel
         bool anyKey = Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame;
+        if (!_sceneActivated && anyKey && onResultsClosed != null)
+        {
+            _sceneActivated = true;
+            CurrentPhase = Phase.Closed;
+            onResultsClosed();
+            return;
+        }
         if (!_sceneActivated && anyKey)
         {
             _sceneActivated = true;
@@ -440,7 +519,7 @@ public class LevelEndManager : MonoBehaviour
         InitStyles();
 
         const float pw = 480f;
-        float ph = 384f + (_contractsDone.Count > 0 ? 30f + 26f * _contractsDone.Count : 0f);
+        float ph = 384f + 136f + (_contractsDone.Count > 0 ? 26f * _contractsDone.Count : 0f);
         float px = (Screen.width  - pw) * 0.5f;
         float py = (Screen.height - ph) * 0.5f;
 
@@ -456,12 +535,14 @@ public class LevelEndManager : MonoBehaviour
         float y = py + 20f;
 
         // Título
-        GUI.Label(new Rect(x, y, pw - 60f, 40f), Loc.T("NIVEL COMPLETADO", "LEVEL COMPLETE"), _titleStyle);
+        string title = string.IsNullOrEmpty(resultsTitleEs) ? Loc.T("NIVEL COMPLETADO", "LEVEL COMPLETE")
+                     : Loc.T(resultsTitleEs, string.IsNullOrEmpty(resultsTitleEn) ? resultsTitleEs : resultsTitleEn);
+        GUI.Label(new Rect(x, y, pw - 60f, 40f), title, _titleStyle);
         y += 50f;
 
         // Nota
-        string grade = RunStats.HeartPresses > 0 ? GetGrade(_accuracy) : "—";
-        _gradeStyle.normal.textColor = GetGradeColor(_accuracy);
+        string grade = RunStats.HeartPresses > 0 ? GetGrade(_score) : "—";
+        _gradeStyle.normal.textColor = GetGradeColor(_score);
         GUI.Label(new Rect(px + pw - 110f, py + 15f, 90f, 70f), grade, _gradeStyle);
 
         // Separador
@@ -478,18 +559,28 @@ public class LevelEndManager : MonoBehaviour
         // Monedas cobradas
         DrawStat(ref y, x, pw, Loc.T("Monedas", "Coins"), Loc.T($"+{_coinsBanked}  (monedero: {PlayerProgress.Coins})", $"+{_coinsBanked}  (wallet: {PlayerProgress.Coins})"));
 
-        // Contratos cumplidos en este nivel
-        if (_contractsDone.Count > 0)
+        // Intentos (muertes) y mejoras usadas: bajan la puntuación (las mejoras solo se cuentan, no se nombran).
+        DrawStat(ref y, x, pw, Loc.T("Muertes", "Deaths"), _deaths > 0 ? $"{_deaths}  (-{ScorePerDeath * _deaths:0})" : "0");
+        DrawStat(ref y, x, pw, Loc.T("Mejoras usadas", "Upgrades used"), _upgradesUsed > 0 ? $"{_upgradesUsed}  (-{ScorePerUpgrade * _upgradesUsed:0})" : "0");
+
+        // Contratos cumplidos en este nivel: suben la puntuación.
         {
             int total = 0;
             foreach (ContractDef c in _contractsDone) total += c.reward;
-            DrawStat(ref y, x, pw, Loc.T("Contratos cumplidos", "Contracts completed"), Loc.T($"{total} por cobrar", $"{total} to claim"));
+            int n = _contractsDone.Count;
+            DrawStat(ref y, x, pw, Loc.T("Contratos cumplidos", "Contracts completed"),
+                     n > 0 ? Loc.T($"{n}  (+{ScorePerContract * n:0}) · {total} por cobrar", $"{n}  (+{ScorePerContract * n:0}) · {total} to claim") : "0");
             foreach (ContractDef c in _contractsDone)
             {
                 GUI.Label(new Rect(x + 16f, y, pw - 76f, 24f), Loc.T($"· {c.title}   ({c.reward}, cóbralo en el puesto)", $"· {c.title}   ({c.reward}, claim it at the stand)"), _bodyStyle);
                 y += 26f;
             }
         }
+
+        // Puntuación final (de ella sale la nota).
+        DrawLine(new Rect(x, y, pw - 60f, 2f));
+        y += 8f;
+        DrawStat(ref y, x, pw, Loc.T("Puntuación", "Score"), RunStats.HeartPresses > 0 ? $"{_score:0}" : "—");
 
         y += 20f;
 
