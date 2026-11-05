@@ -2,37 +2,38 @@ using UnityEngine;
 using UnityEngine.Events;
 
 /// <summary>
-/// Gestiona el beat de la musica y evalua la precision de los inputs del jugador.
+/// Gestiona el beat de la música y evalúa la precisión de los clics del jugador.
 ///
-///   0. RELOJ MUSICAL ÚNICO: SongTime / ClockSeconds / ClockBeats salen del reloj de audio (dspTime) y del
-///      instante programado (ScheduledStartDSP). Todos los sistemas leen la posición de aquí.
-///   1. Compensacion de latencia: CorrectedTime = SongTime - _audioLatencyOffset.
-///      Si el jugador siempre llega tarde, aumenta el offset. Si llega pronto, ponlo negativo.
-///      Si existe un valor guardado en PlayerPrefs ("AudioLatencyOffset"), se usa ese.
+///   0. Reloj musical único. SongTime, ClockSeconds y ClockBeats se calculan a partir del reloj de audio (dspTime)
+///      y del instante en el que se programó la canción (ScheduledStartDSP). Todos los sistemas leen la posición
+///      de la canción de aquí.
+///   1. Compensación de latencia, con CorrectedTime = SongTime - _audioLatencyOffset. Si el jugador siempre llega
+///      tarde, se aumenta el offset, y si llega pronto, se pone negativo. Si hay un valor guardado en PlayerPrefs
+///      ("AudioLatencyOffset"), se usa ese.
 ///
-///   2. Ventanas de timing: Perfect (+-_perfectWindow) y Good (+-_goodWindow).
-///      EvaluateTiming() devuelve Perfect, Good o Miss para escalar energia y mostrar feedback.
+///   2. Ventanas de acierto, Perfect (+-_perfectWindow) y Good (+-_goodWindow). EvaluateTiming() devuelve Perfect,
+///      Good o Miss, que se usa para calcular la energía y para mostrar el resultado en pantalla.
 ///
-///   3. OnBeat y OnHalfBeat: UnityEvents directos para conectar PulseToTheBeat u otros
-///      efectos desde el Inspector, sin necesitar un Interval con steps=1.
+///   3. OnBeat y OnHalfBeat son UnityEvents para conectar PulseToTheBeat u otros efectos desde el Inspector, sin
+///      necesidad de crear un Interval con steps = 1.
 ///
 ///   4. Singleton de acceso global (BeatManager.Instance).
 ///
-///   5. Intervals: UnityEvents cada N pasos de beat (los usa PulseToTheBeat en Managers).
+///   5. Intervals, que son UnityEvents que se lanzan cada N pasos de beat (los usa PulseToTheBeat en Managers).
 ///
-///   6. Los eventos de beat no se disparan con Time.timeScale == 0 (pausa).
+///   6. Los eventos de beat no se lanzan con Time.timeScale == 0, es decir, durante la pausa.
 /// </summary>
 public class BeatManager : MonoBehaviour
 {
     // Singleton
     public static BeatManager Instance { get; private set; }
 
-    // --- Audio ---
+    // -=+=- Audio -=+=-
     [Header("Audio")]
     [SerializeField] private AudioSource _audioSource;
     [SerializeField] private float _bpm = 120f;
 
-    // --- Latencia ---
+    // -=+=- Latencia -=+=-
     [Header("Compensacion de latencia")]
     [Tooltip("Offset en segundos para compensar la latencia del dispositivo de audio. " +
              "Si el jugador siempre llega tarde, aumenta este valor (0.03-0.08). " +
@@ -43,7 +44,7 @@ public class BeatManager : MonoBehaviour
     [Tooltip("Si esta activo, al iniciar carga el offset guardado en PlayerPrefs por el calibrador.")]
     [SerializeField] private bool _loadOffsetFromPlayerPrefs = true;
 
-    // --- Ventanas de timing ---
+    // -=+=- Ventanas de acierto -=+=-
     [Header("Ventanas de timing")]
     [Tooltip("Ventana Perfect en segundos (por ejemplo 0.07 = 70ms). Da 1.5x de energia.")]
     [SerializeField] private float _perfectWindow = 0.07f;
@@ -52,7 +53,7 @@ public class BeatManager : MonoBehaviour
              "Fuera de esta ventana = Miss.")]
     [SerializeField] private float _goodWindow = 0.14f;
 
-    // --- Eventos directos de beat ---
+    // -=+=- Eventos de beat -=+=-
     [Header("Eventos de beat (nuevos)")]
     [Tooltip("Se dispara una vez por beat. Conecta PulseToTheBeat.Pulse() aqui.")]
     public UnityEvent OnBeat;
@@ -60,46 +61,44 @@ public class BeatManager : MonoBehaviour
     [Tooltip("Se dispara dos veces por beat (cada corchea). Util para footsteps.")]
     public UnityEvent OnHalfBeat;
 
-    // --- Intervals: eventos cada N pasos de beat ---
+    // -=+=- Intervals, eventos cada N pasos de beat -=+=-
     [Header("Intervals")]
     [SerializeField] private Intervals[] _intervals;
 
-    // --- Propiedades publicas ---
+    // -=+=- Propiedades públicas -=+=-
 
-    /// <summary>BPM de la cancion.</summary>
+    /// <summary>BPM de la canción.</summary>
     public float Bpm => _bpm;
 
-    /// <summary>Duracion de un beat en segundos.</summary>
+    /// <summary>Duración de un beat en segundos.</summary>
     public float BeatDuration => _bpm > 0f ? 60f / _bpm : 1f;
 
-    /// <summary>Duracion de medio beat en segundos.</summary>
+    /// <summary>Duración de medio beat en segundos.</summary>
     public float HalfBeatDuration => BeatDuration * 0.5f;
 
-    // ── RELOJ MUSICAL ÚNICO ───────────────────────────────────────────────────
-    // Todo el juego lee la posición de la canción de aquí. Sale del reloj de audio (AudioSettings.dspTime) y del
-    // instante en que se programó la canción (ScheduledStartDSP), así que:
-    //   • no acumula error (no suma deltaTime) y avanza suave (no a saltos de buffer como AudioSource.time),
-    //   • sigue siendo continuo aunque cambie la pista (relevo nivel → bucle del jefe → final: SwapSource),
-    //   • el rebobinado lo mueve con SetRewindClock y StartMusicFromAt lo recoloca al retomar.
-    // Antes los obstáculos calculaban (dspTime − ScheduledStartDSP) cada uno por su cuenta y los clics usaban
-    // AudioSource.time: eran dos relojes distintos.
+    // -=+=- Reloj musical único -=+=-
+    // Todo el juego lee de aquí la posición de la canción, que se calcula con el reloj de audio (AudioSettings.dspTime)
+    // y el instante en el que se programó la canción (ScheduledStartDSP). Esto tiene varias ventajas.
+    //   - No acumula error, ya que no suma deltaTime, y avanza de forma continua, no a saltos de bloque como AudioSource.time.
+    //   - Sigue siendo continuo aunque cambie la pista, por ejemplo del nivel al bucle del jefe y al final (SwapSource).
+    //   - El rebobinado lo mueve con SetRewindClock, y StartMusicFromAt lo vuelve a colocar al retomar la partida.
 
-    /// <summary>Tempo por defecto si no hay BeatManager (p. ej. gizmos en el editor sin escena cargada).</summary>
+    /// <summary>Tempo por defecto si no hay BeatManager, por ejemplo para los gizmos del editor sin una escena cargada.</summary>
     public const float DefaultBpm = 120f;
 
-    /// <summary>¿Hay una canción programada (ScheduledStartDSP válido)?</summary>
+    /// <summary>Indica si hay una canción programada, es decir, si ScheduledStartDSP es válido.</summary>
     public bool HasClock => ScheduledStartDSP > 0.0;
 
     /// <summary>
-    /// Segundos de canción según el reloj de audio, SIN recortar ni compensar latencia (negativo antes de empezar).
-    /// Es la base de todo lo demás. Para programar sonidos/eventos en un beat concreto usa DspAtBeat.
+    /// Segundos de canción según el reloj de audio, sin recortar y sin compensar la latencia, por lo que es negativo antes
+    /// de que empiece la canción. Es la base de todo lo demás. Para programar sonidos o eventos en un beat concreto se usa DspAtBeat.
     /// </summary>
     public double ClockSeconds => HasClock ? (_clockHeld ? _heldSongTime : AudioSettings.dspTime - ScheduledStartDSP) : 0.0;
 
     /// <summary>
-    /// «Ahora» en el reloj DSP, coherente con ClockSeconds. Normalmente es AudioSettings.dspTime; mientras el tutorial
-    /// controla el reloj (cámara lenta / parado) es ScheduledStartDSP + la posición fijada, para que dspTime (que avanza a
-    /// saltos por bloques de audio dentro del mismo frame) no haga temblar a los objetos que se calculan con él.
+    /// Instante actual en el reloj DSP, coherente con ClockSeconds. Normalmente es AudioSettings.dspTime, pero mientras el
+    /// tutorial controla el reloj (cámara lenta o parado) es ScheduledStartDSP más la posición fijada. Así, dspTime, que avanza
+    /// a saltos por bloques de audio dentro del mismo fotograma, no hace temblar a los objetos que se calculan con él.
     /// </summary>
     public static double DspNow
     {
@@ -113,7 +112,7 @@ public class BeatManager : MonoBehaviour
     private bool _clockHeld;
     private double _heldSongTime;
 
-    /// <summary>Tutorial: mientras está activo, ClockSeconds y DspNow valen EXACTAMENTE lo fijado con SetClockSongTime.</summary>
+    /// <summary>Tutorial. Mientras está activo, ClockSeconds y DspNow valen exactamente lo fijado con SetClockSongTime.</summary>
     public void HoldClock(bool hold)
     {
         if (hold && !_clockHeld) _heldSongTime = AudioSettings.dspTime - ScheduledStartDSP;
@@ -123,7 +122,7 @@ public class BeatManager : MonoBehaviour
     /// <summary>Posición de la canción en beats (con decimales) según el reloj de audio.</summary>
     public double ClockBeats => BeatDuration > 0f ? ClockSeconds / BeatDuration : 0.0;
 
-    /// <summary>Instante DSP en el que cae el beat 'beat' (0 = inicio de la canción).</summary>
+    /// <summary>Instante DSP en el que cae el beat 'beat' (0 es el inicio de la canción).</summary>
     public double DspAtBeat(double beat) => ScheduledStartDSP + beat * BeatDuration;
 
     /// <summary>Instante DSP en el que la canción llega al segundo 'seconds'.</summary>
@@ -135,8 +134,8 @@ public class BeatManager : MonoBehaviour
     private double _pausedAtDsp;
 
     /// <summary>
-    /// Segundos de canción (sin compensar latencia), ≥ 0. En pausa se congela; tras StopMusic (o sin canción
-    /// programada) vale AudioSource.time, como antes. Entre dos pistas (relevo al bucle del jefe) sigue avanzando.
+    /// Segundos de canción, sin compensar la latencia y nunca menores que 0. En pausa se congela, y después de StopMusic
+    /// (o sin una canción programada) vale AudioSource.time. Entre dos pistas, como en el relevo al bucle del jefe, sigue avanzando.
     /// </summary>
     public float SongTime
     {
@@ -150,18 +149,18 @@ public class BeatManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Como SongTime pero SIN recortar a 0: negativo mientras la canción está programada y aún no ha empezado
-    /// (p. ej. el beat que separa el ¡YA! del inicio). Lo usan las notas del HUD para llegar justo al beat 0.
+    /// Como SongTime, pero sin recortar a 0, por lo que es negativo mientras la canción está programada y todavía no ha
+    /// empezado (por ejemplo, en el beat que separa el ¡YA! del inicio). Lo usan las notas del HUD para llegar justo al beat 0.
     /// </summary>
     public float SongTimeUnclamped => HasClock && !_stopped && !_paused ? (float)ClockSeconds : SongTime;
 
-    /// <summary>Tiempo percibido (con compensación de latencia) sin recortar a 0. Ver SongTimeUnclamped.</summary>
+    /// <summary>Tiempo percibido, con compensación de latencia, sin recortar a 0 (ver SongTimeUnclamped).</summary>
     public float CorrectedTimeUnclamped => SongTimeUnclamped - _audioLatencyOffset;
 
-    /// <summary>Duración de un beat de 'bm' (o del BeatManager de la escena, o a DefaultBpm si no hay ninguno).</summary>
+    /// <summary>Duración de un beat de 'bm', o del BeatManager de la escena, o la de DefaultBpm si no hay ninguno.</summary>
     public static float BeatDurationOf(BeatManager bm) => 60f / BpmOf(bm);
 
-    /// <summary>BPM de 'bm' (o del BeatManager de la escena, o DefaultBpm). Vale también en el editor (gizmos).</summary>
+    /// <summary>BPM de 'bm', o del BeatManager de la escena, o DefaultBpm. También funciona en el editor (gizmos).</summary>
     public static float BpmOf(BeatManager bm)
     {
         if (bm == null) bm = Instance;
@@ -172,35 +171,34 @@ public class BeatManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Tiempo percibido por el jugador (SongTime - offset de latencia).
-    /// Lo usan la evaluación de clics, los eventos de beat y el HUD rítmico.
-    /// Todos los calculos de hit detection usan este valor.
+    /// Tiempo que percibe el jugador (SongTime menos el offset de latencia). Lo usan la evaluación de los clics, los
+    /// eventos de beat y el HUD rítmico.
     /// </summary>
     public float CorrectedTime => Mathf.Max(0f, SongTime - _audioLatencyOffset);
 
-    /// <summary>Indice del beat actual desde el inicio de la cancion.</summary>
+    /// <summary>Índice del beat actual desde el inicio de la canción.</summary>
     public int CurrentBeatIndex => BeatDuration > 0f ? Mathf.FloorToInt(CorrectedTime / BeatDuration) : 0;
 
     /// <summary>Ventana Perfect en segundos.</summary>
-    public float PerfectWindow => _perfectWindow * WindowMultiplier * EnergyManager.GraceWindowMultiplier;   // («Respiro»)
+    public float PerfectWindow => _perfectWindow * WindowMultiplier * EnergyManager.GraceWindowMultiplier;   // "Respiro"
 
     /// <summary>Ventana Good en segundos.</summary>
     public float GoodWindow => _goodWindow * WindowMultiplier * EnergyManager.GraceWindowMultiplier;
 
-    /// <summary>Mejora «Oído fino» de la tienda: +15 % de ventana por nivel (Perfect y Good).</summary>
+    /// <summary>Mejora "Oído fino" de la tienda, que amplía un 15 % las ventanas Perfect y Good por cada nivel.</summary>
     public static float WindowMultiplier => 1f + 0.15f * PlayerProgress.GetLevel(ShopIds.WideWindow);
 
-    /// <summary>True si la musica esta sonando.</summary>
+    /// <summary>Indica si la música está sonando.</summary>
     public bool IsPlaying => _audioSource != null && _audioSource.isPlaying;
 
-    /// <summary>AudioSource que el BeatManager usa ahora mismo como reloj (para relevos de pista).</summary>
+    /// <summary>AudioSource que el BeatManager usa ahora mismo como reloj (cambia en los relevos de pista).</summary>
     public AudioSource CurrentSource => _audioSource;
 
-    // --- Estado interno ---
+    // -=+=- Estado interno -=+=-
     private int _lastBeatIndex   = -1;
     private int _lastHalfBeatIdx = -1;
 
-    // --- Unity lifecycle ---
+    // -=+=- Ciclo de vida de Unity -=+=-
 
     private void Awake()
     {
@@ -226,8 +224,8 @@ public class BeatManager : MonoBehaviour
     {
         if (_audioSource == null || !_audioSource.isPlaying) return;
         if (Time.timeScale == 0f) return;
-        // Rebobinando (la canción suena al revés): sin eventos de beat. Si no, cada beat que se "desanda" dispararía
-        // OnBeat y el HUD rítmico lanzaría montones de notas a la vez.
+        // Mientras se rebobina, la canción suena al revés y no se lanzan eventos de beat, ya que cada beat que se
+        // deshace lanzaría OnBeat y el HUD rítmico mostraría muchas notas a la vez.
         if (TimeRewinder.IsRewinding) return;
 
         float corrected = CorrectedTime;
@@ -254,7 +252,7 @@ public class BeatManager : MonoBehaviour
             }
         }
 
-        // Intervals (usan CorrectedTime)
+        // Intervals, que usan CorrectedTime
         if (_intervals != null && _intervals.Length > 0)
         {
             foreach (Intervals interval in _intervals)
@@ -267,11 +265,9 @@ public class BeatManager : MonoBehaviour
         }
     }
 
-    // --- API de timing ---
+    // -=+=- Evaluación de los clics -=+=-
 
-    /// <summary>
-    /// Distancia en segundos al beat mas cercano usando CorrectedTime.
-    /// </summary>
+    /// <summary>Distancia en segundos al beat más cercano, usando CorrectedTime.</summary>
     public float GetSecondsToNearestBeat()
     {
         if (_audioSource == null || _bpm <= 0f) return float.MaxValue;
@@ -280,19 +276,19 @@ public class BeatManager : MonoBehaviour
         return Mathf.Min(mod, d - mod);
     }
 
-    /// <summary>Mejora «Doble tempo»: los clics también cuentan en los medios beats.</summary>
+    /// <summary>Mejora "Doble tempo". Los clics también cuentan en los medios beats.</summary>
     public static bool HalfBeatClicks => PlayerProgress.GetLevel(ShopIds.HalfBeat) > 0;
 
-    /// <summary>Paso de la rejilla de clics: un beat, o medio beat con «Doble tempo».</summary>
+    /// <summary>Paso de la rejilla de clics, que es un beat, o medio beat con "Doble tempo".</summary>
     public float ClickStep => HalfBeatClicks ? BeatDuration * 0.5f : BeatDuration;
 
-    /// <summary>Beat (o medio beat, con «Doble tempo») MÁS CERCANO al instante actual. Lo usa el anti-spam.</summary>
+    /// <summary>Beat (o medio beat, con "Doble tempo") más cercano al instante actual. Lo usa el anti-spam.</summary>
     public int NearestClickSlot => ClickStep > 0f ? Mathf.RoundToInt(CorrectedTime / ClickStep) : 0;
 
-    /// <summary>Desfase (s) del instante actual respecto al beat (o medio beat) más cercano: + = tarde, − = pronto.</summary>
+    /// <summary>Desfase en segundos del instante actual respecto al beat (o medio beat) más cercano. Es positivo si es tarde y negativo si es pronto.</summary>
     public float ClickOffset => ClickStep > 0f ? CorrectedTime - NearestClickSlot * ClickStep : 0f;
 
-    /// <summary>Timing de un CLIC del jugador (con «Doble tempo» también vale el medio beat más cercano).</summary>
+    /// <summary>Resultado de un clic del jugador. Con "Doble tempo" también vale el medio beat más cercano.</summary>
     public TimingResult EvaluateClickTiming()
     {
         if (!HalfBeatClicks) return EvaluateTiming();
@@ -306,8 +302,8 @@ public class BeatManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Evalua el timing del input actual y devuelve Perfect, Good o Miss.
-    /// Usado por RhythmInput para escalar la energia y mostrar feedback visual.
+    /// Evalúa el momento actual y devuelve Perfect, Good o Miss. Lo usa RhythmInput para calcular la energía y mostrar
+    /// el resultado en pantalla.
     /// </summary>
     public TimingResult EvaluateTiming()
     {
@@ -318,18 +314,18 @@ public class BeatManager : MonoBehaviour
     }
 
     /// <summary>
-    /// True si el input actual esta dentro de la ventana Good o mejor.
-    /// Usado por PlayerMovement para el beat gating de saltos y dashes.
+    /// Indica si el momento actual está dentro de la ventana Good o mejor. Lo usa PlayerMovement para permitir los saltos
+    /// y los dashes solo en el beat.
     /// </summary>
     public bool IsOnBeat() => (HalfBeatMoves ? GetSecondsToNearestHalfBeat() : GetSecondsToNearestBeat()) <= GoodWindow;
 
     /// <summary>
-    /// Con el contrato «Al compás» (acciones solo a ritmo) también valen los MEDIOS beats para saltar, hacer dash,
-    /// slide o romper bloques. Lo activa ContractRunner mientras dura el contrato.
+    /// Con el contrato "Al compás" (acciones solo al ritmo) también valen los medios beats para saltar, hacer dash,
+    /// deslizarse o romper bloques. Lo activa ContractRunner mientras dura el contrato.
     /// </summary>
     public static bool HalfBeatMoves { get; set; }
 
-    /// <summary>Distancia en segundos al beat O medio beat más cercano.</summary>
+    /// <summary>Distancia en segundos al beat o al medio beat más cercano.</summary>
     public float GetSecondsToNearestHalfBeat()
     {
         if (_audioSource == null || _bpm <= 0f) return float.MaxValue;
@@ -338,18 +334,16 @@ public class BeatManager : MonoBehaviour
         return Mathf.Min(mod, d - mod);
     }
 
-    // --- API de control de musica ---
+    // -=+=- Control de la música -=+=-
 
     /// <summary>
-    /// DSP timestamp en el que se ha programado el inicio de la musica.
-    /// Valido solo despues de llamar a StartMusic().
+    /// Instante DSP en el que se ha programado el inicio de la música. Solo es válido después de llamar a StartMusic().
     /// </summary>
     public double ScheduledStartDSP { get; private set; } = -1;
 
     /// <summary>
-    /// Inicia la musica usando PlayScheduled() para precision perfecta de DSP.
-    /// Despues de llamar a este metodo, usa ScheduledStartDSP para sincronizar
-    /// cualquier otro sistema (p.ej. PlayerMovement) al mismo instante exacto.
+    /// Inicia la música con PlayScheduled() para que empiece en un instante exacto del reloj DSP. Después, el resto de
+    /// sistemas (por ejemplo, PlayerMovement) usan ScheduledStartDSP para sincronizarse con el mismo instante.
     /// </summary>
     public void StartMusic()
     {
@@ -357,8 +351,8 @@ public class BeatManager : MonoBehaviour
         if (_audioSource == null) return;
         _audioSource.time = 0f;
 
-        // 80 ms de margen: imperceptible para el jugador pero suficiente
-        // para que el hilo de audio prepare el buffer antes del inicio.
+        // Se deja un margen de 80 ms, que el jugador no nota pero que es suficiente para que el hilo de audio
+        // prepare el buffer antes de que empiece la canción.
         double dspStart = AudioSettings.dspTime + 0.08;
         _audioSource.PlayScheduled(dspStart);
         ScheduledStartDSP = dspStart;
@@ -367,13 +361,8 @@ public class BeatManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Igual que StartMusic() pero programa el inicio en un DSP timestamp concreto.
-    /// Útil para arrancar la canción exactamente en el siguiente beat del metrónomo.
-    /// </summary>
-    /// <summary>
-    /// Pre-carga el clip de audio en memoria para evitar el spike de
-    /// decompresión la primera vez que se llama a PlayScheduled.
-    /// Llama a este método durante la intro (antes de que el jugador empiece).
+    /// Carga el clip de audio en memoria para evitar el pico de descompresión la primera vez que se llama a
+    /// PlayScheduled. Se llama durante la intro, antes de que el jugador empiece.
     /// </summary>
     public void PreloadAudio()
     {
@@ -382,16 +371,20 @@ public class BeatManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Cambia la AudioSource que el BeatManager usa como reloj, SIN resetear ScheduledStartDSP.
-    /// Para relevos de pista (nivel → loop del jefe → final): la nueva fuente debe estar ya sonando
-    /// y ALINEADA al beat (arrancada con PlayScheduled en un downbeat y con longitud múltiplo de beat),
-    /// para que la fase (time % beatDuration) siga cuadrando con la rejilla global.
+    /// Cambia el AudioSource que el BeatManager usa como reloj, sin reiniciar ScheduledStartDSP. Sirve para los relevos de
+    /// pista (del nivel al bucle del jefe y al final). La nueva fuente tiene que estar ya sonando y alineada con el beat,
+    /// es decir, arrancada con PlayScheduled en el primer beat de un compás y con una duración múltiplo del beat, para
+    /// que la fase (time % beatDuration) siga coincidiendo con la rejilla global.
     /// </summary>
     public void SwapSource(AudioSource newSource)
     {
         if (newSource != null) _audioSource = newSource;
     }
 
+    /// <summary>
+    /// Igual que StartMusic(), pero programa el inicio en un instante DSP concreto. Se usa para que la canción empiece
+    /// justo en el siguiente beat del metrónomo.
+    /// </summary>
     public void StartMusicAt(double dspTime)
     {
         _paused = false; _stopped = false;
@@ -404,19 +397,18 @@ public class BeatManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Como StartMusicAt pero arrancando el clip desde songTimeOffset segundos.
-    /// Útil para el modo test con la secuencia de inicio: el jugador hace el 3-2-1-YA!
-    /// y la música arranca en el beat correcto pero desde la posición correspondiente
-    /// a la distancia de test.
-    /// ScheduledStartDSP = dspTime - songTimeOffset  →  beat 0 queda en el pasado correcto.
+    /// Como StartMusicAt, pero el clip empieza en el segundo songTimeOffset. Se usa en el modo test con la secuencia de
+    /// inicio, en la que el jugador hace la cuenta atrás y la música empieza en el beat correcto, pero desde la posición
+    /// que corresponde a la distancia de test. Como ScheduledStartDSP = dspTime - songTimeOffset, el beat 0 queda en el
+    /// pasado, en el instante correcto.
     /// </summary>
     public void StartMusicFromAt(float songTimeOffset, double dspTime)
     {
         _paused = false; _stopped = false;
         if (_audioSource == null) return;
 
-        // Canción EN BUCLE (nivel tutorial / estudio): el reloj sigue contando sin cortes (beat 300, 400…) y el clip
-        // empieza en la posición equivalente dentro de la vuelta. La duración del clip debe ser un número exacto de beats.
+        // Si la canción está en bucle (nivel tutorial o estudio), el reloj sigue contando sin cortes (beat 300, 400...) y
+        // el clip empieza en la posición equivalente dentro de la vuelta. La duración del clip tiene que ser un número exacto de beats.
         bool looping = _audioSource.loop && _audioSource.clip != null && _audioSource.clip.length > 0.5f;
         float safeOffset = looping ? Mathf.Max(0f, songTimeOffset)
             : _audioSource.clip != null
@@ -425,9 +417,9 @@ public class BeatManager : MonoBehaviour
         float clipOffset = looping ? Mathf.Repeat(safeOffset, _audioSource.clip.length) : safeOffset;
 
         _audioSource.Stop();
-        _audioSource.pitch = 1f;   // (por si venía de un rebobinado con pitch negativo)
-        // (Posición en MUESTRAS: con «time» en clips comprimidos el salto no es exacto y la música quedaba unos
-        //  milisegundos desfasada del reloj al reaparecer lejos del principio, p. ej. al saltar una sección.)
+        _audioSource.pitch = 1f;   // por si venía de un rebobinado con pitch negativo
+        // La posición se fija en muestras, ya que con "time" el salto no es exacto en los clips comprimidos y la música
+        // quedaría unos milisegundos desfasada del reloj al empezar lejos del principio, por ejemplo al saltar una sección.
         if (_audioSource.clip != null && _audioSource.clip.frequency > 0)
             _audioSource.timeSamples = Mathf.Clamp((int)System.Math.Round((double)clipOffset * _audioSource.clip.frequency), 0, _audioSource.clip.samples - 1);
         else _audioSource.time = clipOffset;
@@ -438,16 +430,16 @@ public class BeatManager : MonoBehaviour
         _lastHalfBeatIdx  = Mathf.FloorToInt(safeOffset / HalfBeatDuration) - 1;
     }
 
-    /// <summary>Velocidad de reproducción (negativa = hacia atrás; lo usa el Rebobinado). StartMusicFromAt la devuelve a 1.</summary>
+    /// <summary>Velocidad de reproducción. Es negativa hacia atrás, para el Rebobinado, y StartMusicFromAt la devuelve a 1.</summary>
     public void SetPlaybackPitch(float pitch)
     {
         if (_audioSource != null) _audioSource.pitch = pitch;
     }
 
     /// <summary>
-    /// Solo para el Rebobinado: mueve el reloj DSP de todo el nivel para que "ahora" sea el segundo 'songTime' de la
-    /// canción. Así todo lo que se calcula a partir de ScheduledStartDSP (osciladores, bloques que caen…) se ve
-    /// volviendo atrás junto con el jugador. StartMusicFromAt lo deja bien al retomar.
+    /// Solo para el Rebobinado. Mueve el reloj DSP de todo el nivel para que el instante actual sea el segundo 'songTime'
+    /// de la canción. Así, todo lo que se calcula a partir de ScheduledStartDSP (osciladores, bloques que caen...) vuelve
+    /// atrás junto con el jugador. StartMusicFromAt lo corrige al retomar la partida.
     /// </summary>
     public void SetRewindClock(float songTime)
     {
@@ -455,8 +447,8 @@ public class BeatManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Para el tutorial (cámara lenta hasta pararse): fija el reloj para que «ahora» sea el segundo 'songSeconds' de la
-    /// canción. Como todo se calcula a partir de ScheduledStartDSP, el nivel entero se frena y se para con él.
+    /// Para el tutorial, que ralentiza el juego hasta pararlo. Fija el reloj para que el instante actual sea el segundo
+    /// 'songSeconds' de la canción. Como todo se calcula a partir de ScheduledStartDSP, el nivel entero se frena y se para con él.
     /// </summary>
     public void SetClockSongTime(double songSeconds)
     {
@@ -464,7 +456,7 @@ public class BeatManager : MonoBehaviour
         _heldSongTime = songSeconds;
     }
 
-    /// <summary>Para la musica y resetea el estado.</summary>
+    /// <summary>Para la música y reinicia el estado.</summary>
     public void StopMusic()
     {
         _stopped = true;
@@ -472,7 +464,7 @@ public class BeatManager : MonoBehaviour
         ResetBeatState();
     }
 
-    /// <summary>Pausa la musica sin perder la posicion.</summary>
+    /// <summary>Pausa la música sin perder la posición.</summary>
     public void PauseMusic()
     {
         if (_paused) return;
@@ -482,17 +474,17 @@ public class BeatManager : MonoBehaviour
         if (_audioSource != null) _audioSource.Pause();
     }
 
-    /// <summary>Reanuda la musica desde donde se pauso.</summary>
+    /// <summary>Reanuda la música desde donde se pausó.</summary>
     public void ResumeMusic()
     {
-        // Si el reloj de audio siguió corriendo durante la pausa, se desplaza el inicio para que la posición
-        // siga donde se quedó la música (si el reloj se congeló, el desplazamiento es 0 y no cambia nada).
+        // Si el reloj de audio siguió avanzando durante la pausa, se desplaza el inicio para que la posición siga
+        // donde se quedó la música. Si el reloj se congeló, el desplazamiento es 0 y no cambia nada.
         if (_paused && HasClock) ScheduledStartDSP += AudioSettings.dspTime - _pausedAtDsp;
         _paused = false;
         if (_audioSource != null) _audioSource.UnPause();
     }
 
-    // --- Internals ---
+    // -=+=- Funciones internas -=+=-
 
     private void ResetBeatState()
     {
@@ -501,7 +493,7 @@ public class BeatManager : MonoBehaviour
     }
 }
 
-// Intervals: dispara _trigger cada 1/_steps beats.
+// Intervals: lanza _trigger cada 1/_steps beats.
 [System.Serializable]
 public class Intervals
 {
@@ -525,17 +517,15 @@ public class Intervals
     }
 }
 
-/// <summary>
-/// Resultado de evaluar si un input del jugador cayo dentro de una ventana de ritmo.
-/// </summary>
+/// <summary>Resultado de evaluar si un clic del jugador cae dentro de una ventana de acierto.</summary>
 public enum TimingResult
 {
-    /// <summary>Dentro de la ventana Perfect (muy preciso). Da bonus de energia.</summary>
+    /// <summary>Dentro de la ventana Perfect (muy preciso). Da un bonus de energía.</summary>
     Perfect,
 
-    /// <summary>Dentro de la ventana Good (aceptable). Da energia normal.</summary>
+    /// <summary>Dentro de la ventana Good (aceptable). Da la energía normal.</summary>
     Good,
 
-    /// <summary>Fuera de cualquier ventana. Penalizacion de energia.</summary>
+    /// <summary>Fuera de las dos ventanas. Penaliza la energía.</summary>
     Miss
 }

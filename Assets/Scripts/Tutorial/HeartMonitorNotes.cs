@@ -5,11 +5,11 @@ using UnityEngine.UI;
 using static SimpleUI;
 
 /// <summary>
-/// NOTAS QUE CAEN EN EL MONITOR DEL CORAZÓN (las usan el tutorial y las pistas).
-/// Cada nota es una TECLA DE TECLADO dibujada (o varias: «A + SHIFT»): una tecla clara con su canto oscuro debajo y un
-/// borde del color de la nota (azul = con explicación, amarillo = normal). Baja desde arriba y llega al recuadro del
-/// monitor justo en su beat. Acertada → se pone verde y crece; pasada sin hacerla → se apaga.
-/// Se dibujan en un Canvas propio ('canvas'), encima del HUD.
+/// Notas que caen en el monitor del corazón, que usan el tutorial y las pistas. Cada nota es una tecla de teclado
+/// dibujada (o varias, como "A + SHIFT"), con la cara clara, el canto oscuro debajo y un borde del color de la nota
+/// (azul si tiene explicación y amarillo si es normal). Baja desde arriba y llega al recuadro del monitor justo en su
+/// beat. Si se acierta, se pone verde y crece, y si pasa sin hacerla, se apaga. Se dibujan en un Canvas propio
+/// ('canvas'), encima del HUD.
 /// </summary>
 public class HeartMonitorNotes
 {
@@ -21,7 +21,7 @@ public class HeartMonitorNotes
         public CanvasGroup group;
         public readonly List<Image> faces = new List<Image>();
         public float beat;
-        public float hitT = -1f;   // tiempo (real) desde que se acertó
+        public float hitT = -1f;   // tiempo real desde que se acertó
         public bool fading;
     }
 
@@ -35,15 +35,15 @@ public class HeartMonitorNotes
     public float BeatOf(int id) => _notes.TryGetValue(id, out Note n) ? n.beat : float.NaN;
     public IEnumerable<int> Ids => _notes.Keys;
 
-    // Aspecto de las teclas.
+    // Aspecto de las teclas
     private const float KeyH = 54f, KeyMinW = 54f, KeyEdge = 7f, KeyBorder = 4f, KeyGap = 10f;
     private static readonly Color KeyFace = new Color(0.93f, 0.92f, 0.9f, 1f);
     private static readonly Color KeyEdgeCol = new Color(0.42f, 0.4f, 0.38f, 1f);
     private static readonly Color KeyText = new Color(0.12f, 0.1f, 0.1f, 1f);
 
     /// <summary>
-    /// Crea la nota 'id' (si no existe): una tecla por cada parte de 'label' separada por «+» («A+SHIFT» → [A] + [SHIFT]).
-    /// 'sibling' ≥ 0 la coloca en esa posición dentro del Canvas.
+    /// Crea la nota 'id', si no existe, con una tecla por cada parte de 'label' separada por "+" ("A+SHIFT" da las
+    /// teclas A y SHIFT). Si 'sibling' es mayor o igual que 0, la coloca en esa posición dentro del Canvas.
     /// </summary>
     public void Spawn(int id, float beat, string label, Color color, int sibling = -1)
     {
@@ -62,7 +62,7 @@ public class HeartMonitorNotes
         {
             keys[i] = keys[i].Trim().ToUpperInvariant();
             widths[i] = Mathf.Max(KeyMinW, 17f * keys[i].Length + 26f);
-            if (keys[i] == "ESPACIO" || keys[i] == "SPACE") widths[i] = Mathf.Max(widths[i], 180f);   // (barra espaciadora: larga)
+            if (keys[i] == "ESPACIO" || keys[i] == "SPACE") widths[i] = Mathf.Max(widths[i], 180f);   // la barra espaciadora es más larga
             total += widths[i] + (i > 0 ? KeyGap + 22f : 0f);
         }
         rt.sizeDelta = new Vector2(total, KeyH + KeyEdge);
@@ -72,7 +72,7 @@ public class HeartMonitorNotes
         {
             if (i > 0)
             {
-                // «+» entre teclas.
+                // Signo "+" entre las teclas
                 var plus = Lbl("Mas", rt, "+", FontMid, TextAlignmentOptions.Center);
                 plus.color = Color.white;
                 plus.raycastTarget = false;
@@ -80,10 +80,10 @@ public class HeartMonitorNotes
                 x += KeyGap + 22f;
             }
             float w = widths[i], cx = x + w * 0.5f;
-            // Borde del color de la nota, canto oscuro (la tecla «tiene altura») y la cara de la tecla con su letra.
+            // Borde del color de la nota, canto oscuro (para que la tecla parezca tener altura) y cara de la tecla con su letra.
             Img(rt, "Borde", new Color(color.r, color.g, color.b, 1f), new Vector2(cx, -KeyEdge * 0.5f), new Vector2(w + KeyBorder * 2f, KeyH + KeyEdge + KeyBorder * 2f));
             Img(rt, "Canto", KeyEdgeCol, new Vector2(cx, -KeyEdge * 0.5f), new Vector2(w, KeyH + KeyEdge));
-            Image face = Img(rt, "Tecla", KeyFace, new Vector2(cx, 0f), new Vector2(w, KeyH));   // (el canto asoma por debajo)
+            Image face = Img(rt, "Tecla", KeyFace, new Vector2(cx, 0f), new Vector2(w, KeyH));   // el canto asoma por debajo
             note.faces.Add(face);
             var t = Lbl("Letra", face.transform, keys[i], keys[i].Length <= 2 ? FontMid + 6f : FontMid, TextAlignmentOptions.Center);
             t.color = KeyText;
@@ -106,10 +106,10 @@ public class HeartMonitorNotes
         return img;
     }
 
-    /// <summary>Acertada: verde y desaparece.</summary>
+    /// <summary>Nota acertada, que se pone verde y desaparece.</summary>
     public void Hit(int id) { if (_notes.TryGetValue(id, out Note n) && n.hitT < 0f) n.hitT = 0f; }
 
-    /// <summary>Pasada sin hacerla: se apaga.</summary>
+    /// <summary>Nota que ha pasado sin hacerla, que se apaga.</summary>
     public void Fade(int id) { if (_notes.TryGetValue(id, out Note n) && n.hitT < 0f) n.fading = true; }
 
     public void Clear()
@@ -118,7 +118,7 @@ public class HeartMonitorNotes
         _notes.Clear();
     }
 
-    // ── Monitor ──────────────────────────────────────────────────────────────
+    // -=+=- Monitor -=+=-
 
     private RectTransform MonitorBox()
     {
@@ -128,7 +128,7 @@ public class HeartMonitorNotes
         return _box;
     }
 
-    /// <summary>Recuadro del monitor del corazón en píxeles de pantalla (vale para cualquier modo de Canvas).</summary>
+    /// <summary>Recuadro del monitor del corazón en píxeles de pantalla. Funciona con cualquier modo de Canvas.</summary>
     public bool ScreenRect(out Rect rect)
     {
         rect = default;
@@ -144,7 +144,7 @@ public class HeartMonitorNotes
         return rect.width > 1f;
     }
 
-    // ── Cada frame ───────────────────────────────────────────────────────────
+    // -=+=- En cada fotograma -=+=-
 
     public void Update(float beatNow)
     {
@@ -160,7 +160,7 @@ public class HeartMonitorNotes
             bool visible = !HudHider.IsHidden;
             if (n.rt.gameObject.activeSelf != visible) n.rt.gameObject.SetActive(visible);
 
-            float u = Mathf.Clamp01((n.beat - beatNow) / LeadBeats);   // 1 = arriba, 0 = en el monitor
+            float u = Mathf.Clamp01((n.beat - beatNow) / LeadBeats);   // 1 es arriba y 0, en el monitor
             n.rt.anchoredPosition = center + new Vector2(0f, fall * u);
 
             bool gone = false;
@@ -180,7 +180,7 @@ public class HeartMonitorNotes
             }
             else
             {
-                // Al llegar al monitor late para llamar la atención.
+                // Al llegar al monitor, la nota late para llamar la atención.
                 float s = u <= 0.001f ? 1f + 0.12f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f)) : 1f;
                 n.rt.localScale = Vector3.one * s;
             }

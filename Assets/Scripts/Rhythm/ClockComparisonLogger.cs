@@ -5,21 +5,21 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// EXPERIMENTO DE SINCRONIZACIÓN (para la memoria). Compara, fotograma a fotograma, cuatro formas de saber
-/// «por qué segundo va la canción» en Unity:
-///   1. Reloj DSP (AudioSettings.dspTime − instante de inicio programado) → el que usa el juego (BeatManager).
+/// Experimento de sincronización para la memoria. Compara, fotograma a fotograma, cuatro formas de saber en qué
+/// segundo va la canción en Unity.
+///   1. Reloj DSP (AudioSettings.dspTime menos el instante de inicio programado), que es el que usa el juego (BeatManager).
 ///   2. AudioSource.time.
-///   3. AudioSource.timeSamples / frecuencia (lo mismo, pero en muestras).
-///   4. Reloj de fotogramas: sumar Time.deltaTime cada frame (lo que haría un juego «ingenuo»).
-/// Para cada uno guarda la diferencia con el reloj DSP y si se ha quedado CONGELADO (mismo valor que en el
-/// fotograma anterior). Al terminar escribe un CSV y un resumen en la consola.
+///   3. AudioSource.timeSamples dividido entre la frecuencia, que es lo mismo, pero en muestras.
+///   4. Reloj de fotogramas, que suma Time.deltaTime en cada fotograma, como haría un juego que no usa el reloj de audio.
+/// Para cada uno se guarda la diferencia con el reloj DSP y si se ha quedado congelado, es decir, si tiene el mismo
+/// valor que en el fotograma anterior. Al terminar, se escribe un CSV y un resumen en la consola.
 ///
-/// USO: menú «Tools/Debug: Medir relojes» (se marca con ✓) → en cada nivel se añade solo. También se puede poner a mano
-/// en cualquier objeto. Empieza cuando arranca la canción y termina a los 'maxSeconds' (o al salir del modo Play).
-/// Mientras mide, el jugador es INVULNERABLE y está en GOD MODE (nada lo mata, la energía no se acaba y la canción no se
-/// corta): basta con dejarlo correr.
-/// El archivo se llama «Sincronizacion_Relojes_<escena>_<fecha-hora>.csv» (uno por medición, no se sobrescriben).
-/// No hagas pausa ni actives el tutorial durante la medición.
+/// Uso. Desde el menú "Tools/Debug: Medir relojes" se activa (aparece marcado) y se añade solo en cada nivel. También
+/// se puede añadir a mano a cualquier objeto. Empieza cuando arranca la canción y termina a los 'maxSeconds' o al salir
+/// del modo Play. Mientras mide, el jugador es invulnerable y está en modo Dios, por lo que nada lo mata, la energía no
+/// se acaba y la canción no se corta, así que basta con dejarlo correr.
+/// El archivo se llama "Sincronizacion_Relojes_&lt;escena&gt;_&lt;tipo de carga&gt;_&lt;fecha-hora&gt;.csv" y se crea uno por medición,
+/// sin sobrescribir los anteriores. Durante la medición no se debe pausar el juego ni activar el tutorial.
 /// </summary>
 public class ClockComparisonLogger : MonoBehaviour
 {
@@ -99,7 +99,7 @@ public class ClockComparisonLogger : MonoBehaviour
             if (invulnerable)
             {
                 GameOverManager.DebugInvulnerable = true;
-                EnergyManager em = EnergyManager.Instance;   // God Mode: la energía no se gasta ni se acaba
+                EnergyManager em = EnergyManager.Instance;   // modo Dios: la energía no se gasta ni se acaba
                 if (em != null) { _prevGodMode = em.godMode; em.godMode = true; _godModeSet = true; }
             }
             Debug.Log($"[Relojes] Midiendo {maxSeconds:0} s en «{SceneManager.GetActiveScene().name}»…");
@@ -141,7 +141,7 @@ public class ClockComparisonLogger : MonoBehaviour
     }
 
     private void OnDisable() { if (_running && !_done) Finish(); }
-    private void Awake() => StartSequenceManager.ForceSkipIntro = true;   // (medición: sin la intro del nivel)
+    private void Awake() => StartSequenceManager.ForceSkipIntro = true;   // en la medición no se reproduce la intro del nivel
     private void OnDestroy()
     {
         StartSequenceManager.ForceSkipIntro = false;
@@ -161,10 +161,11 @@ public class ClockComparisonLogger : MonoBehaviour
         _done = true;
         RestoreProtection();
         string dir = Application.isEditor ? Path.GetDirectoryName(Application.dataPath) : Application.persistentDataPath;
-        string load = _bm != null && _bm.CurrentSource != null && _bm.CurrentSource.clip != null ? _bm.CurrentSource.clip.loadType.ToString() : "?";
+        string load = _bm != null && _bm.CurrentSource != null && _bm.CurrentSource.clip != null ? _bm.CurrentSource.clip.loadType.ToString() : "SinClip";
         string outName = $"{Path.GetFileNameWithoutExtension(fileName)}_{SceneManager.GetActiveScene().name}_{load}_{System.DateTime.Now:yyyyMMdd_HHmmss}.csv";
         string path = Path.Combine(dir, outName);
-        File.WriteAllText(path, _csv.ToString());
+        try { File.WriteAllText(path, _csv.ToString()); }
+        catch (IOException e) { Debug.LogWarning($"[Relojes] No se pudo guardar el CSV: {e.Message}"); return; }
 
         var sb = new StringBuilder($"[Relojes] {_frames} fotogramas medidos. CSV: {path}\n");
         sb.AppendLine("Reloj | error medio | error máximo | error al final | fotogramas congelado");

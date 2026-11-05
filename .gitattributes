@@ -169,3 +169,8 @@ Packages/packages-lock.json linguist-generated
 
 # Exceptions for .asset files such as lightning pre-baking
 LightingData.asset     binary
+
+# La memoria (imágenes y PDF) se guarda en git normal, no en LFS
+Memoria/**/*.jpg        !filter !diff !merge -text
+Memoria/**/*.png        !filter !diff !merge -text
+Memoria/**/*.pdf        !filter !diff !merge -text

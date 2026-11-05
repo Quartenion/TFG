@@ -3,37 +3,35 @@ using UnityEngine;
 /// <summary>
 /// Mueve un objeto entre dos puntos (A y B) sincronizado con la música.
 ///
-/// MODO OSCILACIÓN (Oscillate = true):
-///   Ciclo continuo A → B → A al ritmo de la canción.
-///   beatsPerCycle = duración del ciclo completo A→B→A en beats.
-///   phaseOffsetBeats = desfasa el ciclo (útil para escalonar varias plataformas).
+/// Modo oscilación (Oscillate = true).
+///   El objeto va de A a B y vuelve a A de forma continua, al ritmo de la canción. beatsPerCycle es la duración del
+///   ciclo completo en beats, y phaseOffsetBeats desfasa el ciclo, lo que sirve para escalonar varias plataformas.
 ///
-/// MODO DISPARO (Oscillate = false):
-///   El objeto espera quieto en A. Cuando el jugador está a triggerBeats de distancia
-///   empieza a moverse hacia B, tarda beatsPerCycle beats en llegar y se queda en B
-///   para siempre.
+/// Modo disparo (Oscillate = false).
+///   El objeto espera quieto en A. Cuando el jugador está a triggerBeats de distancia, empieza a moverse hacia B,
+///   tarda beatsPerCycle beats en llegar y se queda en B.
 ///
-/// SETUP:
-///   1. Añade el componente al GameObject.
-///   2. Define A y B con los handles de la Scene View o los botones del Inspector.
-///   3. Asigna BeatGridVisualizer (se busca automáticamente si se deja vacío).
-///   4. Si hay Rigidbody en el objeto, ponlo en Is Kinematic.
+/// Configuración.
+///   1. Se añade el componente al GameObject.
+///   2. Se definen A y B con los controles de la vista de escena o con los botones del Inspector.
+///   3. Se asigna BeatGridVisualizer, que se busca automáticamente si se deja vacío.
+///   4. Si el objeto tiene un Rigidbody, se marca como Is Kinematic.
 /// </summary>
 [AddComponentMenu("Level/Beat Oscillator")]
 public class BeatOscillator : MonoBehaviour, IRewindable
 {
-    // ── Enums ─────────────────────────────────────────────────────────────────
+    // -=+=- Enums -=+=-
 
     public enum EasingMode
     {
         Linear,
-        SmoothStep,   // suave al inicio y al final  (ideal para plataformas)
-        EaseIn,       // lento al inicio, rápido al final
-        EaseOut,      // rápido al inicio, lento al final
-        Bounce,       // rebote al llegar al destino
+        SmoothStep,   // suave al principio y al final (ideal para plataformas)
+        EaseIn,       // lento al principio y rápido al final
+        EaseOut,      // rápido al principio y lento al final
+        Bounce,       // rebota al llegar al destino
     }
 
-    // ── Inspector ─────────────────────────────────────────────────────────────
+    // -=+=- Inspector -=+=-
 
     [Header("Referencias")]
     [Tooltip("BeatManager de la escena. Se localiza automáticamente si se deja vacío.")]
@@ -89,23 +87,23 @@ public class BeatOscillator : MonoBehaviour, IRewindable
              "Mejor para colisiones físicas. Requiere Rigidbody en modo Kinematic.")]
     [SerializeField] private bool _useRigidbody = false;
 
-    // ── Estado interno ────────────────────────────────────────────────────────
+    // -=+=- Estado interno -=+=-
 
     private Rigidbody _rb;
     private bool      _ready;          // true en cuanto ScheduledStartDSP > 0
-    private Vector3   _originPos;      // posición inicial del objeto (para modo local)
+    private Vector3   _originPos;      // posición inicial del objeto, para el modo local
 
     // Modo disparo
     private enum Phase { Idle, Moving, Done }
     private Phase  _phase      = Phase.Idle;
     private double _triggerDSP = double.MaxValue;
-    private bool   _triggerRequested;   // Trigger() externo pendiente de aplicar
+    private bool   _triggerRequested;   // llamada externa a Trigger() pendiente de aplicar
 
-    // Modo "conducido por la mirada": SetOpen(t) fija directamente la posición (0..1 → A..B).
+    // Modo controlado por la mirada. SetOpen(t) fija directamente la posición (de 0 a 1 equivale de A a B).
     private bool  _driven;
     private float _drivenT;
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    // -=+=- Ciclo de vida -=+=-
 
     private void Awake()
     {
@@ -115,13 +113,13 @@ public class BeatOscillator : MonoBehaviour, IRewindable
         if (_beatManager == null)
             _beatManager = BeatManager.Instance;
 
-        // Posición inicial mientras la música no ha arrancado
+        // Posición inicial mientras la música no ha empezado
         Move(WorldA);
     }
 
     private void Start()
     {
-        // Segunda oportunidad de encontrar referencias (por si Awake fue antes del Singleton)
+        // Segundo intento de encontrar las referencias, por si Awake se ejecutó antes que el Singleton.
         if (_beatManager == null)
             _beatManager = BeatManager.Instance;
 
@@ -131,8 +129,8 @@ public class BeatOscillator : MonoBehaviour, IRewindable
 
     private void Update()
     {
-        // Modo CONDUCIDO POR LA MIRADA (SetOpen): la posición la fija directamente el progreso
-        // externo (0..1 → A..B). Tiene prioridad y no necesita BeatManager.
+        // Modo controlado por la mirada (SetOpen). La posición la fija directamente el progreso externo (de 0 a 1
+        // equivale de A a B). Tiene prioridad y no necesita BeatManager.
         if (_driven)
         {
             Move(Vector3.Lerp(WorldA, WorldB, Ease(_drivenT)));
@@ -141,13 +139,13 @@ public class BeatOscillator : MonoBehaviour, IRewindable
 
         if (_beatManager == null) return;
 
-        // Esperar a que la música esté programada
+        // Se espera a que la música esté programada.
         if (!_ready)
         {
             if (!_beatManager.HasClock) return;
 
-            // En modo disparo por cercanía, calcular el momento de disparo una sola vez.
-            // En modo trigger externo se deja _triggerDSP = MaxValue: solo Trigger() lo dispara.
+            // En el modo disparo por cercanía, el momento del disparo se calcula una sola vez. Con el disparo externo,
+            // _triggerDSP se deja en MaxValue, por lo que solo lo dispara Trigger().
             if (!_oscillate && !_waitForExternalTrigger)
                 ComputeTriggerDSP();
 
@@ -160,7 +158,7 @@ public class BeatOscillator : MonoBehaviour, IRewindable
             UpdateOneShot();
     }
 
-    // ── Modo oscilación ───────────────────────────────────────────────────────
+    // -=+=- Modo oscilación -=+=-
 
     private void UpdateOscillate()
     {
@@ -168,15 +166,14 @@ public class BeatOscillator : MonoBehaviour, IRewindable
         double elapsed = _beatManager.ClockBeats;
         double shifted = elapsed + _phaseOffsetBeats;
 
-        // Posición normalizada dentro del ciclo [0, 1)
+        // Posición normalizada dentro del ciclo, en [0, 1)
         double cycleT = (shifted / _beatsPerCycle) % 1.0;
         if (cycleT < 0.0) cycleT += 1.0;
 
         float t      = (float)cycleT;
         bool  toB    = t < 0.5f;
-        // halfT siempre va de 0→1 en cada mitad, para que Ease se aplique
-        // en la misma dirección (sin importar si vamos A→B o B→A).
-        // Bounce así da un rebote suave al llegar a B y otro al llegar a A.
+        // halfT va siempre de 0 a 1 en cada mitad, para que Ease se aplique en la misma dirección tanto de A a B como de
+        // B a A. Así, Bounce rebota suavemente al llegar a B y otra vez al llegar a A.
         float halfT  = toB ? t * 2f : (t - 0.5f) * 2f;
         float eased  = Ease(halfT);
 
@@ -185,7 +182,7 @@ public class BeatOscillator : MonoBehaviour, IRewindable
             : Vector3.Lerp(WorldB, WorldA, eased));
     }
 
-    // ── Modo disparo ──────────────────────────────────────────────────────────
+    // -=+=- Modo disparo -=+=-
 
     private double _arrivalOffset = double.NaN;   // segundos de canción hasta que llega el jugador (se calcula una vez, en A)
 
@@ -196,7 +193,7 @@ public class BeatOscillator : MonoBehaviour, IRewindable
                       - (double)(_triggerBeats * _beatManager.BeatDuration);
     }
 
-    /// <summary>REBOBINADO: recalcula el disparo con el reloj actual; el Update lo deja en A, a medio camino o en B.</summary>
+    /// <summary>Rebobinado. Vuelve a calcular el disparo con el reloj actual, y Update deja el objeto en A, a medio camino o en B.</summary>
     public void OnTimeRewind()
     {
         if (_driven || _oscillate || _waitForExternalTrigger || !_ready || _beatManager == null) return;
@@ -209,10 +206,10 @@ public class BeatOscillator : MonoBehaviour, IRewindable
 
     private void UpdateOneShot()
     {
-        // Done es un estado final: no hay nada más que hacer
+        // Done es el estado final, así que no hay nada más que hacer.
         if (_phase == Phase.Done) return;
 
-        // Aplicar un Trigger() externo pendiente: empieza a moverse ahora.
+        // Si hay una llamada externa a Trigger() pendiente, empieza a moverse ahora.
         if (_triggerRequested && _phase == Phase.Idle)
         {
             _triggerDSP = BeatManager.DspNow;
@@ -221,17 +218,17 @@ public class BeatOscillator : MonoBehaviour, IRewindable
 
         double now = BeatManager.DspNow;
 
-        // ── Idle: esperar en A hasta el momento de disparo ────────────────────
+        // -=+=- En reposo: espera en A hasta el momento del disparo -=+=-
         if (_phase == Phase.Idle)
         {
             if (now < _triggerDSP) { Move(WorldA); return; }
             _phase = Phase.Moving;
         }
 
-        // ── Moving: mover A → B ───────────────────────────────────────────────
+        // -=+=- En movimiento: de A a B -=+=-
         double duration = (double)_beatsPerCycle * _beatManager.BeatDuration;
-        // t RAW (no eased) determina cuándo terminamos: así Bounce puede rebotar
-        // brevemente por encima de B sin disparar Done antes de tiempo.
+        // El final se decide con t sin suavizar, para que Bounce pueda rebotar un momento por encima de B sin pasar a
+        // Done antes de tiempo.
         float t     = Mathf.Clamp01((float)((now - _triggerDSP) / duration));
         float eased = Ease(t);
 
@@ -244,7 +241,7 @@ public class BeatOscillator : MonoBehaviour, IRewindable
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -=+=- Funciones auxiliares -=+=-
 
     private void Move(Vector3 pos)
     {
@@ -267,12 +264,12 @@ public class BeatOscillator : MonoBehaviour, IRewindable
         }
     }
 
-    // ── Helpers de puntos ─────────────────────────────────────────────────────
+    // -=+=- Funciones auxiliares de los puntos -=+=-
 
     private Vector3 WorldA => _localSpace ? _originPos + pointA : pointA;
     private Vector3 WorldB => _localSpace ? _originPos + pointB : pointB;
 
-    // ── API pública ───────────────────────────────────────────────────────────
+    // -=+=- API pública -=+=-
 
     public void CaptureCurrentAsA()
     {
@@ -285,9 +282,9 @@ public class BeatOscillator : MonoBehaviour, IRewindable
     }
 
     /// <summary>
-    /// Dispara el movimiento A→B AHORA (modo disparo). Pensado para activarlo desde fuera —
-    /// p. ej. un GazeSwitch conecta su OnActivated a este método para "abrir la puerta".
-    /// Solo tiene efecto si aún está en A (no se ha movido); no hace nada en modo oscilación.
+    /// Lanza el movimiento de A a B en este momento (modo disparo). Está pensado para activarlo desde fuera, por ejemplo
+    /// conectando el OnActivated de un GazeSwitch a este método para abrir una puerta. Solo tiene efecto si el objeto
+    /// sigue en A, y no hace nada en el modo oscilación.
     /// </summary>
     public void Trigger()
     {
@@ -295,7 +292,7 @@ public class BeatOscillator : MonoBehaviour, IRewindable
         _triggerRequested = true;
     }
 
-    /// <summary>Reinicia el disparo: vuelve a A y queda a la espera de otro Trigger().</summary>
+    /// <summary>Reinicia el disparo, por lo que el objeto vuelve a A y espera otra llamada a Trigger().</summary>
     public void ResetTrigger()
     {
         if (_oscillate) return;
@@ -307,10 +304,10 @@ public class BeatOscillator : MonoBehaviour, IRewindable
     }
 
     /// <summary>
-    /// Modo CONDUCIDO POR LA MIRADA: fija la posición directamente con un progreso 0..1 (A→B)
-    /// — conecta aquí GazeSwitch → On Progress. Se mueve mientras el progreso sube; como el
-    /// GazeSwitch lo descarga al dejar de mirar, vuelve solo a A. Si llega a 1 con el switch en
-    /// One Shot, el switch congela el progreso en 1 y se queda en B.
+    /// Modo controlado por la mirada. Fija la posición directamente con un progreso de 0 a 1 (de A a B), y se conecta al
+    /// On Progress de un GazeSwitch. El objeto se mueve mientras el progreso sube y, como el GazeSwitch lo descarga al
+    /// dejar de mirar, vuelve solo a A. Si llega a 1 con el interruptor en One Shot, el interruptor congela el progreso
+    /// en 1 y el objeto se queda en B.
     /// </summary>
     public void SetOpen(float t01)
     {
@@ -318,7 +315,7 @@ public class BeatOscillator : MonoBehaviour, IRewindable
         _drivenT = Mathf.Clamp01(t01);
     }
 
-    // ── Gizmos ────────────────────────────────────────────────────────────────
+    // -=+=- Gizmos -=+=-
 
 #if UNITY_EDITOR
     private void OnDrawGizmos()         => DrawGizmos(false);
@@ -329,12 +326,12 @@ public class BeatOscillator : MonoBehaviour, IRewindable
         float alpha  = selected ? 1f   : 0.4f;
         float radius = selected ? 0.18f : 0.09f;
 
-        // En edit mode _originPos no está inicializado → usar transform.position
+        // En el modo edición, _originPos no está inicializado, así que se usa transform.position.
         Vector3 origin = Application.isPlaying ? _originPos : transform.position;
         Vector3 wA = _localSpace ? origin + pointA : pointA;
         Vector3 wB = _localSpace ? origin + pointB : pointB;
 
-        // Línea A-B
+        // Línea de A a B
         UnityEditor.Handles.color = new Color(1f, 1f, 1f, selected ? 0.6f : 0.15f);
         UnityEditor.Handles.DrawDottedLine(wA, wB, 5f);
 
@@ -351,7 +348,7 @@ public class BeatOscillator : MonoBehaviour, IRewindable
         Gizmos.DrawSphere(wB, radius);
         UnityEditor.Handles.Label(wB + Vector3.up * 0.35f, _localSpace ? "B (local)" : "B", styleB);
 
-        // Indicador de trigger (solo modo disparo, solo seleccionado)
+        // Indicador del disparo (solo en el modo disparo y con el objeto seleccionado)
         if (selected && !_oscillate && _grid != null)
         {
             float   bpm         = BeatManager.BpmOf(_beatManager);
@@ -368,7 +365,7 @@ public class BeatOscillator : MonoBehaviour, IRewindable
             UnityEditor.Handles.Label(triggerPos + Vector3.up * 0.3f, $"▶ trigger ({_triggerBeats} beats)", styleTrigger);
         }
 
-        // Posición actual en play mode
+        // Posición actual en el modo Play
         if (selected && Application.isPlaying && _ready)
         {
             Gizmos.color = new Color(1f, 0.9f, 0f, 0.9f);

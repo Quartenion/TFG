@@ -6,13 +6,13 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 
 /// <summary>
-/// TECLAS CONFIGURABLES (Ajustes → Controles). Guarda en PlayerPrefs la tecla de cada acción del teclado.
-/// Los clics del ratón (latido / kayak), Esc y P (pausa), TAB (controles) y F2 (consejos) son fijos.
+/// Teclas configurables (Ajustes > Controles). Guarda en PlayerPrefs la tecla de cada acción del teclado. Los clics
+/// del ratón (latido y kayak), Esc y P (pausa), TAB (controles) y F2 (consejos) son fijos.
 ///
-/// Uso desde el código:
-///   • Acciones del Input System: <see cref="Apply"/> (y volver a llamarlo en <see cref="Changed"/>).
-///   • Lecturas directas: <see cref="Pressed"/> / <see cref="Held"/> en vez de Keyboard.current.xKey.
-///   • Textos que nombran teclas («[ E ] Tienda», carteles del tutorial): <see cref="Fix"/>.
+/// Uso desde el código.
+///   - En las acciones del Input System se usa <see cref="Apply"/>, y se vuelve a llamar en <see cref="Changed"/>.
+///   - Para leer las teclas directamente se usan <see cref="Pressed"/> y <see cref="Held"/>, en lugar de Keyboard.current.xKey.
+///   - En los textos que nombran teclas ("[ E ] Tienda", carteles del tutorial...) se usa <see cref="Fix"/>.
 /// </summary>
 public static class Keybinds
 {
@@ -27,12 +27,12 @@ public static class Keybinds
         { Bind.Block, Key.Q }, { Bind.Zipline, Key.F }, { Bind.Interact, Key.E }, { Bind.Metronome, Key.M },
     };
 
-    /// <summary>Parejas que comparten tecla A PROPÓSITO (no se marcan como conflicto).</summary>
+    /// <summary>Parejas de acciones que comparten tecla a propósito, por lo que no se marcan como conflicto.</summary>
     private static bool SharedOnPurpose(Bind a, Bind b)
         => (a == Bind.Back && b == Bind.Slam) || (a == Bind.Slam && b == Bind.Back)
         || (a == Bind.Dash && b == Bind.Interact) || (a == Bind.Interact && b == Bind.Dash);
 
-    /// <summary>Teclas que no se pueden asignar (pausa / ayuda).</summary>
+    /// <summary>Teclas que no se pueden asignar (pausa y ayuda).</summary>
     public static bool Reserved(Key k) => k == Key.Escape || k == Key.P || k == Key.Tab || k == Key.F2 || k == Key.None;
 
     /// <summary>Se lanza al cambiar cualquier tecla.</summary>
@@ -69,7 +69,7 @@ public static class Keybinds
         Changed?.Invoke();
     }
 
-    /// <summary>¿Otra acción usa la misma tecla (sin contar las que la comparten a propósito)?</summary>
+    /// <summary>Indica si otra acción usa la misma tecla, sin contar las que la comparten a propósito.</summary>
     public static bool Conflicts(Bind b)
     {
         Key k = Get(b);
@@ -78,7 +78,7 @@ public static class Keybinds
         return false;
     }
 
-    // ── Lectura ───────────────────────────────────────────────────────────────
+    // -=+=- Lectura -=+=-
 
     private static KeyControl Control(Bind b)
     {
@@ -90,7 +90,7 @@ public static class Keybinds
     public static bool Pressed(Bind b)  { var c = Control(b); return c != null && c.wasPressedThisFrame; }
     public static bool Held(Bind b)     { var c = Control(b); return c != null && c.isPressed; }
 
-    /// <summary>Ruta del Input System («&lt;Keyboard&gt;/space»).</summary>
+    /// <summary>Ruta del Input System ("&lt;Keyboard&gt;/space").</summary>
     public static string Path(Bind b) => Path(Get(b));
 
     public static string Path(Key k)
@@ -101,7 +101,7 @@ public static class Keybinds
         return "<Keyboard>/" + char.ToLowerInvariant(s[0]) + s.Substring(1);
     }
 
-    /// <summary>Pone la tecla de 'b' en la acción (binding número 'index'; en un compuesto WASD: 1 arriba…4 derecha).</summary>
+    /// <summary>Pone la tecla de 'b' en la acción, en el binding número 'index' (en un compuesto WASD, de 1 arriba a 4 derecha).</summary>
     public static void Apply(InputAction action, Bind b, int index = 0)
     {
         if (action == null || index < 0 || index >= action.bindings.Count) return;
@@ -109,9 +109,9 @@ public static class Keybinds
         else action.ApplyBindingOverride(index, Path(b));
     }
 
-    // ── Nombres ───────────────────────────────────────────────────────────────
+    // -=+=- Nombres -=+=-
 
-    /// <summary>Nombre corto de la tecla para enseñarlo («ESPACIO», «SHIFT», «Q»…).</summary>
+    /// <summary>Nombre corto de la tecla para mostrarlo ("ESPACIO", "SHIFT", "Q"...).</summary>
     public static string Name(Bind b) => Name(Get(b));
 
     public static string Name(Key k)
@@ -144,7 +144,7 @@ public static class Keybinds
         return s.ToUpperInvariant();
     }
 
-    /// <summary>Qué hace cada acción (para la pantalla de Controles).</summary>
+    /// <summary>Qué hace cada acción, para la pantalla de controles.</summary>
     public static string Label(Bind b)
     {
         switch (b)
@@ -166,8 +166,8 @@ public static class Keybinds
     }
 
     /// <summary>
-    /// Cambia en un texto los nombres de las teclas POR DEFECTO por las elegidas («[ E ] Tienda» → «[ R ] Tienda»).
-    /// Si no se ha cambiado nada, devuelve el texto tal cual.
+    /// Cambia en un texto los nombres de las teclas por defecto por las elegidas (por ejemplo, "[ E ] Tienda" pasa a
+    /// "[ R ] Tienda"). Si no se ha cambiado nada, devuelve el texto tal cual.
     /// </summary>
     public static string Fix(string s)
     {
@@ -176,13 +176,14 @@ public static class Keybinds
         foreach (Bind b in All) if (Get(b) != Defaults[b]) { any = true; break; }
         if (!any) return s;
 
-        // WASD (las cuatro juntas) primero, para que no lo toquen las letras sueltas.
+        // Primero WASD (las cuatro juntas), para que no lo cambien las letras sueltas.
         string wasd = Name(Bind.Forward) + Name(Bind.Left) + Name(Bind.Back) + Name(Bind.Right);
         string wasdSp = Name(Bind.Forward) + " " + Name(Bind.Left) + " " + Name(Bind.Back) + " " + Name(Bind.Right);
         s = s.Replace("W A S D", "\u0001").Replace("WASD", "\u0002");
 
-        // Una sola pasada (si Q pasa a ser E, esa E nueva no se vuelve a cambiar). Solo palabras sueltas en
-        // MAYÚSCULAS: «E» sí, «EMPEZAR» no. (A y D sueltas no: «SALTA A LA PARED» no es una tecla.)
+        // Se hace en una sola pasada, para que, si Q pasa a ser E, esa E nueva no se vuelva a cambiar. Solo se cambian
+        // palabras sueltas en mayúsculas, como "E", pero no "EMPEZAR". La A y la D sueltas no se cambian, ya que en
+        // "SALTA A LA PARED" no son teclas.
         s = Token.Replace(s, m =>
         {
             Bind b;

@@ -2,21 +2,19 @@ using UnityEngine;
 using UnityEngine.Events;
 
 /// <summary>
-/// Interruptor de MIRADA: se activa cuando el jugador lo mira (crosshair encima, sin paredes de
-/// por medio) durante <see cref="_holdDuration"/> segundos. Al completarse dispara
-/// <see cref="OnActivated"/>, que puedes conectar a lo que quieras — por ejemplo, a
-/// <c>BeatOscillator.Trigger()</c> para abrir una puerta.
+/// Interruptor de mirada. Se activa cuando el jugador lo mira (con el punto de mira encima y sin paredes en medio)
+/// durante <see cref="_holdDuration"/> segundos. Al completarse lanza <see cref="OnActivated"/>, que se puede
+/// conectar a cualquier método, por ejemplo a <c>BeatOscillator.Trigger()</c> para abrir una puerta.
 ///
-/// SETUP:
-///   1. Pon este componente en el objeto-interruptor (necesita un Collider en él o en un hijo).
-///   2. Asigna la cámara del jugador (o se coge Camera.main).
-///   3. Conecta OnActivated → (tu puerta) BeatOscillator.Trigger(), o cualquier método.
-///   4. (Opcional) Conecta OnProgress a una barra/aro de carga, o asigna Fill Scale / Glow Renderer
-///      para un feedback integrado.
+/// Configuración.
+///   1. Se añade este componente al objeto del interruptor, que necesita un Collider en él o en un hijo.
+///   2. Se asigna la cámara del jugador (si no, se usa Camera.main).
+///   3. Se conecta OnActivated a BeatOscillator.Trigger() de la puerta, o a cualquier otro método.
+///   4. Opcionalmente, se conecta OnProgress a una barra o un aro de carga, o se asignan Fill Scale y Glow Renderer
+///      para usar la indicación integrada.
 ///
-/// NOTA (auto-runner): como el jugador avanza solo, coloca el interruptor MÁS ADELANTE en su
-/// camino: así lo mantiene a la vista mientras se acerca y la carga se completa durante la
-/// aproximación. Ajusta Hold Duration a ese tiempo de acercamiento.
+/// Como el jugador avanza solo, el interruptor se coloca más adelante en su camino, de forma que lo tenga a la vista
+/// mientras se acerca y la carga se complete durante la aproximación. Hold Duration se ajusta a ese tiempo.
 /// </summary>
 [AddComponentMenu("Level/Gaze Switch")]
 public class GazeSwitch : MonoBehaviour
@@ -27,7 +25,7 @@ public class GazeSwitch : MonoBehaviour
 
     [Tooltip("Distancia máxima a la que se puede activar mirándolo.")]
     [SerializeField] private float _maxDistance = 40f;
-    /// <summary>Distancia máxima a la que se le puede mirar (BloodSucker no chupa más lejos de esto).</summary>
+    /// <summary>Distancia máxima desde la que se puede mirar. Un BloodSucker no drena sangre más allá de esta distancia.</summary>
     public float MaxDistance => _maxDistance;
 
     [Tooltip("Capas que BLOQUEAN la mirada (paredes, obstáculos) además del propio interruptor.\n" +
@@ -68,7 +66,7 @@ public class GazeSwitch : MonoBehaviour
     public UnityEvent OnGazeStart;
     public UnityEvent OnGazeStop;
 
-    // ── Estado ──────────────────────────────────────────────────────────────────
+    // -=+=- Estado -=+=-
 
     private float _progress;
     private bool  _activated;
@@ -76,13 +74,13 @@ public class GazeSwitch : MonoBehaviour
     private MaterialPropertyBlock _mpb;
     private static readonly int EmissionColorID = Shader.PropertyToID("_EmissionColor");
 
-    /// <summary>Interruptores activos en la escena (los que se crean al jugar también: los lee GazeChargeUI).</summary>
+    /// <summary>Interruptores activos en la escena, incluidos los que se crean durante la partida. Los lee GazeChargeUI.</summary>
     public static readonly System.Collections.Generic.List<GazeSwitch> All = new System.Collections.Generic.List<GazeSwitch>();
 
     private void OnEnable()
     {
         if (!All.Contains(this)) All.Add(this);
-        GazeChargeUI.Ensure();   // (escenas sin aro de carga en el HUD: se crea uno)
+        GazeChargeUI.Ensure();   // si la escena no tiene un aro de carga en el HUD, se crea uno
     }
 
     private void OnDisable() => All.Remove(this);
@@ -102,7 +100,7 @@ public class GazeSwitch : MonoBehaviour
     {
         if (_playerCamera == null || !_playerCamera.isActiveAndEnabled)
         {
-            Camera main = Camera.main;               // la cámara pudo cambiar (p. ej. al subir al kayak)
+            Camera main = Camera.main;               // la cámara puede haber cambiado, por ejemplo al subir al kayak
             if (main != null) _playerCamera = main;
         }
         if (_playerCamera == null) return;
@@ -139,13 +137,13 @@ public class GazeSwitch : MonoBehaviour
         }
     }
 
-    // ── Detección ───────────────────────────────────────────────────────────────
+    // -=+=- Detección -=+=-
 
     private bool IsGazedAt()
     {
         Ray ray = new Ray(_playerCamera.transform.position, _playerCamera.transform.forward);
 
-        // Con raíces ignoradas (p. ej. el jugador y su kayak): el primer collider que NO sea de ellas.
+        // Con raíces ignoradas (por ejemplo, el jugador y su kayak), cuenta el primer collider que no pertenezca a ellas.
         if (_ignoredRoots != null && _ignoredRoots.Length > 0)
         {
             RaycastHit[] hits = Physics.RaycastAll(ray, _maxDistance, _obstruction, QueryTriggerInteraction.Ignore);
@@ -160,8 +158,8 @@ public class GazeSwitch : MonoBehaviour
             return false;
         }
 
-        // El PRIMER collider que encuentra el rayo desde el centro de la cámara. Si es este
-        // interruptor (o un hijo suyo), lo estás mirando directamente y sin pared de por medio.
+        // Primer collider que encuentra el rayo desde el centro de la cámara. Si es este interruptor (o un hijo suyo),
+        // el jugador lo está mirando directamente, sin paredes en medio.
         if (Physics.Raycast(ray, out RaycastHit hit, _maxDistance, _obstruction, QueryTriggerInteraction.Ignore))
         {
             Transform ht = hit.collider.transform;
@@ -181,13 +179,13 @@ public class GazeSwitch : MonoBehaviour
         return false;
     }
 
-    /// <summary>Colliders de estas raíces (y sus hijos) NO tapan la mirada (p. ej. el jugador y su kayak).</summary>
+    /// <summary>Los colliders de estas raíces (y de sus hijos) no tapan la mirada, por ejemplo el jugador y su kayak.</summary>
     public void SetIgnoredRoots(params Transform[] roots) => _ignoredRoots = roots;
 
-    /// <summary>Cámara desde la que se mira (si Camera.main no es la del jugador).</summary>
+    /// <summary>Cámara desde la que se mira, si Camera.main no es la del jugador.</summary>
     public void SetCamera(Camera cam) { if (cam != null) _playerCamera = cam; }
 
-    /// <summary>Nombre del primer collider que tocó el rayo de mirada en el último frame (para depurar).</summary>
+    /// <summary>Nombre del primer collider que tocó el rayo de la mirada en el último fotograma, para depurar.</summary>
     public string LastHitName { get; private set; } = "(sin comprobar)";
 
     private void ApplyVisual(float p)
@@ -203,7 +201,7 @@ public class GazeSwitch : MonoBehaviour
         }
     }
 
-    /// <summary>Reinicia el interruptor (carga a 0, sin activar). Para re-usarlo.</summary>
+    /// <summary>Reinicia el interruptor (carga a 0 y sin activar) para poder volver a usarlo.</summary>
     public void ResetSwitch()
     {
         _progress  = 0f;
@@ -214,8 +212,8 @@ public class GazeSwitch : MonoBehaviour
     }
 
     /// <summary>
-    /// Configura el interruptor desde código (p. ej. los que se añaden en runtime al jefe).
-    /// holdSeconds / maxDistance ≤ 0 → se deja el valor actual. glow = renderer que se ilumina al cargar.
+    /// Configura el interruptor desde el código, por ejemplo los que se añaden al jefe durante la partida. Si holdSeconds
+    /// o maxDistance son menores o iguales que 0, se mantiene el valor actual. glow es el renderer que se ilumina al cargar.
     /// </summary>
     public void Configure(float holdSeconds, float maxDistance, Renderer glow = null)
     {
@@ -229,10 +227,10 @@ public class GazeSwitch : MonoBehaviour
         if (_playerCamera == null) _playerCamera = Camera.main;
     }
 
-    /// <summary>Capas que cuentan para el rayo de mirada (lo primero que toque debe ser este interruptor).</summary>
+    /// <summary>Capas que cuentan para el rayo de la mirada. Lo primero que toque el rayo tiene que ser este interruptor.</summary>
     public void SetObstruction(LayerMask mask) => _obstruction = mask;
 
-    /// <summary>Progreso de carga actual [0..1].</summary>
+    /// <summary>Progreso de carga actual, de 0 a 1.</summary>
     public float Progress => _progress;
     public bool  IsActivated => _activated;
 
@@ -241,7 +239,7 @@ public class GazeSwitch : MonoBehaviour
     {
         Gizmos.color = new Color(0.2f, 0.9f, 1f, 0.9f);
         Gizmos.DrawWireSphere(transform.position, 0.35f);
-        // Rayo de referencia hacia la cámara (si está asignada) para ver la línea de mirada.
+        // Rayo de referencia hacia la cámara (si está asignada), para ver la línea de la mirada.
         if (_playerCamera != null)
         {
             Gizmos.color = new Color(0.2f, 0.9f, 1f, 0.3f);

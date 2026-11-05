@@ -4,27 +4,27 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// CONTRATOS EN JUEGO. Se crea solo en los niveles (escenas con BeatManager y jugador):
-///   • Cuenta saltos, dashes, slides, wallruns y entradas en modo azul (RunStats).
-///   • Aplica las REGLAS de los contratos firmados mientras se juega (fuera del freeroam):
-///       – «Al compás»: salto, dash, slide y remo solo en el beat.
-///       – «A pelo»: sin mejoras ni consumibles de la tienda.
-///   • Muestra a la izquierda los contratos firmados con su progreso en directo.
-///   • Al llegar a la meta, LevelEndManager llama a EvaluateLevelEnd(): los cumplidos quedan por cobrar.
-/// Solo cuentan los contratos firmados DEL NIVEL ACTUAL (cada contrato tiene una versión por nivel). En el nivel 3
-/// cuentan durante todo el nivel, también en la pelea del jefe.
+/// Contratos durante la partida. Se crea solo en los niveles, es decir, en las escenas con BeatManager y jugador.
+///   - Cuenta los saltos, los dashes, los deslizamientos, las carreras por la pared y las entradas en modo azul (RunStats).
+///   - Aplica las reglas de los contratos firmados mientras se juega (fuera de la zona de inicio). Con "Al compás",
+///     saltar, hacer dash, deslizarse y remar solo funcionan en el beat, y con "A pelo" no hay mejoras ni
+///     consumibles de la tienda.
+///   - Muestra a la izquierda los contratos firmados con su progreso en directo.
+///   - Al llegar a la meta, LevelEndManager llama a EvaluateLevelEnd() y los contratos cumplidos quedan por cobrar.
+/// Solo cuentan los contratos firmados del nivel actual, ya que cada contrato tiene una versión por nivel. En el
+/// nivel 3 cuentan durante todo el nivel, también en la pelea del jefe.
 /// </summary>
 public class ContractRunner : MonoBehaviour
 {
     private static ContractRunner _instance;
 
-    /// <summary>True mientras un contrato prohíbe los latidos automáticos (Auto-latido). Lo consulta AutoBeater.</summary>
+    /// <summary>Es true mientras un contrato prohíbe los latidos automáticos (Auto-latido). Lo consulta AutoBeater.</summary>
     public static bool AutoBeatsBlocked { get; private set; }
 
     private PlayerMovement _pm;
     private EnergyManager  _em;
 
-    // Valores originales de las reglas que se tocan (para devolverlos)
+    // Valores originales de las reglas que se cambian, para devolverlos después
     private bool _origJump, _origDash, _origSlide;
     private readonly Dictionary<KayakController, bool> _origPaddle = new Dictionary<KayakController, bool>();
     private bool _suspendedByUs;
@@ -35,7 +35,7 @@ public class ContractRunner : MonoBehaviour
     private RectTransform _hudPanel;
     private float _hudRefresh;
 
-    // ── Aparición automática ──────────────────────────────────────────────────
+    // -=+=- Aparición automática -=+=-
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
@@ -96,7 +96,7 @@ public class ContractRunner : MonoBehaviour
         AutoBeatsBlocked = false;
     }
 
-    // ── Cumplidos a mitad de nivel ────────────────────────────────────────────
+    // -=+=- Contratos cumplidos a mitad de nivel -=+=-
 
     private float _midCheckT;
     private string _bannerText;
@@ -115,7 +115,7 @@ public class ContractRunner : MonoBehaviour
             bool ok;
             try { ok = c.check(now); } catch { ok = false; }
             if (!ok) continue;
-            PlayerProgress.CompleteContract(c.id);   // (se cobra en el puesto de contratos)
+            PlayerProgress.CompleteContract(c.id);   // se cobra en el puesto de contratos
             ShowBanner(Loc.T($"¡CONTRATO CUMPLIDO!  «{c.title}»\n<size=70%>Cobra tus <color=#FFC83A>{c.reward} monedas</color> en el puesto de contratos</size>",
                              $"CONTRACT COMPLETE!  «{c.title}»\n<size=70%>Claim your <color=#FFC83A>{c.reward} coins</color> at the contract stand</size>"));
             Debug.Log($"[Contratos] Cumplido a mitad de nivel «{c.title}» (pendiente de cobrar: {c.reward}).");
@@ -137,7 +137,7 @@ public class ContractRunner : MonoBehaviour
         if (_bannerT <= 0f) _bannerText = null;
     }
 
-    // ── Reglas ────────────────────────────────────────────────────────────────
+    // -=+=- Reglas -=+=-
 
     /// <summary>Reglas de los contratos firmados de este nivel.</summary>
     public static ContractRule ActiveRules()
@@ -153,7 +153,7 @@ public class ContractRunner : MonoBehaviour
     {
         ContractRule rules = Playing ? ActiveRules() : ContractRule.None;
 
-        // «Al compás»: movimientos solo en el beat (solo mientras se juega: en el freeroam no hay música).
+        // "Al compás": los movimientos solo funcionan en el beat, y solo mientras se juega, ya que en la zona de inicio no hay música.
         bool onBeat = (rules & ContractRule.MovesOnBeat) != 0;
         if (_pm != null)
         {
@@ -163,15 +163,15 @@ public class ContractRunner : MonoBehaviour
         }
         foreach (var kv in _origPaddle)
             if (kv.Key != null) kv.Key.paddleRequiresBeat = kv.Value || onBeat;
-        // Con «Al compás» las acciones también valen en los MEDIOS beats.
+        // Con "Al compás", las acciones también valen en los medios beats.
         BeatManager.HalfBeatMoves = onBeat;
-        // «Contrarreloj»: sin latidos automáticos (Auto-latido apagado); cada latido lo tiene que dar el jugador.
+        // "Contrarreloj": sin latidos automáticos (Auto-latido apagado), por lo que cada latido lo tiene que dar el jugador.
         AutoBeatsBlocked = (rules & ContractRule.PressLimit) != 0;
 
-        // Contratos de "consigue N…": se cobran EN CUANTO se cumplen, sin esperar al final del nivel.
+        // Los contratos del tipo "consigue N..." se cobran en cuanto se cumplen, sin esperar al final del nivel.
         if (Playing) CheckMidLevel();
 
-        // «A pelo»: la tienda cuenta como si no tuvieras nada.
+        // "A pelo": la tienda cuenta como si el jugador no tuviera nada.
         bool noShop = (rules & ContractRule.NoShop) != 0;
         if (noShop != _suspendedByUs)
         {
@@ -179,7 +179,7 @@ public class ContractRunner : MonoBehaviour
             _suspendedByUs = noShop;
         }
 
-        // «Contrarreloj»: una pulsación de más → GAME OVER directo (sin vidas extra ni checkpoints).
+        // "Contrarreloj": una pulsación de más es game over directo, sin vidas extra ni puntos de control.
         int pressLimit = ContractCatalog.PressLimitFor(ContractCatalog.CurrentLevel);
         if ((rules & ContractRule.PressLimit) != 0 && !_pressLimitHit && RunStats.HeartPresses > pressLimit)
         {
@@ -194,16 +194,16 @@ public class ContractRunner : MonoBehaviour
 
     private bool _pressLimitHit;
 
-    // ── Final del nivel ───────────────────────────────────────────────────────
+    // -=+=- Final del nivel -=+=-
 
     /// <summary>
-    /// Comprueba los contratos firmados al llegar a la meta. Los cumplidos se marcan y se PAGAN (al monedero).
-    /// Devuelve los cumplidos (para enseñarlos en los resultados).
+    /// Comprueba los contratos firmados al llegar a la meta. Los cumplidos se marcan y se pagan al monedero. Devuelve los
+    /// contratos cumplidos, para mostrarlos en los resultados.
     /// </summary>
     public static List<ContractDef> EvaluateLevelEnd(LevelResult result)
     {
         var done = new List<ContractDef>();
-        // (Firmados que ya no existen en el catálogo, p. ej. de una versión anterior: se quitan.)
+        // Se quitan los contratos firmados que ya no existen en el catálogo.
         foreach (string id in new List<string>(PlayerProgress.ActiveContracts))
             if (ContractCatalog.Get(id) == null) PlayerProgress.SetContractActive(id, false);
 
@@ -217,18 +217,18 @@ public class ContractRunner : MonoBehaviour
         }
         foreach (ContractDef c in done)
         {
-            PlayerProgress.CompleteContract(c.id);   // (se cobra en el puesto de contratos)
+            PlayerProgress.CompleteContract(c.id);   // se cobra en el puesto de contratos
             Debug.Log($"[Contratos] Cumplido «{c.title}» (pendiente de cobrar: {c.reward}).");
         }
         return done;
     }
 
-    // ── HUD ───────────────────────────────────────────────────────────────────
+    // -=+=- HUD -=+=-
 
     private void BuildHud()
     {
         Canvas c = UIKit.CreateCanvas("ContractHUDCanvas", 85, transform);
-        // Mismo estilo que el puesto de contratos (ContractUI / SimpleUI): cajas cuadradas en grises y título arriba.
+        // Mismo estilo que el puesto de contratos (ContractUI y SimpleUI), con cajas cuadradas en grises y el título arriba.
         var panel = SimpleUI.Box("ContractHUD", c.transform, new Color(SimpleUI.PanelCol.r, SimpleUI.PanelCol.g, SimpleUI.PanelCol.b, 0.9f));
         _hudPanel = panel.rectTransform;
         _hudPanel.anchorMin = _hudPanel.anchorMax = new Vector2(0f, 0.5f);
@@ -249,7 +249,7 @@ public class ContractRunner : MonoBehaviour
         SimpleUI.Stretch(_hudText.rectTransform, 12f, 12f, 10f, 10f);
         _hudText.richText = true;
 
-        // Aviso de contrato cumplido (arriba, en el centro)
+        // Aviso de contrato cumplido, arriba y en el centro
         _banner = UIKit.Label("Banner", c.transform, "", 34f, new Color(0.6f, 1f, 0.6f), TMPro.TextAlignmentOptions.Top, true);
         _banner.richText = true;
         _banner.outlineWidth = 0.2f; _banner.outlineColor = new Color(0f, 0f, 0f, 0.85f);
@@ -261,7 +261,7 @@ public class ContractRunner : MonoBehaviour
         UpdateBanner();
         if (_hudGroup == null) return;
         List<ContractDef> here = ContractCatalog.ActiveHere();
-        // Solo en la 2.ª pulsación de TAB (1.ª = controles, 2.ª = contratos, 3.ª = cerrar); entra desde la izquierda.
+        // Solo aparece con la segunda pulsación de TAB (la primera muestra los controles, la segunda los contratos y la tercera cierra), y entra desde la izquierda.
         float open = TutorialHUD.ContractsAmount;
         bool show = Playing && here.Count > 0 && !ContractUI.IsOpen && !ShopUI.IsOpen && open > 0.001f;
         _hudGroup.alpha = show ? open : 0f;
@@ -278,7 +278,7 @@ public class ContractRunner : MonoBehaviour
         foreach (ContractDef cd in here)
         {
             bool broken = cd.broken != null && cd.broken();
-            // Sin colores (como el puesto de contratos): blanco y grises; fallado = tachado y más apagado.
+            // Sin colores, como el puesto de contratos, en blanco y grises. Los contratos fallados aparecen tachados y más apagados.
             string name = broken ? $"<s>{cd.title}</s>" : cd.title;
             sb.Append($"<color=#{(broken ? "8A8A8A" : "FFFFFF")}><b>{name}</b></color>");
             if (broken) sb.Append(Loc.T("  <color=#8A8A8A>(fallado)</color>", "  <color=#8A8A8A>(failed)</color>"));
@@ -288,7 +288,7 @@ public class ContractRunner : MonoBehaviour
         }
         sb.Append(Loc.T("\n<color=#8A8A8A>TAB para cerrar</color>", "\n<color=#8A8A8A>TAB to close</color>"));
         _hudText.text = sb.ToString();
-        // El panel crece con la lista (sin huecos ni texto cortado).
+        // El panel crece con la lista, para que no haya huecos ni texto cortado.
         if (_hudPanel != null)
         {
             float h = _hudText.GetPreferredValues(_hudText.text, 416f - 24f, 0f).y;

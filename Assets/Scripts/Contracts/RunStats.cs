@@ -2,28 +2,30 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// ESTADÍSTICAS DE LA PARTIDA ACTUAL de un nivel (para los contratos): latidos, fallos, Perfect, rachas,
-/// movimientos, modo azul y ayudas usadas.
-///   • Se ponen a cero al cargar un nivel (o reiniciarlo tras morir).
-///   • Si se reaparece en un CHECKPOINT (el nivel se recarga) se conservan: es la misma partida.
-///   • Solo cuenta lo que pasa jugando (no en el freeroam de antes de la puerta).
+/// Estadísticas de la partida actual en un nivel, para los contratos: latidos, fallos, Perfect, rachas, movimientos,
+/// modo azul y ayudas usadas.
+///   - Se ponen a cero al cargar un nivel o al reiniciarlo después de morir.
+///   - Si se reaparece en un punto de control (y el nivel se recarga), se conservan, ya que es la misma partida.
+///   - Solo cuenta lo que pasa jugando, no en la zona de inicio antes de la puerta.
 /// </summary>
 public static class RunStats
 {
-    public static int HeartPresses { get; private set; }   // latidos (clics al corazón / remadas), acertados o no
+    public static int HeartPresses { get; private set; }   // latidos (clics al corazón o remadas), acertados o no
     public static int Hits         { get; private set; }
     public static int Misses       { get; private set; }
     public static int Perfects     { get; private set; }
-    public static int Streak       { get; private set; }   // aciertos seguidos ahora mismo
+    public static int Streak       { get; private set; }   // aciertos seguidos en este momento
     public static int BestStreak   { get; private set; }
     public static int Jumps        { get; private set; }
     public static int Dashes       { get; private set; }
     public static int Slides       { get; private set; }
     public static int Wallruns     { get; private set; }
     public static int BlueEntries  { get; private set; }
-    public static int HelpsUsed    { get; private set; }   // vidas extra, Adrenalina, Paracaídas, checkpoints, rebobinados
-    /// <summary>Muertes en ESTE nivel desde que se empezó (se conservan al reintentar; se ponen a cero al completarlo o
-    /// al cambiar de nivel). Las ayudas usadas (HelpsUsed) también se conservan entre intentos.</summary>
+    public static int HelpsUsed    { get; private set; }   // vidas extra, Adrenalina, Paracaídas, puntos de control y rebobinados
+    /// <summary>
+    /// Muertes en este nivel desde que se empezó. Se conservan al reintentar y se ponen a cero al completarlo o al cambiar
+    /// de nivel. Las ayudas usadas (HelpsUsed) también se conservan entre intentos.
+    /// </summary>
     public static int Deaths       { get; private set; }
 
     private static string _levelScene = "";
@@ -32,14 +34,14 @@ public static class RunStats
     /// <summary>El jugador ha muerto (game over) en el nivel.</summary>
     public static void Death() { Deaths++; OnChanged?.Invoke(); }
 
-    /// <summary>Nivel superado: si se vuelve a jugar, todo empieza de cero (estadísticas, muertes, ayudas, monedas).</summary>
+    /// <summary>Nivel superado. Si se vuelve a jugar, todo empieza de cero (estadísticas, muertes, ayudas y monedas).</summary>
     public static void LevelCompleted() => _levelCompleted = true;
 
     public static event System.Action OnChanged;
 
-    // ── Registro (lo llaman RhythmInput, KayakController, GameOverManager, TimeRewinder, ContractRunner) ──
+    // -=+=- Registro (lo llaman RhythmInput, KayakController, GameOverManager, TimeRewinder y ContractRunner) -=+=-
 
-    /// <summary>Un latido del jugador (clic real al corazón o remada en el kayak).</summary>
+    /// <summary>Un latido del jugador, ya sea un clic al corazón o una remada en el kayak.</summary>
     public static void HeartPress(TimingResult r)
     {
         if (!Counting) return;
@@ -68,7 +70,7 @@ public static class RunStats
     /// <summary>Se ha usado una ayuda de la tienda para no morir.</summary>
     public static void HelpUsed() { HelpsUsed++; OnChanged?.Invoke(); }
 
-    /// <summary>¿Se está jugando el nivel? (música sonando y fuera del freeroam).</summary>
+    /// <summary>Indica si se está jugando el nivel, es decir, con la música sonando y fuera de la zona de inicio.</summary>
     private static bool Counting
     {
         get
@@ -81,7 +83,7 @@ public static class RunStats
     }
     private static PlayerMovement _pm;
 
-    /// <summary>Todo a cero (partida nueva o nivel nuevo).</summary>
+    /// <summary>Pone todo a cero, en una partida o un nivel nuevos.</summary>
     public static void Reset()
     {
         Deaths = HelpsUsed = 0;
@@ -89,7 +91,7 @@ public static class RunStats
         ResetAttempt();
     }
 
-    /// <summary>Solo lo del intento (al reintentar el MISMO nivel tras morir): las muertes y ayudas se conservan.</summary>
+    /// <summary>Reinicia solo lo del intento, al reintentar el mismo nivel después de morir. Las muertes y las ayudas se conservan.</summary>
     private static void ResetAttempt()
     {
         HeartPresses = Hits = Misses = Perfects = Streak = BestStreak = 0;
@@ -109,9 +111,9 @@ public static class RunStats
     {
         if (m != LoadSceneMode.Single) return;
         _pm = null;
-        if (CheckpointSystem.PendingRespawn) return;   // reaparición en checkpoint: misma partida
-        // Reintento del mismo nivel sin haberlo completado: nuevo intento (las muertes se siguen contando).
-        // Nivel distinto, o ya completado: todo de cero.
+        if (CheckpointSystem.PendingRespawn) return;   // reaparición en un punto de control, es la misma partida
+        // Si se reintenta el mismo nivel sin haberlo completado, es un intento nuevo y las muertes se siguen contando. Si
+        // el nivel es distinto o ya se había completado, todo empieza de cero.
         if (s.name == _levelScene && !_levelCompleted) ResetAttempt();
         else { Reset(); _levelScene = s.name; }
     }

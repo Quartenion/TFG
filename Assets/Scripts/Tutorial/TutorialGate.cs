@@ -2,29 +2,29 @@
 public enum TutorialKey { None, Jump, Dash, Slide, Slam, Zipline, Block, DoubleJump }
 
 /// <summary>
-/// «Puerta» del tutorial:
-///   • Mientras el tiempo está PARADO (ver <see cref="TutorialDirector"/>) solo se deja hacer la acción que se explica.
-///   • Durante el tutorial, las acciones que aún NO se han enseñado están BLOQUEADAS (Lock/Unlock).
-/// Fuera del tutorial no hace nada (todo permitido).
+/// "Puerta" del tutorial.
+///   - Mientras el tiempo está parado (ver <see cref="TutorialDirector"/>), solo se deja hacer la acción que se explica.
+///   - Durante el tutorial, las acciones que todavía no se han enseñado están bloqueadas (Lock y Unlock).
+/// Fuera del tutorial no hace nada, por lo que todo está permitido.
 /// </summary>
 public static class TutorialGate
 {
-    /// <summary>¿Está el tiempo parado por el tutorial (con un aviso en pantalla)?</summary>
+    /// <summary>Indica si el tiempo está parado por el tutorial, con un aviso en pantalla.</summary>
     public static bool Frozen { get; set; }
 
-    /// <summary>¿Está el tutorial controlando el tiempo (frenando, parado o reanudando)? Bloquea el menú de pausa.</summary>
+    /// <summary>Indica si el tutorial está controlando el tiempo (frenando, parado o reanudando). Bloquea el menú de pausa.</summary>
     public static bool Busy { get; set; }
 
-    /// <summary>Acción que se está pidiendo mientras está parado (None = ninguna: solo ENTER para seguir).</summary>
+    /// <summary>Acción que se pide mientras el tiempo está parado (None si no se pide ninguna y solo hay que pulsar ENTER para seguir).</summary>
     public static TutorialKey Expected { get; set; }
 
     /// <summary>
-    /// Acción que se va a explicar mientras el tiempo FRENA hacia la parada: no se puede hacer antes de ver el mensaje
-    /// (antes, saltar mientras frenaba —p. ej. en el kayak— se saltaba la explicación).
+    /// Acción que se va a explicar mientras el tiempo frena hasta pararse. No se puede hacer antes de ver el mensaje, ya
+    /// que, si no, el jugador podría saltarse la explicación (por ejemplo, saltando mientras el kayak frena).
     /// </summary>
     public static TutorialKey HoldBack { get; set; }
 
-    private static int _locked;   // máscara de acciones aún no enseñadas
+    private static int _locked;   // máscara de las acciones que todavía no se han enseñado
 
     public static void Lock(TutorialKey k)   => _locked |= 1 << (int)k;
     public static void Unlock(TutorialKey k) => _locked &= ~(1 << (int)k);

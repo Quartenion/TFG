@@ -1,29 +1,27 @@
 using UnityEngine;
 
 /// <summary>
-/// Obstáculo que cae del techo usando caída libre, sincronizado con la música.
+/// Obstáculo que cae del techo en caída libre, sincronizado con la música.
 ///
-/// Coloca el GameObject en la escena a la altura de aterrizaje (Y final).
-/// El script calcula cuándo tiene que empezar a caer para aterrizar exactamente
-/// cuando el jugador llega, usando cinemática de caída libre: y = ceilingY - ½gt²
+/// El GameObject se coloca en la escena a la altura en la que aterriza (la Y final). El script calcula cuándo tiene
+/// que empezar a caer para aterrizar justo cuando llega el jugador, con la fórmula de la caída libre,
+/// y = ceilingY - ½gt².
 ///
-/// CÁLCULO DE TIMING:
+/// Cálculo del momento de la caída.
 ///   fallDistance = ceilingY - landY
-///   fallDuration = √(2 × fallDistance / fallGravity)     ← física real
-///   arrivalDSP   = ScheduledStartDSP + distFromOrigin / walkSpeed
+///   fallDuration = √(2 × fallDistance / fallGravity)
+///   arrivalDSP   = DspAtSongTime(distFromOrigin / walkSpeed)
 ///   startFallDSP = arrivalDSP - fallDuration
 ///
-/// SETUP:
-///   1. Añade este componente al prefab/GameObject del obstáculo.
-///   2. Asigna BeatManager y BeatGridVisualizer.
-///   3. Ajusta _ceilingY y _fallGravity.
-///   4. (Opcional) Añade un hijo con la sombra/icono de aviso y asígnalo a _warningIndicator.
+/// Configuración.
+///   1. Se añade este componente al prefab o GameObject del obstáculo.
+///   2. Se asignan BeatManager y BeatGridVisualizer.
+///   3. Se ajustan _ceilingY y _fallGravity.
+///   4. Opcionalmente, se añade un hijo con la sombra o el icono de aviso y se asigna a _warningIndicator.
 /// </summary>
 public class FallingObstacle : MonoBehaviour, IRewindable
 {
-    // ─────────────────────────────────────────────────────────────────────────
-    // Inspector
-    // ─────────────────────────────────────────────────────────────────────────
+    // -=+=- Inspector -=+=-
 
     [Header("Referencias")]
     [Tooltip("BeatManager de la escena. Se localiza en BeatManager.Instance si se deja vacío.")]
@@ -69,23 +67,19 @@ public class FallingObstacle : MonoBehaviour, IRewindable
              "0 = coincide con el impacto visual. 0.08 = 80 ms antes (valor típico).")]
     [SerializeField] [Min(0f)] private float _sfxLeadTime = 0.08f;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Estado interno
-    // ─────────────────────────────────────────────────────────────────────────
+    // -=+=- Estado interno -=+=-
 
     private float  _landY;
     private double _warningDSP;
     private double _startFallDSP;
-    private double _sfxDSP;          // DSP en el que se dispara el sonido (antes del impacto)
+    private double _sfxDSP;          // instante DSP en el que suena el sonido, antes del impacto
     private bool   _initialized;
     private bool   _sfxPlayed;
 
     private enum Phase { Idle, Warning, Falling, Landed }
     private Phase _phase = Phase.Idle;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Unity lifecycle
-    // ─────────────────────────────────────────────────────────────────────────
+    // -=+=- Ciclo de vida de Unity -=+=-
 
     private void Awake()
     {
@@ -137,11 +131,11 @@ public class FallingObstacle : MonoBehaviour, IRewindable
 
             case Phase.Falling:
             {
-                // Caída libre: y = ceilingY - ½ g t²
+                // Caída libre, y = ceilingY - ½ g t²
                 float t = (float)(now - _startFallDSP);
                 float y = _ceilingY - 0.5f * _fallGravity * t * t;
 
-                // Sonido anticipado: se dispara _sfxLeadTime segundos antes del impacto visual
+                // El sonido se adelanta y suena _sfxLeadTime segundos antes del impacto visual.
                 if (!_sfxPlayed && now >= _sfxDSP)
                 {
                     PlayLandSfx();
@@ -163,9 +157,7 @@ public class FallingObstacle : MonoBehaviour, IRewindable
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Cálculo de timing
-    // ─────────────────────────────────────────────────────────────────────────
+    // -=+=- Cálculo de los tiempos -=+=-
 
     private void CalculateTiming()
     {
@@ -180,7 +172,7 @@ public class FallingObstacle : MonoBehaviour, IRewindable
         _sfxPlayed    = false;
     }
 
-    private double _arrivalOffset = double.NaN;   // segundos de canción hasta que llega el jugador (se calcula una vez)
+    private double _arrivalOffset = double.NaN;   // segundos de canción hasta que llega el jugador (se calcula una sola vez)
 
     private double ComputeArrivalOffset()
     {
@@ -205,8 +197,8 @@ public class FallingObstacle : MonoBehaviour, IRewindable
     }
 
     /// <summary>
-    /// REBOBINADO: recalcula los tiempos con el reloj actual y se coloca directamente en la fase que toca
-    /// (arriba esperando, con el aviso, cayendo o ya en el suelo), sin repetir el golpe si ya había caído.
+    /// Rebobinado. Vuelve a calcular los tiempos con el reloj actual y se coloca directamente en la fase que toca (arriba
+    /// esperando, con el aviso, cayendo o ya en el suelo), sin repetir el golpe si ya había caído.
     /// </summary>
     public void OnTimeRewind()
     {
@@ -214,7 +206,7 @@ public class FallingObstacle : MonoBehaviour, IRewindable
         CalculateTiming();
 
         double now = BeatManager.DspNow;
-        // (Con el tutorial frenando el tiempo, el sonido aún no sonado debe sonar al llegar: no se marca.)
+        // Si el tutorial está frenando el tiempo, el sonido que todavía no ha sonado tiene que sonar al llegar, así que no se marca.
         _sfxPlayed = TutorialGate.Busy ? _sfxPlayed : now >= _sfxDSP;
 
         if (now < _warningDSP)
@@ -239,9 +231,7 @@ public class FallingObstacle : MonoBehaviour, IRewindable
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────────────────────────────────
+    // -=+=- Funciones auxiliares -=+=-
 
     private void ApplyY(float y)
     {
@@ -252,8 +242,8 @@ public class FallingObstacle : MonoBehaviour, IRewindable
 
     private void OnLanded()
     {
-        // El sonido ya se habrá disparado antes (_sfxLeadTime s antes del impacto).
-        // Solo reproducirlo aquí como fallback si por algún motivo no sonó.
+        // El sonido ya habrá sonado antes (_sfxLeadTime segundos antes del impacto). Aquí solo se reproduce si por algún
+        // motivo no llegó a sonar.
         if (!_sfxPlayed) PlayLandSfx();
     }
 
@@ -266,9 +256,7 @@ public class FallingObstacle : MonoBehaviour, IRewindable
             CameraShaker.Instance?.ShakeAt(_shakeTrauma, transform.position);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Gizmos de editor
-    // ─────────────────────────────────────────────────────────────────────────
+    // -=+=- Gizmos del editor -=+=-
 
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected()
@@ -298,7 +286,7 @@ public class FallingObstacle : MonoBehaviour, IRewindable
             fontStyle = FontStyle.Bold,
             fontSize  = 10
         };
-        // Mostrar si los beats configurados son suficientes para completar la caída
+        // Se muestra si los beats configurados son suficientes para completar la caída.
         float beatDur      = BeatManager.BeatDurationOf(_beatManager);
         float triggerSecs  = _beatsBeforeArrival * beatDur;
         string fallWarning = fallTime > triggerSecs

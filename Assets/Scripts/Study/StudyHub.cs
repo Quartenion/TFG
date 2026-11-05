@@ -7,15 +7,16 @@ using UnityEngine.UI;
 using static SimpleUI;
 
 /// <summary>
-/// PANTALLAS DEL MODO PRUEBA en el menú principal (se crea sola en «MainMenu»):
-///   • Botón «JUGAR» → consentimiento informado.
-///   • Antes de cada parte: qué se va a jugar.  • Después: cuestionario corto (1-7).
-///   • Tras la parte 3 (y la 4 y la 5): seguir al siguiente nivel, repetir el nivel en PRÁCTICA LIBRE (todo
-///     desbloqueado, sin registrar datos) o terminar.  • Final: código + cuestionario de Google Forms.
+/// Pantallas del modo prueba en el menú principal. Se crea sola en "MainMenu".
+///   - El botón "JUGAR" abre el consentimiento informado.
+///   - Antes de cada parte se explica qué se va a jugar, y después se muestra el cuestionario corto (de 1 a 7).
+///   - Después de las partes principales, el jugador puede seguir al siguiente nivel, repetir el nivel en práctica
+///     libre (con todo desbloqueado y sin registrar datos) o terminar.
+///   - Al final se muestran el código y el cuestionario de Google Forms.
 /// </summary>
 public class StudyHub : MonoBehaviour
 {
-    /// <summary>Preguntas del cuestionario corto (1 = nada de acuerdo, 7 = totalmente de acuerdo).</summary>
+    /// <summary>Preguntas del cuestionario corto (1 es nada de acuerdo y 7, totalmente de acuerdo).</summary>
     public static string[] Questions => new[]
     {
         Loc.T("Me he divertido.", "I had fun."),
@@ -50,11 +51,11 @@ public class StudyHub : MonoBehaviour
         Cursor.visible = true;
         _canvas = UIKit.CreateCanvas("StudyCanvas", 500, transform).transform;
 
-        // Sin sesión: no se enseña nada. La prueba se empieza con el botón Play del menú cuando el MainMenuManager
-        // tiene marcado «Playtest» (versión que se reparte a los jugadores).
+        // Sin sesión no se muestra nada. La prueba se empieza con el botón Play del menú cuando el MainMenuManager tiene
+        // marcado "Playtest", que es la versión que se reparte a los jugadores.
         if (!StudySession.Active) return;
 
-        // Vuelta de la práctica libre: todo como estaba y otra vez a elegir.
+        // Al volver de la práctica libre, todo queda como estaba y el jugador vuelve a elegir.
         if (StudySession.FreePlay) { StudySession.EndFreePlay(); ShowContinueChoice(); return; }
 
         if (StudySession.AwaitingReturn)
@@ -62,11 +63,11 @@ public class StudyHub : MonoBehaviour
             StudySession.ReturnedToMenu();
             if (StudySession.Current.questionnaire) { ShowQuestionnaire(); return; }
         }
-        else if (StudySession.Step >= 0) { ShowPartIntro(); return; }   // (p. ej. se volvió al menú desde la pausa)
+        else if (StudySession.Step >= 0) { ShowPartIntro(); return; }   // por ejemplo, si se volvió al menú desde la pausa
         AfterPart();
     }
 
-    // ── Pantallas ─────────────────────────────────────────────────────────────
+    // -=+=- Pantallas -=+=-
 
     private Transform NewScreen(string title)
     {
@@ -99,14 +100,14 @@ public class StudyHub : MonoBehaviour
     private static StudyHub _instance;
 
     /// <summary>
-    /// Sala del tutorial: el participante ya ha leído la siguiente parte y va a la puerta grande (lo usa CourseBuilder
-    /// para devolverle el control y abrir esa puerta).
+    /// Sala del tutorial. El participante ya ha leído la siguiente parte y va hacia la puerta grande. Lo usa CourseBuilder
+    /// para devolverle el control y abrir esa puerta.
     /// </summary>
     public static Action RoomPartReady;
     private void Awake() => _instance = this;
     private void OnDestroy() { if (_instance == this) _instance = null; }
 
-    /// <summary>Abre el consentimiento (lo llama el botón Play del menú en la versión de prueba).</summary>
+    /// <summary>Abre el consentimiento. Lo llama el botón Play del menú en la versión de prueba.</summary>
     public static void OpenConsent()
     {
         if (_instance == null) _instance = new GameObject("StudyHub").AddComponent<StudyHub>();
@@ -147,9 +148,9 @@ public class StudyHub : MonoBehaviour
             "usa AURICULARES CON CABLE (los Bluetooth retrasan el sonido) y juega en un sitio tranquilo. " +
             "Durante la partida, TAB muestra los controles.",
             100f, 620f);
-        // (Si no cabe, la letra se reduce un poco; nunca crece.)
+        // Si el texto no cabe, la letra se reduce un poco, pero nunca crece.
         consent.fontSizeMax = consent.fontSize; consent.fontSizeMin = 14f; consent.enableAutoSizing = true;
-        // Aceptado: primero el TUTORIAL (no se registra nada); el estudio empieza en su sala, al cruzar la puerta grande.
+        // Una vez aceptado, primero se juega el tutorial, en el que no se registra nada, y el estudio empieza en su sala, al cruzar la puerta grande.
         Bottom(p, Loc.T("Acepto y quiero participar", "I agree and want to take part"), 40f, () =>
         {
             StudySession.Begin();
@@ -165,7 +166,7 @@ public class StudyHub : MonoBehaviour
         StudySession.Part part = StudySession.Current;
         int total = StudySession.Plan.Length;
         bool course = part.scene == StudySession.CourseScene;
-        if (part.shop) StudySession.GiveShopBudget();   // (presupuesto fijo: todos pueden comprar algo)
+        if (part.shop) StudySession.GiveShopBudget();   // presupuesto fijo, para que todos puedan comprar algo
         Transform p = NewScreen(Loc.T($"Parte {StudySession.Step + 1} de {total} · {part.title}", $"Part {StudySession.Step + 1} of {total} · {part.title}"));
         string rules = course
             ? Loc.T("\n\nSi chocas o te quedas sin energía, podrás volver al último punto de control desde la pantalla de game over, " +
@@ -175,7 +176,7 @@ public class StudyHub : MonoBehaviour
             : Loc.T($"\n\nSi mueres puedes reintentar (hasta {StudySettings.MaxAttemptsPerPart} intentos); después se pasa a la siguiente parte.",
                     $"\n\nIf you die you can retry (up to {StudySettings.MaxAttemptsPerPart} attempts); after that you move on to the next part.");
         string coins = part.shop ? Loc.T($"\nMonedas: {PlayerProgress.Coins}.", $"\nCoins: {PlayerProgress.Coins}.") : "";
-        // En la sala, antes de empezar el estudio: se pueden repetir partes del tutorial por las demás puertas.
+        // En la sala, antes de empezar el estudio, se pueden repetir partes del tutorial por las demás puertas.
         string practice = !StudySession.RunsStarted && SceneManager.GetActiveScene().name != StudySession.MenuScene
             ? Loc.T("\n\nAntes de empezar el estudio, puedes volver a jugar cualquier parte del tutorial acercándote a una de las " +
                     "puertas de la sala. Una vez cruces la puerta grande, el estudio empezará y ya no podrás repetirlas.",
@@ -188,7 +189,7 @@ public class StudyHub : MonoBehaviour
         if (SceneManager.GetActiveScene().name == StudySession.MenuScene)
             Bottom(p, Loc.T("Empezar", "Start"), 40f, StudySession.StartPart);
         else
-            // En la sala del tutorial: la parte empieza al cruzar la PUERTA GRANDE.
+            // En la sala del tutorial, la parte empieza al cruzar la puerta grande.
             Bottom(p, Loc.T("Ir a la puerta grande", "Go to the big door"), 40f, () =>
             {
                 Destroy(_screen); _screen = null;
@@ -196,7 +197,7 @@ public class StudyHub : MonoBehaviour
             });
         if (part.shop)
         {
-            // La tienda y los contratos se abren desde aquí (la escena del recorrido no tiene zona de inicio).
+            // La tienda y los contratos se abren desde aquí, ya que la escena del recorrido no tiene zona de inicio.
             Bottom(p, Loc.T("Abrir la tienda", "Open the shop"), 450f, () =>
             {
                 _screen.SetActive(false);
@@ -241,7 +242,7 @@ public class StudyHub : MonoBehaviour
             y += 62f;
         }
 
-        // Tras la 2.ª partida del Nivel 1: ¿cuál ha gustado más?
+        // Después del segundo recorrido se pregunta qué configuración ha gustado más.
         string pref = null;
         if (part.preference)
         {
@@ -274,17 +275,17 @@ public class StudyHub : MonoBehaviour
         });
     }
 
-    /// <summary>Después de una parte: la siguiente, la elección de seguir (tras la 3.ª) o el final.</summary>
+    /// <summary>Después de una parte se muestra la siguiente, la elección de seguir o el final.</summary>
     private void AfterPart()
     {
         StudySession.NextPart();
-        if (StudySession.Step >= StudySession.Plan.Length) { StudySession.MarkStudyCompleted(); ShowEnd(); return; }   // (estudio terminado: cuestionario final)
+        if (StudySession.Step >= StudySession.Plan.Length) { StudySession.MarkStudyCompleted(); ShowEnd(); return; }   // estudio terminado, cuestionario final
         ShowPartIntro();
     }
 
     /// <summary>
-    /// Tras el Nivel 3: «puesto final» para cobrar los contratos cumplidos (en la prueba se vuelve al menú en vez de
-    /// a la escena final, así que el puesto se abre aquí). Si no hay nada que cobrar, se va directo al final.
+    /// Después del nivel 3 se abre el puesto final para cobrar los contratos cumplidos, ya que en la prueba se vuelve al
+    /// menú en lugar de ir a la escena final. Si no hay nada que cobrar, se pasa directamente al final.
     /// </summary>
     private void ShowFinalStand()
     {
@@ -307,8 +308,8 @@ public class StudyHub : MonoBehaviour
     }
 
     /// <summary>
-    /// Tras la parte 3 (y las siguientes): CONTINUAR al siguiente nivel, REPETIR el nivel jugado en práctica libre
-    /// (todo desbloqueado, no se registra nada) o TERMINAR.
+    /// Después de las partes principales, el jugador puede continuar al siguiente nivel, repetir el nivel jugado en
+    /// práctica libre (con todo desbloqueado y sin registrar nada) o terminar.
     /// </summary>
     private void ShowContinueChoice()
     {
@@ -363,7 +364,7 @@ public class StudyHub : MonoBehaviour
                       "Afterwards, the normal mode (PLAY) is unlocked in the menu."), 100f, 500f);
         string url = string.IsNullOrEmpty(StudySettings.FinalFormUrl) ? null : StudySettings.FinalFormUrl.Replace("CODIGO", Uri.EscapeDataString(StudySession.Participant));
         Bottom(p, Loc.T("Abrir el cuestionario final", "Open the final questionnaire"), 40f, () => { if (url != null && StudyTelemetry.IsSafeUrl(url)) Application.OpenURL(url); });
-        // Volver al menú: la prueba queda terminada y JUGAR (modo normal) ya está desbloqueado.
+        // Al volver al menú, la prueba queda terminada y JUGAR (el modo normal) ya está desbloqueado.
         Bottom(p, Loc.T("Volver al menú", "Back to menu"), 450f, () =>
         {
             Destroy(_screen); _screen = null;

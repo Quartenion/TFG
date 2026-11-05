@@ -7,33 +7,34 @@ using TMPro;
 /// <summary>
 /// Gestiona la secuencia de inicio del nivel.
 ///
-/// FLUJO:
-///   Primera vez   → Intro → pantalla con 3 círculos + metrónomo → canción + correr.
-///   Restart/muerte → salta la intro directamente a los 3 círculos.
+/// Flujo.
+///   La primera vez se reproduce la intro, después aparece la pantalla con los círculos y el metrónomo y, al
+///   completarla, empiezan la canción y la carrera. Al reiniciar o al morir, se salta la intro y se pasa directamente
+///   a los círculos.
 ///
-/// METRÓNOMO:
-///   Los mismos tics generados por código que el Metrónomo de la tienda (MetronomeClicks), programados con
-///   PlayScheduled en el instante DSP exacto de cada beat → sin latencia. Suena SIEMPRE (no depende de la tienda).
-///   Tic AGUDO (beat fuerte) = puedes empezar: suena en CADA beat mientras no has empezado la racha.
-///   En cuanto aciertas el «1», los siguientes suenan GRAVES (2, 3, ¡YA!). Si fallas, el siguiente beat vuelve
-///   a ser agudo y puedes empezar ahí mismo (sin esperar a ningún compás). Ej.: HHHHH(acierta)HLL(falla)HHLLL.
+/// Metrónomo.
+///   Usa los mismos tics generados por código que el Metrónomo de la tienda (MetronomeClicks), programados con
+///   PlayScheduled en el instante DSP exacto de cada beat, por lo que no tienen latencia. Suena siempre, ya que no
+///   depende de la tienda. El tic agudo indica que el jugador puede empezar, y suena en cada beat mientras no ha
+///   empezado la racha. En cuanto acierta el "1", los siguientes suenan graves (2, 3, ¡YA!). Si falla, el siguiente
+///   beat vuelve a ser agudo y puede empezar ahí mismo, sin esperar a ningún compás. Por ejemplo, con A para agudo y G
+///   para grave, AAAAA (acierta) AGG (falla) AAGGG.
 ///
-/// ACIERTO / FALLO:
-///   · Acierto → el círculo pulsa en verde.
-///   · Fallo   → TODOS los círculos correctos anteriores + el actual sacuden
-///               y vuelven a gris. Se reinicia a 0.
-///   · Solo LATE el círculo que toca pulsar ahora (el «1» mientras no has empezado; luego el 2, el 3 y el ¡YA!).
-///   · El tic de cada beat se decide en el último momento (ClickLead): si aciertas dentro del margen suena el que
-///     toca (grave); si fallas o se pasa el margen, el siguiente vuelve a ser agudo.
+/// Aciertos y fallos.
+///   - Con un acierto, el círculo late en verde.
+///   - Con un fallo, todos los círculos acertados y el actual tiemblan y vuelven a gris, y la cuenta vuelve a 0.
+///   - Solo late el círculo que toca pulsar (el "1" mientras no ha empezado la racha, y luego el 2, el 3 y el ¡YA!).
+///   - El tic de cada beat se decide en el último momento (ClickLead). Si el jugador acierta dentro del margen, suena
+///     el que toca (grave), y si falla o se pasa el margen, el siguiente vuelve a ser agudo.
 ///
-/// SETUP:
-///   · _introSource   → AudioSource con el clip de la intro asignado (loop OFF).
-///   · _sfxSource     → AudioSource para efectos de acierto/error.
-///   · Circle Roots   → Circle1, Circle2, Circle3. Image y TMP_Text se buscan solos.
+/// Configuración en el Inspector.
+///   - _introSource es el AudioSource con el clip de la intro asignado, sin bucle.
+///   - _sfxSource es el AudioSource para los efectos de acierto y fallo.
+///   - Circle Roots son los círculos, cuyos Image y TMP_Text se buscan automáticamente.
 /// </summary>
 public class StartSequenceManager : MonoBehaviour
 {
-    // ── Audio ─────────────────────────────────────────────────────────────
+    // -=+=- Audio -=+=-
 
     [Header("Audio — Intro (se omite en restart)")]
     [Tooltip("AudioSource con el clip de la intro ya asignado en su campo 'AudioClip'. Loop OFF.")]
@@ -50,7 +51,7 @@ public class StartSequenceManager : MonoBehaviour
     [SerializeField] private AudioClip   _hitOkSound;
     [SerializeField] private AudioClip   _hitErrorSound;
 
-    // ── Juego ─────────────────────────────────────────────────────────────
+    // -=+=- Juego -=+=-
 
     [Header("Referencias de juego")]
     [SerializeField] private BeatManager    _beatManager;
@@ -58,7 +59,7 @@ public class StartSequenceManager : MonoBehaviour
     [SerializeField] private RhythmInput    _rhythmInput;
     [SerializeField] private EnergyManager  _energyManager;
 
-    // ── UI ────────────────────────────────────────────────────────────────
+    // -=+=- Interfaz -=+=-
 
     [Header("UI — Overlay gris")]
     [SerializeField] private CanvasGroup _overlay;
@@ -67,13 +68,13 @@ public class StartSequenceManager : MonoBehaviour
     [Tooltip("4 GameObjects: los 3 numéricos + el círculo ¡YA!. Image y TMP_Text se buscan dentro.")]
     [SerializeField] private GameObject[] _circleRoots = new GameObject[4];
 
-    // ── Beat ──────────────────────────────────────────────────────────────
+    // -=+=- Beat -=+=-
 
     [Header("Beat")]
     [SerializeField] private float _bpm       = 180f;
     [SerializeField] private float _hitWindow = 0.12f;
 
-    // ── Animaciones ───────────────────────────────────────────────────────
+    // -=+=- Animaciones -=+=-
 
     [Header("Animación — Pulso (acierto)")]
     [SerializeField] private float _pulseScale    = 1.35f;
@@ -94,7 +95,7 @@ public class StartSequenceManager : MonoBehaviour
     [Header("Fade del overlay al salir")]
     [SerializeField] private float _fadeDuration = 0.4f;
 
-    // ── Colores ───────────────────────────────────────────────────────────
+    // -=+=- Colores -=+=-
 
     [Header("Colores")]
     [SerializeField] private Color _colorIdle = new Color(0.85f, 0.85f, 0.85f, 1f);
@@ -138,23 +139,25 @@ public class StartSequenceManager : MonoBehaviour
     [Tooltip("Posición Y (altura) del test. Solo se aplica si 'Test Override XY' está activo.")]
     [SerializeField] private float _testStartY = 1f;
 
-    // ── Estado (static: sobrevive al reload de escena) ────────────────────
+    // -=+=- Estado estático, que se mantiene al recargar la escena -=+=-
 
-    /// <summary>Escenas en las que la intro ya se ha reproducido al menos una vez.</summary>
-    /// La intro suena UNA vez por nivel cada vez que se abre el juego: la lista se vacía al arrancar (también al
-    /// darle a Play en el editor, aunque esté desactivado el "domain reload").
+    /// <summary>
+    /// Escenas en las que la intro ya se ha reproducido al menos una vez. La intro suena una vez por nivel cada vez que
+    /// se abre el juego, ya que la lista se vacía al arrancar (también al pulsar Play en el editor, aunque esté
+    /// desactivado el "domain reload").
+    /// </summary>
     private static readonly System.Collections.Generic.HashSet<string> s_introPlayedScenes
         = new System.Collections.Generic.HashSet<string>();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetIntroMemory() => s_introPlayedScenes.Clear();
 
-    /// <summary>(Mediciones / pruebas) Salta siempre la intro del nivel. Lo activa ClockComparisonLogger.</summary>
+    /// <summary>Salta siempre la intro del nivel, para las mediciones y las pruebas. Lo activa ClockComparisonLogger.</summary>
     public static bool ForceSkipIntro { get; set; }
 
-    // ── Estado de instancia ───────────────────────────────────────────────
+    // -=+=- Estado de la instancia -=+=-
 
-    private float _testSongOffset = 0f;  // offset de canción calculado en modo test
+    private float _testSongOffset = 0f;  // offset de la canción calculado en el modo test
 
     private const int TOTAL_CIRCLES = 4; // 1, 2, 3, ¡YA!
 
@@ -165,24 +168,23 @@ public class StartSequenceManager : MonoBehaviour
     private double   _lastBeatDSP;
     private double   _nextBeatDSP;
     private MetronomeClicks _clicks;
-    private double   _lastClickDSP;  // último beat con tic ya programado
-    private bool     _lastClickHigh; // …y si era agudo
-    private const double ClickLead = 0.05;   // antelación mínima con la que se programa cada tic (decidir tarde)
+    private double   _lastClickDSP;  // último beat con el tic ya programado
+    private bool     _lastClickHigh; // ...y si era agudo
+    private const double ClickLead = 0.05;   // antelación mínima con la que se programa cada tic, para decidirlo lo más tarde posible
     private Image[]      _imgs          = new Image[TOTAL_CIRCLES];
     private TMP_Text[]   _texts         = new TMP_Text[TOTAL_CIRCLES];
     private Coroutine[]  _activeAnims      = new Coroutine[TOTAL_CIRCLES];
-    private Coroutine[]  _idleAnims        = new Coroutine[TOTAL_CIRCLES]; // pulso metrónomo
+    private Coroutine[]  _idleAnims        = new Coroutine[TOTAL_CIRCLES]; // pulso del metrónomo
     private Vector2[]    _originPos        = new Vector2[TOTAL_CIRCLES];
+    // con la racha empezada, beat exacto en el que tiene que caer el siguiente acierto
     private double       _expectedBeatDSP;
-    private double       _streakStartDSP = -1.0;   // beat (DSP) en el que empezó la racha actual   // con la racha empezada: beat EXACTO en el que toca el siguiente acierto
+    private double       _streakStartDSP = -1.0;   // beat (DSP) en el que empezó la racha actual
 
-    // =========================================================================
-    // INICIO
-    // =========================================================================
+    // -=+=- Inicio -=+=-
 
     /// <summary>
-    /// Reloj del 3-2-1-¡YA!: instante DSP de un beat del metrónomo y su intervalo (−1 = aún no ha salido la cuenta).
-    /// Lo usan los carteles del tutorial para latir solo desde que aparece la cuenta.
+    /// Reloj de la cuenta atrás, con el instante DSP de un beat del metrónomo y su intervalo (-1 si todavía no ha salido
+    /// la cuenta). Lo usan los carteles del tutorial para latir solo desde que aparece la cuenta.
     /// </summary>
     public static double CountdownBeatDSP { get; private set; } = -1;
     public static double CountdownBeatInterval { get; private set; } = 0.5;
@@ -192,19 +194,19 @@ public class StartSequenceManager : MonoBehaviour
     private void Start()
     {
         CountdownBeatDSP = -1;
-        // Por si se pierde alguna referencia del Inspector (p. ej. entre prefabs): se buscan en la escena.
+        // Si se pierde alguna referencia del Inspector (por ejemplo, entre prefabs), se busca en la escena.
         if (_beatManager    == null) _beatManager    = BeatManager.Instance != null ? BeatManager.Instance : FindAnyObjectByType<BeatManager>();
         if (_playerMovement == null) _playerMovement = FindAnyObjectByType<PlayerMovement>();
         if (_rhythmInput    == null) _rhythmInput    = FindAnyObjectByType<RhythmInput>();
         if (_energyManager  == null) _energyManager  = FindAnyObjectByType<EnergyManager>();
         Time.timeScale       = 1f;
         AudioListener.pause  = false;
-        AudioListener.volume = GameSettings.Volume;   // (el volumen elegido en Ajustes)
+        AudioListener.volume = GameSettings.Volume;   // el volumen elegido en los ajustes
 
         if (_rhythmInput   != null) _rhythmInput.enabled   = false;
         if (_energyManager != null) _energyManager.enabled = false;
 
-        // Cachear Image, TMP_Text y posición en reposo de cada círculo
+        // Se guardan el Image, el TMP_Text y la posición en reposo de cada círculo.
         for (int i = 0; i < TOTAL_CIRCLES; i++)
         {
             if (i < _circleRoots.Length && _circleRoots[i] != null)
@@ -222,7 +224,7 @@ public class StartSequenceManager : MonoBehaviour
         PreloadClip(_introSource);
         if (_beatManager != null) _beatManager.PreloadAudio();
 
-        // Reaparición en un CHECKPOINT (tienda): sin freeroam ni puerta; directos al 3-2-1 desde ese punto.
+        // Al reaparecer en un punto de control (tienda), no hay zona de inicio ni puerta y se pasa directamente a la cuenta atrás desde ese punto.
         if (CheckpointSystem.PendingRespawn)
         {
             StartCoroutine(CheckpointSequence());
@@ -231,16 +233,16 @@ public class StartSequenceManager : MonoBehaviour
 
         if (_waitForInteraction)
         {
-            // Freeroam: cursor bloqueado para poder moverse en primera persona
+            // En la zona de inicio, el cursor se bloquea para poder moverse en primera persona.
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible   = false;
-            // Activar movimiento libre: el jugador puede moverse hasta que pulse E
+            // Se activa el movimiento libre, y el jugador puede moverse hasta que pulse E.
             if (_playerMovement != null)
                 _playerMovement.EnableFreeroam();
-            // Ocultar barra de energía durante freeroam
+            // La barra de energía se oculta en la zona de inicio.
             if (_energyBarRoot != null)
                 _energyBarRoot.SetActive(false);
-            // La secuencia la lanza StartWall al pulsar E
+            // La secuencia la lanza StartWall cuando el jugador pulsa E.
         }
         else
         {
@@ -251,37 +253,35 @@ public class StartSequenceManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Lanza la secuencia de inicio manualmente (llamado por StartWall cuando
-    /// el jugador pulsa E). Solo funciona si _waitForInteraction está activo.
+    /// Lanza la secuencia de inicio. La llama StartWall cuando el jugador pulsa E, y solo funciona si
+    /// _waitForInteraction está activo.
     /// </summary>
     public void TriggerSequence()
     {
         if (_challengeActive || _launching) return;
-        // En modo freeroam el cursor ya está bloqueado; no lo cambiamos aquí porque
-        // PauseMenuManager interpreta el paso Locked→None como si el jugador pulsara ESC.
-        // El cursor se mantiene bloqueado durante toda la intro y se gestiona en LaunchGame.
+        // En la zona de inicio el cursor ya está bloqueado, y no se cambia aquí, ya que PauseMenuManager interpreta el paso
+        // de Locked a None como si el jugador hubiese pulsado ESC. El cursor se mantiene bloqueado durante toda la intro y
+        // se gestiona en LaunchGame.
         if (!_waitForInteraction)
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible   = true;
         }
-        // Mostrar barra de energía durante la introducción (antes de que arranque el juego)
+        // La barra de energía se muestra durante la introducción, antes de que empiece la partida.
         if (_energyBarRoot != null) _energyBarRoot.SetActive(true);
         StartCoroutine(Sequence());
     }
 
-    // =========================================================================
-    // UPDATE
-    // =========================================================================
+    // -=+=- Update -=+=-
 
     private void Update()
     {
-        // No procesar nada si el juego está pausado
+        // Si el juego está pausado, no se procesa nada.
         if (!_challengeActive || _launching || AudioListener.pause) return;
 
         double now = AudioSettings.dspTime;
 
-        // ── Avanzar marcadores de beat ─────────────────────────────────────
+        // -=+=- Avance de los marcadores de beat -=+=-
         bool newBeat = false;
         while (now >= _nextBeatDSP)
         {
@@ -290,28 +290,28 @@ public class StartSequenceManager : MonoBehaviour
             newBeat = true;
         }
 
-        // ── Metrónomo: programar el tic del PRÓXIMO beat en su instante DSP exacto ──
+        // -=+=- Metrónomo, que programa el tic del próximo beat en su instante DSP exacto -=+=-
         if (_clicks != null && _nextBeatDSP > _lastClickDSP + 0.001 && _nextBeatDSP - now <= ClickLead)
         {
-            // Agudo si aún no ha empezado la racha… o si la racha empieza justo en ESTE beat (clic un pelín adelantado,
-            // antes de programar su tic: antes salía grave y el primer tic de la racha no era agudo).
+            // El tic es agudo si todavía no ha empezado la racha, o si la racha empieza justo en este beat, es decir, si el clic
+            // llegó un poco adelantado, antes de programar su tic.
             bool high = _hitsOk == 0 || System.Math.Abs(_nextBeatDSP - _streakStartDSP) < 0.001;
             ScheduleClick(_nextBeatDSP, high);
         }
 
-        // ── Auto-fallo por beat perdido ────────────────────────────────────
-        // Con la racha empezada, el siguiente acierto tiene que caer en el beat que toca: en cuanto se cierra su
-        // ventana sin clic, se reinicia (y el tic del siguiente beat ya sale agudo).
+        // -=+=- Fallo automático por beat perdido -=+=-
+        // Con la racha empezada, el siguiente acierto tiene que caer en el beat que toca, así que, en cuanto se cierra su
+        // ventana sin ningún clic, la cuenta se reinicia y el tic del siguiente beat ya sale agudo.
         if (_hitsOk > 0 && now > _expectedBeatDSP + _hitWindow)
         {
             TriggerAutoFail();
             return;
         }
 
-        // ── Pulso visual del metrónomo (más grande en el beat fuerte) ──────
+        // -=+=- Pulso visual del metrónomo, más grande en el beat fuerte -=+=-
         if (newBeat) PulseIdleCircles(_hitsOk == 0);
 
-        // ── Input ──────────────────────────────────────────────────────────
+        // -=+=- Entrada -=+=-
         bool hit = Keybinds.Pressed(Keybinds.Bind.Jump);
         if (!hit && Mouse.current != null)
             hit = Mouse.current.leftButton.wasPressedThisFrame;
@@ -323,13 +323,11 @@ public class StartSequenceManager : MonoBehaviour
 #endif
     }
 
-    // =========================================================================
-    // SECUENCIA PRINCIPAL
-    // =========================================================================
+    // -=+=- Secuencia principal -=+=-
 
     private IEnumerator Sequence()
     {
-        // ── Modo test: teleportar al jugador y calcular offset, luego flujo normal ──
+        // -=+=- Modo test: se teletransporta al jugador, se calcula el offset y se sigue el flujo normal -=+=-
         if (_testMode)
         {
             if (_playerMovement == null || _beatManager == null)
@@ -338,7 +336,7 @@ public class StartSequenceManager : MonoBehaviour
                 yield break;
             }
 
-            // Teleportar. Z siempre; X e Y solo si se ha activado el override.
+            // Teletransporte. La Z se cambia siempre, y la X y la Y solo si se ha activado el override.
             Vector3 pos = _playerMovement.transform.position;
             pos.z = _testStartZ;
             if (_testOverrideXY)
@@ -347,15 +345,15 @@ public class StartSequenceManager : MonoBehaviour
                 pos.y = _testStartY;
             }
 
-            // El CharacterController puede resistir el cambio de posicion; se desactiva
-            // un instante para que el teleport (sobre todo la altura Y) se aplique limpio.
+            // El CharacterController puede impedir el cambio de posición, por lo que se desactiva un instante para que el
+            // teletransporte (sobre todo la altura) se aplique bien.
             CharacterController cc = _playerMovement.GetComponent<CharacterController>();
             bool ccWasEnabled = cc != null && cc.enabled;
             if (ccWasEnabled) cc.enabled = false;
             _playerMovement.transform.position = pos;
             if (ccWasEnabled) cc.enabled = true;
 
-            // Guardar el offset de canción; se usará en LaunchGame()
+            // Se guarda el offset de la canción, que se usará en LaunchGame().
             _testSongOffset = _testStartZ / _playerMovement.walkSpeed;
 
             float beatApprox = _testSongOffset / _beatManager.BeatDuration;
@@ -364,12 +362,12 @@ public class StartSequenceManager : MonoBehaviour
                 : $"Z={_testStartZ:F0} m";
             Debug.Log($"[StartSequenceManager] TEST  {posInfo}  |  beat ≈{beatApprox:F0}  |  offset={_testSongOffset:F2} s");
 
-            // Saltar intro siempre en test mode, luego la secuencia 3-2-1-YA! normal
+            // En el modo test se salta siempre la intro y después se hace la cuenta atrás normal.
             BeginChallenge();
             yield break;
         }
 
-        // ── Flujo normal: intro + secuencia ──────────────────────────────────
+        // -=+=- Flujo normal, con la intro y la secuencia -=+=-
         string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         if (!_debugSkipIntro && !ForceSkipIntro && !s_introPlayedScenes.Contains(scene) && _introSource != null && _introSource.clip != null)
         {
@@ -379,7 +377,7 @@ public class StartSequenceManager : MonoBehaviour
             s_introPlayedScenes.Add(scene);
         }
 
-        // El 3-2-1-¡YA! no sale hasta que el jugador ha llegado al Starting Point (así no puede salir antes).
+        // La cuenta atrás no aparece hasta que el jugador ha llegado al Starting Point, para que no pueda salir antes.
         if (_playerMovement == null) _playerMovement = FindAnyObjectByType<PlayerMovement>();
         float waited = 0f;
         while (_playerMovement != null && _playerMovement.IsMovingToStart && waited < 15f)
@@ -394,13 +392,13 @@ public class StartSequenceManager : MonoBehaviour
     private bool _checkpointMode;
 
     /// <summary>
-    /// Reaparición en el checkpoint: coloca al jugador, recupera las monedas que llevaba y lanza el 3-2-1 normal;
-    /// al completarlo la canción arranca justo en el segundo del checkpoint (como el modo test).
+    /// Reaparición en el punto de control. Coloca al jugador, recupera las monedas que llevaba y lanza la cuenta atrás
+    /// normal. Al completarla, la canción empieza justo en el segundo del punto de control, como en el modo test.
     /// </summary>
     private IEnumerator CheckpointSequence()
     {
         CheckpointSystem.State st = CheckpointSystem.ConsumePending();
-        yield return null;   // que el resto de Start (puertas, etc.) ya se hayan ejecutado
+        yield return null;   // para que el resto de Start (puertas, etc.) ya se haya ejecutado
 
         foreach (var d in FindObjectsByType<DoorInteraction>()) d.SkipForCheckpoint();
         foreach (var w in FindObjectsByType<StartWall>())       w.SkipForCheckpoint();
@@ -417,7 +415,7 @@ public class StartSequenceManager : MonoBehaviour
             _playerMovement.transform.position = st.pos;
             if (ccWasEnabled) cc.enabled = true;
         }
-        // (Las monedas de la partida se conservan solas al reaparecer: ver LevelCoins.)
+        // Las monedas de la partida se conservan solas al reaparecer (ver LevelCoins).
 
         _checkpointMode = true;
         _testSongOffset = st.songOffset;
@@ -432,7 +430,7 @@ public class StartSequenceManager : MonoBehaviour
         _expectedBeatDSP  = 0.0;
         _ticks.Clear();
 
-        // Metrónomo: el primer tic (agudo) se programa en el reloj DSP; los demás, desde Update.
+        // Metrónomo. El primer tic, que es agudo, se programa en el reloj DSP, y los demás desde Update.
         double metStart = AudioSettings.dspTime + 0.08;
         if (_clicks == null) _clicks = new MetronomeClicks(gameObject);
         ScheduleClick(metStart, true);
@@ -447,37 +445,34 @@ public class StartSequenceManager : MonoBehaviour
         _challengeActive = true;
     }
 
-    // =========================================================================
-    // LÓGICA DE HIT
-    // =========================================================================
+    // -=+=- Aciertos -=+=-
 
     private void HandleHit()
     {
         if (_hitsOk >= TOTAL_CIRCLES) return;
 
-        // Beat al que corresponde el clic (el más cercano). Con la racha empezada TIENE que ser el que toca:
-        // un clic de más en el mismo beat, o acertar tras haberse saltado uno, es un fallo.
+        // Beat al que corresponde el clic, que es el más cercano. Con la racha empezada, tiene que ser el que toca, por lo
+        // que un clic de más en el mismo beat, o acertar después de saltarse uno, cuenta como fallo.
         double now       = AudioSettings.dspTime;
         double clickBeat = (_nextBeatDSP - now) < (now - _lastBeatDSP) ? _nextBeatDSP : _lastBeatDSP;
-        // La racha SOLO puede empezar en un beat con tic AGUDO (antes, tras varios fallos seguidos, un segundo clic en
-        // el mismo beat —cuyo tic era grave— empezaba la racha y al llegar al ¡YA! faltaba el último tic grave).
+        // La racha solo puede empezar en un beat con tic agudo, para que al llegar al ¡YA! no falte el último tic grave.
         bool ok = IsOnBeat() && (_hitsOk == 0 ? TickWasHigh(clickBeat)
                                               : System.Math.Abs(clickBeat - _expectedBeatDSP) < 0.001);
         if (ok)
         {
-            // ── Acierto ──────────────────────────────────────────────────
+            // -=+=- Acierto -=+=-
             PlaySfx(_hitOkSound);
             if (_hitsOk == 0) _streakStartDSP = clickBeat;
             StopAnim(_hitsOk);
             _activeAnims[_hitsOk] = StartCoroutine(AnimatePulse(_hitsOk));
             _hitsOk++;
-            _expectedBeatDSP = clickBeat + _beatInterval;   // el siguiente, justo en el beat de después
+            _expectedBeatDSP = clickBeat + _beatInterval;   // el siguiente tiene que caer justo en el beat de después
             Debug.Log($"[StartSequence] Acierto {_hitsOk}/{TOTAL_CIRCLES}");
             if (_hitsOk >= TOTAL_CIRCLES) StartCoroutine(LaunchGame());
         }
         else
         {
-            // ── Fallo manual: sacudir todos los círculos completados + el actual ──
+            // -=+=- Fallo manual: tiemblan todos los círculos acertados y el actual -=+=-
             PlaySfx(_hitErrorSound);
             int affected = _hitsOk + 1;
             _hitsOk           = 0;
@@ -510,16 +505,16 @@ public class StartSequenceManager : MonoBehaviour
         _clicks.Schedule(at, high, _clickVolume);
         _lastClickDSP  = at;
         _lastClickHigh = high;
-        _ticks.RemoveAll(k => System.Math.Abs(k.t - at) < 0.001);   // (si se reprograma el mismo beat)
+        _ticks.RemoveAll(k => System.Math.Abs(k.t - at) < 0.001);   // por si se vuelve a programar el mismo beat
         _ticks.Add((at, high));
         if (_ticks.Count > 8) _ticks.RemoveAt(0);
     }
 
-    /// <summary>Tics programados recientes (instante DSP, agudo o no).</summary>
+    /// <summary>Tics programados recientemente (instante DSP y si son agudos).</summary>
     private readonly System.Collections.Generic.List<(double t, bool high)> _ticks =
         new System.Collections.Generic.List<(double t, bool high)>();
 
-    /// <summary>¿El beat de 'beatDSP' tuvo (o va a tener) tic agudo? Sin tic registrado → se acepta.</summary>
+    /// <summary>Indica si el beat de 'beatDSP' tuvo (o va a tener) un tic agudo. Si no hay tic registrado, se acepta.</summary>
     private bool TickWasHigh(double beatDSP)
     {
         foreach (var k in _ticks)
@@ -528,8 +523,8 @@ public class StartSequenceManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Tras un fallo: si el tic del próximo beat ya estaba programado como grave, se cambia por uno agudo
-    /// (se puede volver a empezar en ese mismo beat).
+    /// Después de un fallo, si el tic del próximo beat ya estaba programado como grave, se cambia por uno agudo, ya que
+    /// se puede volver a empezar en ese mismo beat.
     /// </summary>
     private void ForceNextClickHigh()
     {
@@ -546,28 +541,26 @@ public class StartSequenceManager : MonoBehaviour
         return System.Math.Min(toNext, sinceLast) <= _hitWindow;
     }
 
-    // =========================================================================
-    // LANZAR JUEGO
-    // =========================================================================
+    // -=+=- Inicio de la partida -=+=-
 
     private IEnumerator LaunchGame()
     {
         _challengeActive = false;
         _launching       = true;
 
-        _clicks?.StopAll();   // (el beat de inicio ya lo marca la canción)
-        // …pero si el ¡YA! se pulsó un pelín ANTES de su beat, el StopAll se llevaba también el tic grave de ESE
-        // beat (ya programado) y el ¡YA! sonaba sin tic. Se vuelve a programar si aún no ha sonado.
+        _clicks?.StopAll();   // el beat de inicio ya lo marca la canción
+        // Si el ¡YA! se pulsó un poco antes de su beat, StopAll también quitaría el tic grave de ese beat, que ya estaba
+        // programado, y el ¡YA! sonaría sin tic, por lo que se vuelve a programar si todavía no ha sonado.
         double yaBeat = _expectedBeatDSP - _beatInterval;
         if (_clicks != null && yaBeat > AudioSettings.dspTime + 0.005) ScheduleClick(yaBeat, false);
 
-        // Programar canción y jugador en el siguiente beat (el 4º círculo acaba de pulsar)
-        // Los círculos siguen visibles durante el pulse animation (~0.18 s) y se ocultan
-        // cuando llega el beat de inicio (0.33 s después), quedando una transición limpia.
-        double startDSP = _expectedBeatDSP;   // el beat justo después del ¡YA! (aunque se haya pulsado un pelín antes)
+        // La canción y el jugador se programan en el siguiente beat, ya que el cuarto círculo acaba de latir. Los círculos
+        // siguen visibles durante la animación del latido (unos 0,18 s) y se ocultan cuando llega el beat de inicio (0,33 s
+        // después), para que la transición quede limpia.
+        double startDSP = _expectedBeatDSP;   // el beat justo después del ¡YA!, aunque se haya pulsado un poco antes
 
         if ((_testMode || _checkpointMode) && _testSongOffset > 0f)
-            _beatManager.StartMusicFromAt(_testSongOffset, startDSP);  // arranca desde el offset de test
+            _beatManager.StartMusicFromAt(_testSongOffset, startDSP);  // empieza desde el offset de test
         else
             _beatManager.StartMusicAt(startDSP);
 
@@ -580,15 +573,15 @@ public class StartSequenceManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible   = false;
 
-        // Esperar el beat de inicio (la animación de pulso del 4º círculo ocurre aquí)
+        // Se espera al beat de inicio. Mientras tanto, se reproduce la animación del latido del cuarto círculo.
         while (AudioSettings.dspTime < startDSP)
             yield return null;
 
-        // Parar todas las animaciones antes de ocultar
+        // Se paran todas las animaciones antes de ocultar los círculos.
         for (int i = 0; i < TOTAL_CIRCLES; i++) StopAnim(i);
         HideCircles();
 
-        // Desvanecer overlay
+        // Se desvanece la capa superpuesta.
         float t = 0f;
         while (t < _fadeDuration)
         {
@@ -600,9 +593,7 @@ public class StartSequenceManager : MonoBehaviour
         SetOverlay(false);
     }
 
-    // =========================================================================
-    // ANIMACIONES
-    // =========================================================================
+    // -=+=- Animaciones -=+=-
 
     private IEnumerator AnimatePulse(int idx)
     {
@@ -627,7 +618,7 @@ public class StartSequenceManager : MonoBehaviour
         _activeAnims[idx] = null;
     }
 
-    /// <summary>Sacude el círculo y lo devuelve a color idle (usado en reset).</summary>
+    /// <summary>Hace temblar el círculo y lo devuelve al color en reposo. Se usa al reiniciar la cuenta.</summary>
     private IEnumerator AnimateShakeAndReset(int idx)
     {
         if (!Valid(idx)) yield break;
@@ -652,21 +643,19 @@ public class StartSequenceManager : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(0.1f);
         if (_imgs[idx] != null) _imgs[idx].color = idx == TOTAL_CIRCLES - 1 ? _colorYaIdle : _colorIdle;
-        _activeAnims[idx] = null;   // (sin esto el círculo dejaba de latir con el metrónomo tras un fallo)
+        _activeAnims[idx] = null;   // así el círculo sigue latiendo con el metrónomo después de un fallo
     }
 
-    // =========================================================================
-    // PULSO IDLE (METRÓNOMO)
-    // =========================================================================
+    // -=+=- Pulso en reposo (metrónomo) -=+=-
 
     /// <summary>
-    /// Late SOLO el círculo que toca pulsar ahora (más fuerte si aún no has empezado la racha).
-    /// No reemplaza animaciones de acierto/error activas.
+    /// Hace latir solo el círculo que toca pulsar, con más fuerza si todavía no ha empezado la racha. No sustituye a las
+    /// animaciones de acierto o fallo que estén en marcha.
     /// </summary>
     private void PulseIdleCircles(bool highBeat)
     {
         int i = _hitsOk;   // solo late el círculo que toca pulsar ahora
-        if (!Valid(i) || _activeAnims[i] != null) return;   // respetar acierto/error en curso
+        if (!Valid(i) || _activeAnims[i] != null) return;   // no se interrumpe un acierto o un fallo en curso
         if (_idleAnims[i] != null) { StopCoroutine(_idleAnims[i]); _idleAnims[i] = null; }
         _idleAnims[i] = StartCoroutine(AnimateIdlePulse(i, highBeat ? _highBeatPulseScale : _idlePulseScale));
     }
@@ -692,13 +681,11 @@ public class StartSequenceManager : MonoBehaviour
         _idleAnims[idx]  = null;
     }
 
-    // =========================================================================
-    // HELPERS
-    // =========================================================================
+    // -=+=- Funciones auxiliares -=+=-
 
     /// <summary>
-    /// Cancela la corrutina activa de un círculo (si la hay) y restaura su transform
-    /// al estado en reposo (escala 1, posición original).
+    /// Cancela la corrutina activa de un círculo, si la hay, y devuelve su transform al estado en reposo (escala 1 y
+    /// posición original).
     /// </summary>
     private void StopAnim(int idx)
     {
@@ -725,7 +712,7 @@ public class StartSequenceManager : MonoBehaviour
     {
         for (int i = 0; i < TOTAL_CIRCLES; i++)
         {
-            StopAnim(i);      // cancelar cualquier animación residual antes de mostrar
+            StopAnim(i);      // se cancela cualquier animación que quede antes de mostrar los círculos
             if (!Valid(i)) continue;
             _circleRoots[i].SetActive(true);
             bool isYa = (i == TOTAL_CIRCLES - 1);

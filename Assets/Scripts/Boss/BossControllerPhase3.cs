@@ -2,33 +2,37 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// FASE 3 del jefe — Persecución en la lava (parte de <see cref="BossController"/>).
+/// Fase 3 del jefe, la persecución en la lava (parte de <see cref="BossController"/>).
 ///
-/// TRANSICIÓN (≈7 beats):
-///   0-2  El jefe PIERDE EL EQUILIBRIO (se tambalea cada vez más).
-///   2    Intenta AGARRARSE: estampa los dos puños contra la plataforma de delante.
-///   2.5  La plataforma tiembla y aparece un ATAÚD-KAYAK (prefab Coffin) YA FLOTANDO en la lava justo en
-///        la Z donde caerá el jugador (predicción con su velocidad y la gravedad).
-///   4    El suelo SE HUNDE: jugador y jefe caen a la vez; el jugador aterriza en el kayak. El jefe RASCA la
-///        cara de la plataforma de arriba a abajo con zarpazos alternos (dejando surcos) hasta la lava.
-///   4-7  El jefe se HUNDE en la lava (sin tapar nunca brazos ni cabeza) y deja de tambalearse.
+/// Transición (unos 7 beats).
+///   0-2  El jefe pierde el equilibrio y se tambalea cada vez más.
+///   2    Intenta agarrarse y golpea con los dos puños la plataforma de delante.
+///   2,5  La plataforma tiembla y aparece un ataúd-kayak (prefab Coffin), ya flotando en la lava, justo en la Z en la
+///        que caerá el jugador (calculada con su velocidad y la gravedad).
+///   4    El suelo se hunde, el jugador y el jefe caen a la vez y el jugador aterriza en el kayak. El jefe rasca la
+///        cara de la plataforma de arriba abajo con zarpazos alternos, dejando surcos, hasta llegar a la lava.
+///   4-7  El jefe se hunde en la lava (sin tapar nunca los brazos ni la cabeza) y deja de tambalearse.
 ///
-/// CICLOS (3): cada uno con la dificultad de su ronda (fácil → media → difícil). Con ESCUDO, uno a uno:
-///   1. PINCHOS en la lava (capa Obstacle, solo la cara frontal es letal): altos → carril, bajos → saltar.
-///   2. TRIDENTE LANZADO (mismo arco y velocidad que el barrido, suelto y girando; la otra mano lo coge) → saltar.
-///   3. BLOODSUCKERS que CHUPAN SANGRE de verdad. Vuelan con el jefe; se eliminan MIRÁNDOLOS.
-///   4. Muertos todos → cae el escudo y se marca la parte a mirar (brazo izq → brazo der → cabeza).
-///   5. Mirarla 'Gaze Hold Beats' → 1 golpe:
-///        · 1ª mano → se rebela y le da 4 puñetazos en la cara (por su lado, en el beat) y vuelve a su sitio;
-///        · 2ª mano → los DOS puños se intercalan pegándole en la cara (6 golpes, uno por beat);
-///   (los BloodSuckers, al mirarlos, se giran contra el jefe y le chupan la sangre; con todos girados cae el escudo)
-///        · cabeza → las dos manos la agarran y la hunden en la lava → derrotado.
-/// FINAL: sale terreno de la lava, el kayak se rompe (el jugador sale despedido y cae en él); el loop del jefe
-///   NO se corta (termina su vuelta), luego LDNM-END y, al acabar la canción entera, EMERGE el END.
+/// Ciclos (3), cada uno con la dificultad de su ronda (fácil, media y difícil). Con el escudo puesto, los ataques
+/// llegan de uno en uno.
+///   1. Pinchos en la lava (capa Obstacle, con solo la cara frontal letal). Los altos se esquivan cambiando de carril
+///      y los bajos, saltando.
+///   2. Tridente lanzado (con el mismo arco y velocidad que el barrido, suelto y girando, y lo coge la otra mano), que
+///      se esquiva saltando.
+///   3. BloodSuckers, que drenan sangre de verdad y vuelan con el jefe. Al mirarlos, se giran contra el jefe y le
+///      drenan la sangre a él.
+///   4. Cuando todos los BloodSuckers se han girado, cae el escudo y se marca la parte que hay que mirar (brazo
+///      izquierdo, brazo derecho y cabeza).
+///   5. Mirar la parte durante 'Gaze Hold Beats' cuenta como un golpe.
+///        - Con la primera mano, el puño se rebela, le da 4 puñetazos en la cara (por su lado y en el beat) y vuelve a su sitio.
+///        - Con la segunda mano, los dos puños se intercalan para golpearle en la cara (6 golpes, uno por beat).
+///        - Con la cabeza, las dos manos la agarran y la hunden en la lava, y el jefe queda derrotado.
+/// Final. Sale terreno de la lava y el kayak se rompe (el jugador sale despedido y cae en el terreno). El bucle del
+/// jefe no se corta, sino que termina su vuelta, después suena LDNM-END y, al acabar la canción entera, aparece el END.
 /// </summary>
 public partial class BossController
 {
-    // ── Configuración ────────────────────────────────────────────────────────
+    // -=+=- Configuración -=+=-
 
     [System.Serializable]
     public class Phase3Tier
@@ -101,34 +105,34 @@ public partial class BossController
     [Header("Fase 3 — dificultad por ciclo — [0] Fácil · [1] Media · [2] Difícil")]
     [SerializeField] private Phase3Tier[] _phase3Tiers =
     {
-        //             bichos · pinchos (mín, máx, cada) · % altos · beats de pinchos · lanzamientos
-        new Phase3Tier(5,        1, 2, 2f,               0.7f,     8f,                1),   // fácil  (brazo izq)
-        new Phase3Tier(7,        2, 3, 1f,               0.7f,     8f,                2),   // media  (brazo der)
+        //             bichos · pinchos (mín., máx., cada) · % altos · beats de pinchos · lanzamientos
+        new Phase3Tier(5,        1, 2, 2f,               0.7f,     8f,                1),   // fácil (brazo izquierdo)
+        new Phase3Tier(7,        2, 3, 1f,               0.7f,     8f,                2),   // media (brazo derecho)
         new Phase3Tier(9,        2, 4, 1f,               0.6f,     10f,               3),   // difícil (cabeza)
     };
 
-    // ── Estado ──────────────────────────────────────────────────────────────
+    // -=+=- Estado -=+=-
 
-    // Ciclo: Attacking (pinchos → tridente) → Suckers (BloodSuckers que chupan) → Exposed (mirar) → PartBreaking
+    // Ciclo: Attacking (pinchos y tridente), Suckers (BloodSuckers que drenan), Exposed (mirar) y PartBreaking
     private enum Phase3Sub { Transition, Attacking, Suckers, Exposed, PartBreaking, Finished }
     private Phase3Sub _p3sub = Phase3Sub.Transition;
 
-    // Tiempos de la transición (en beats desde el inicio de la fase).
+    // Tiempos de la transición, en beats desde el inicio de la fase
     private const float P3WobbleEnd     = 2f;    // se tambalea cada vez más hasta aquí
-    private const float P3GrabBeat      = 2f;    // se AGARRA al borde de la plataforma con los dos puños
-    private const float P3CrumbleBeat   = 2.5f;  // la plataforma empieza a DESMORONARSE (tiembla)…
-    private const float P3ShakeBeats    = 1.5f;  //   …durante 1.5 beats
-    private const float P3FallBeat      = 4f;    // se rompe: todo CAE (suelo, jefe agarrado y jugador → kayak)
-    private const float P3PlatformFall  = 4f;    // beats que tarda el suelo en hundirse (lento: da tiempo a rascarlo)
-    private const float P3ReleaseBeat   = 6.5f;  // ya en la lava: suelta el borde (puños a su sitio)
-    private const float P3SinkEnd       = 7f;    // termina de caer/hundirse
+    private const float P3GrabBeat      = 2f;    // se agarra al borde de la plataforma con los dos puños
+    private const float P3CrumbleBeat   = 2.5f;  // la plataforma empieza a desmoronarse (tiembla)...
+    private const float P3ShakeBeats    = 1.5f;  //   ...durante 1,5 beats
+    private const float P3FallBeat      = 4f;    // se rompe y cae todo (el suelo, el jefe agarrado y el jugador, que cae en el kayak)
+    private const float P3PlatformFall  = 4f;    // beats que tarda el suelo en hundirse (despacio, para que dé tiempo a rascarlo)
+    private const float P3ReleaseBeat   = 6.5f;  // ya en la lava, suelta el borde y los puños vuelven a su sitio
+    private const float P3SinkEnd       = 7f;    // termina de caer y hundirse
     private const float P3CycleStart    = 8f;    // empieza el primer ciclo
     private const float P3WobbleDeg     = 12f;
-    private const float P3HangMaxDrop   = 4f;    // lo que se hunde colgado ANTES de que se rompa el suelo (m)
+    private const float P3HangMaxDrop   = 4f;    // metros que se hunde colgado antes de que se rompa el suelo
 
     private double     _p3Start;
     private bool       _p3CrumbleDone, _p3BreakDone, _p3Released;
-    private float      _p3GroundY;               // superficie de la plataforma (donde se agarra)
+    private float      _p3GroundY;               // superficie de la plataforma, donde se agarra
     private float      _p3SinkOffset;            // metros hundido (lo aplica ApplyClimb)
     private float      _p3SinkTarget;
     private Quaternion _p3BodyRestRot;
@@ -151,7 +155,7 @@ public partial class BossController
         ? _phase3Tiers[Mathf.Clamp(_roundDifficulty, 0, _phase3Tiers.Length - 1)]
         : new Phase3Tier(3, 1, 2, 2f, 0.7f, 8f, 1);
 
-    // ── Entrada ─────────────────────────────────────────────────────────────
+    // -=+=- Entrada -=+=-
 
     private void EnterPhase3()
     {
@@ -163,7 +167,7 @@ public partial class BossController
         _p3SinkOffset = 0f;
         _p3SeatOffset = float.MaxValue;
 
-        // Restos de la Fase 2: cabeza a su sitio y fuera el spike.
+        // Restos de la fase 2: la cabeza vuelve a su sitio y se quita el pincho.
         if (_head != null && _headCaptured)
         {
             _head.localPosition = _headRestLocalPos;
@@ -175,8 +179,8 @@ public partial class BossController
         if (_platformSpawner == null) _platformSpawner = FindAnyObjectByType<BossPlatformSpawner>();
         _p3BodyRestRot = BossT.localRotation;
 
-        // La mirada solo cuenta si lo PRIMERO que toca el rayo es la parte objetivo: se apagan el resto de
-        // colliders del jefe (p. ej. HitBoss, que ya no hace falta) para que no tapen brazos ni cabeza.
+        // La mirada solo cuenta si lo primero que toca el rayo es la parte objetivo, así que se apagan el resto de
+        // colliders del jefe (por ejemplo, HitBoss, que ya no hace falta) para que no tapen los brazos ni la cabeza.
         Transform[] targets = P3Targets();
         foreach (Collider c in GetComponentsInChildren<Collider>())
         {
@@ -189,14 +193,13 @@ public partial class BossController
             if (!isTarget) c.enabled = false;
         }
 
-        // Los GazeSwitch de la fase, APAGADOS hasta que les toque.
+        // Los GazeSwitch de la fase están apagados hasta que les toque.
         if (_phase3GazeSwitches != null)
             foreach (GazeSwitch g in _phase3GazeSwitches)
                 if (g != null) { g.ResetSwitch(); g.enabled = false; }
 
-        // ¿Cuánto BAJA el jefe? Primero lo MISMO que cae el jugador (de la plataforma a la lava) —esto faltaba:
-        // antes solo se calculaba el hundimiento extra y, con los puños a ras de suelo, salía ~0 → no bajaba—,
-        // y además se HUNDE un poco en la lava, sin tapar nunca brazos ni cabeza.
+        // Cuánto baja el jefe. Primero, lo mismo que cae el jugador (de la plataforma a la lava) y, además, se hunde un
+        // poco en la lava, sin tapar nunca los brazos ni la cabeza.
         _p3GroundY = (_playerCC != null && _playerCC.enabled) ? _playerCC.bounds.min.y : _lastGroundY;
         float lavaY  = LavaY();
         float fall   = Mathf.Max(0f, _p3GroundY - lavaY);
@@ -216,7 +219,7 @@ public partial class BossController
                                 $"baja {fall:F1} m hasta la lava + se hunde {submerge:F1} m).");
     }
 
-    // ── Bucle por frame ─────────────────────────────────────────────────────
+    // -=+=- Bucle de cada fotograma -=+=-
 
     private void UpdatePhase3()
     {
@@ -233,23 +236,23 @@ public partial class BossController
 
             case Phase3Sub.Attacking:
                 UpdateP3Shield(now);
-                UpdateP3Attacks(now);   // UN ataque cada vez: pinchos → tridente(s) → BloodSuckers
+                UpdateP3Attacks(now);   // un ataque cada vez: pinchos, tridente y BloodSuckers
                 break;
 
             case Phase3Sub.Suckers:
                 UpdateP3Shield(now);
                 UpdateP3SpawnQueue();   // van saliendo de uno en uno, uno por beat
                 UpdateP3Suckers();
-                if (AllSuckersTurned()) ExposeP3Part();   // todos girados contra el jefe → cae el escudo
+                if (AllSuckersTurned()) ExposeP3Part();   // cuando todos se han girado contra el jefe, cae el escudo
                 break;
 
             case Phase3Sub.Exposed:
             case Phase3Sub.PartBreaking:
-                UpdateP3Suckers();   // siguen con el jefe, chupándole la sangre
+                UpdateP3Suckers();   // siguen con el jefe, drenándole la sangre
                 break;
         }
 
-        // (2º paso del mismo frame: lo propio de cada estado)
+        // Segundo paso del mismo fotograma, con lo propio de cada estado
         switch (_p3sub)
         {
             case Phase3Sub.Exposed:
@@ -263,18 +266,18 @@ public partial class BossController
         }
     }
 
-    // ── Transición: tambaleo → agarre → derrumbe + kayak → hundirse ─────────
+    // -=+=- Transición: tambaleo, agarre, derrumbe con el kayak y hundimiento -=+=-
 
     private void UpdateP3Transition(float tb)
     {
-        // Tambaleo: crece hasta P3WobbleEnd y luego se va apagando mientras cae.
+        // El tambaleo crece hasta P3WobbleEnd y después se va apagando mientras cae.
         float amp = tb < P3WobbleEnd
             ? P3WobbleDeg * Mathf.SmoothStep(0f, 1f, tb / P3WobbleEnd)
             : P3WobbleDeg * Mathf.Clamp01(1f - (tb - P3WobbleEnd) / (P3SinkEnd - P3WobbleEnd));
         float roll = Mathf.Sin(tb * Mathf.PI * 2f) * amp;   // un vaivén por beat
         BossT.localRotation = _p3BodyRestRot * Quaternion.Euler(0f, 0f, roll);
 
-        // 1) Se AGARRA al borde con los dos puños (y los mantiene ahí, bajando con el borde cuando cae).
+        // 1) Se agarra al borde con los dos puños y los mantiene ahí, bajando con el borde cuando cae.
         if (tb >= P3GrabBeat && !_p3Released)
         {
             if (tb < P3GrabBeat + 0.05f && _verbose && _rightFist != null && !_rightFistGrabLogged)
@@ -282,12 +285,12 @@ public partial class BossController
             HoldP3Edge(tb);
         }
 
-        // 2) La plataforma se DESMORONA (tiembla) y a P3FallBeat se rompe y cae a la lava. En ese momento el
-        //    kayak ya está FLOTANDO en la lava, justo donde va a caer el jugador.
+        // 2) La plataforma se desmorona (tiembla) y, en P3FallBeat, se rompe y cae a la lava. En ese momento, el kayak ya
+        //    está flotando en la lava, justo donde va a caer el jugador.
         if (!_p3CrumbleDone && tb >= P3CrumbleBeat)
         {
             _p3CrumbleDone = true;
-            // El jugador cae con la MISMA gravedad que los bloques del suelo (y el kayak se predice con ella).
+            // El jugador cae con la misma gravedad que los bloques del suelo, y la posición del kayak se calcula con ella.
             if (_pm != null) _pm.SetGravityOverride(_p3FallGravity);
             if (_platformSpawner != null)
             {
@@ -298,17 +301,17 @@ public partial class BossController
             if (_verbose) Debug.Log("[Boss] La plataforma se desmorona…");
         }
 
-        // 3) Se rompe: el jefe y el jugador caen A LA VEZ (el jugador, en caída libre, al kayak).
+        // 3) Se rompe, y el jefe y el jugador caen a la vez (el jugador, en caída libre, al kayak).
         if (!_p3BreakDone && tb >= P3FallBeat)
         {
             _p3BreakDone = true;
             if (_verbose) Debug.Log("[Boss] ¡Se rompe! El jefe cae a la lava arrastrando la plataforma.");
         }
         if (_p3BreakDone) CatchPlayerWithKayak();
-        // Ya en el kayak (o terminada la transición): gravedad normal otra vez.
+        // Ya en el kayak, o al terminar la transición, la gravedad vuelve a ser la normal.
         if (_pm != null && _p3BreakDone && (_pm.IsOnKayak || tb >= P3CycleStart)) _pm.SetGravityOverride(0f);
 
-        // 4) Ya en la lava: suelta el borde y los puños vuelven a su sitio.
+        // 4) Ya en la lava, suelta el borde y los puños vuelven a su sitio.
         if (!_p3Released && tb >= P3ReleaseBeat)
         {
             _p3Released = true;
@@ -317,8 +320,8 @@ public partial class BossController
             if (_leftFist  != null) _leftFist.ManualRelease(BeatDuration, 1.5f);
         }
 
-        // Caída del cuerpo: colgado se hunde un poco mientras el suelo se desmorona; al romperse cae con él
-        // hasta la lava (lo mismo que el jugador) y un poco más.
+        // Caída del cuerpo. Colgado, se hunde un poco mientras el suelo se desmorona y, al romperse, cae con él hasta la
+        // lava (lo mismo que el jugador) y un poco más.
         float hang = _p3SinkTarget > 0.01f ? Mathf.Min(0.3f, P3HangMaxDrop / _p3SinkTarget) : 0f;
         float s;
         if (tb < P3CrumbleBeat)   s = 0f;
@@ -336,15 +339,15 @@ public partial class BossController
     private bool _rightFistGrabLogged;
 
     // Rascado de la plataforma al caer
-    private const float P3ScrapeStrokeBeats = 0.5f;   // un zarpazo por mano cada medio beat (alternas)
+    private const float P3ScrapeStrokeBeats = 0.5f;   // un zarpazo por mano cada medio beat, alternando
     private const float P3ScrapeReach       = 3f;     // metros que sube la mano en cada zarpazo
     private readonly List<GameObject> _p3ScrapeTrails = new List<GameObject>();
 
     /// <summary>
-    /// Los puños en el BORDE de la plataforma de delante (hacia el jugador):
-    ///   • Agarre → derrumbe: se aferran arriba, temblando con el suelo.
-    ///   • Al romperse: el jefe se CAE y RASCA la cara de la plataforma DE ARRIBA A ABAJO con zarpazos
-    ///     alternos (cada mano sube rápido y arrastra hacia abajo), dejando surcos, hasta llegar a la lava.
+    /// Los puños en el borde de la plataforma de delante (hacia el jugador).
+    ///   - Desde el agarre hasta el derrumbe, se aferran arriba, temblando con el suelo.
+    ///   - Al romperse, el jefe cae y rasca la cara de la plataforma de arriba abajo con zarpazos alternos (cada mano
+    ///     sube rápido y arrastra hacia abajo), dejando surcos, hasta llegar a la lava.
     /// </summary>
     private void HoldP3Edge(float tb)
     {
@@ -369,30 +372,30 @@ public partial class BossController
 
             if (!falling)
             {
-                // Aferrado arriba; tiembla con el suelo que se desmorona.
+                // Aferrado arriba, tiembla con el suelo que se desmorona.
                 float shake = tb >= P3CrumbleBeat ? 0.25f * Mathf.Sin((float)AudioSettings.dspTime * 40f + i) : 0f;
                 y = top + shake;
             }
             else
             {
-                // Baja de ARRIBA A ABAJO a la vez que cae el cuerpo…
+                // Baja de arriba abajo a la vez que cae el cuerpo...
                 float f = Mathf.Clamp01((tb - P3FallBeat) / (P3ReleaseBeat - P3FallBeat));
                 f = f * f * (3f - 2f * f);
                 float baseY = Mathf.Lerp(top, bottom, f);
 
-                // …a ZARPAZOS: sube rápido (30 %) y arrastra hacia abajo (70 %). Las manos van alternas.
+                // ...a zarpazos, subiendo rápido (30 %) y arrastrando hacia abajo (70 %). Las manos van alternas.
                 float ph = (tb - P3FallBeat) / P3ScrapeStrokeBeats + (i == 1 ? 0f : 0.5f);
                 float p  = ph - Mathf.Floor(ph);
                 float stroke = p < 0.3f ? p / 0.3f : 1f - (p - 0.3f) / 0.7f;
                 float rise   = p < 0.3f ? Mathf.Sin(Mathf.PI * p / 0.3f) : 0f;
                 y = Mathf.Max(bottom, baseY + stroke * P3ScrapeReach * (1f - 0.6f * f));
-                z -= dirZ * 1.2f * rise;                      // al subir se separa un poco; al bajar, clava
+                z -= dirZ * 1.2f * rise;                      // al subir se separa un poco, y al bajar, se clava
             }
             fist.ManualHold(new Vector3(x, y, z), falling ? 30f : 12f);
         }
     }
 
-    /// <summary>Surcos/chispas que dejan las manos al rascar (TrailRenderer temporal en cada puño).</summary>
+    /// <summary>Surcos y chispas que dejan las manos al rascar (un TrailRenderer temporal en cada puño).</summary>
     private void StartScrapeTrails()
     {
         foreach (BossFistSlam fist in new[] { _rightFist, _leftFist })
@@ -400,7 +403,7 @@ public partial class BossController
             if (fist == null) continue;
             var go = new GameObject("ScrapeTrail");
             go.transform.SetParent(fist.transform, false);
-            // En la cara de la mano que roza la plataforma (abajo-delante).
+            // En la cara de la mano que roza la plataforma (abajo y delante)
             go.transform.localPosition = Vector3.zero;
             var tr = go.AddComponent<TrailRenderer>();
             tr.time = 0.6f;
@@ -422,11 +425,11 @@ public partial class BossController
     }
 
     /// <summary>
-    /// Pone el ataúd-kayak YA TUMBADO Y FLOTANDO en la lava, en el punto EXACTO donde caerá el jugador:
-    ///   Z = donde está + lo que avanza corriendo hasta que se rompe el suelo + lo que avanza mientras cae
-    ///       (tiempo de caída libre = √(2·altura / gravedad del jugador)).
-    ///   X = la del jugador. Orientado hacia donde avanza.
-    /// El jugador cae libre (no controla nada en el aire) y, al entrar en su caja de activación, queda sentado.
+    /// Coloca el ataúd-kayak, ya tumbado y flotando en la lava, en el punto exacto en el que caerá el jugador.
+    ///   - La Z es su posición, más lo que avanza corriendo hasta que se rompe el suelo, más lo que avanza mientras cae
+    ///     (el tiempo de caída libre es √(2·altura / gravedad del jugador)).
+    ///   - La X es la del jugador, y está orientado hacia donde avanza.
+    /// El jugador cae libre (sin controlar nada en el aire) y, al entrar en la caja de activación, queda sentado.
     /// </summary>
     private void SpawnFloatingKayak(float secondsUntilFall)
     {
@@ -442,48 +445,48 @@ public partial class BossController
         float   g    = _pm != null ? Mathf.Max(1f, _pm.CurrentGravity) : 30f;
 
         float kayakY = LavaY() + _kayakPrefab.floatHeight;
-        float height = Mathf.Max(0f, PlayerT.position.y - kayakY);            // pivote del jugador → kayak
+        float height = Mathf.Max(0f, PlayerT.position.y - kayakY);            // del pivote del jugador al kayak
         float tFall  = Mathf.Sqrt(2f * height / g);
         Vector3 land = PlayerT.position + run * (walk * (Mathf.Max(0f, secondsUntilFall) + tFall));
         land.y = kayakY;
 
-        // Orientación TUMBADA: la misma que tendría tras volcarse (yaw hacia donde avanza + giro de volcado).
+        // Orientación tumbada, la misma que tendría después de volcar (giro hacia donde avanza más el giro del vuelco)
         float yaw = Mathf.Atan2(run.x, run.z) * Mathf.Rad2Deg;
         Quaternion flat = Quaternion.Euler(0f, yaw, 0f) *
                           Quaternion.AngleAxis(_kayakPrefab.tiltAngle, _kayakPrefab.tiltAxis.normalized);
 
         _p3Kayak = Instantiate(_kayakPrefab, land, flat);
         _p3Kayak.name             = "BossKayak";
-        _p3Kayak.startHorizontal  = true;                          // ya está tumbado: al entrar, flota directamente
-        _p3Kayak.activationBoxSize = new Vector3(6f, 8f, 8f);      // caja amplia: recoge al jugador que cae
+        _p3Kayak.startHorizontal  = true;                          // ya está tumbado, así que al entrar flota directamente
+        _p3Kayak.activationBoxSize = new Vector3(6f, 8f, 8f);      // caja amplia, para recoger al jugador que cae
         if (_p3Kayak.gameOverManager == null) _p3Kayak.gameOverManager = _gameOver;
 
         if (_verbose) Debug.Log($"[Boss] Kayak flotando en la lava donde caerá el jugador (caída {tFall:F2} s, Z={land.z:F1}).");
     }
 
     /// <summary>
-    /// Red de seguridad mientras cae: si el jugador llega casi a la lava sin haber entrado en el kayak (la
-    /// predicción falló por poco), el kayak se coloca bajo él para recogerlo en vez de dejarlo morir.
+    /// Protección mientras el jugador cae. Si llega casi a la lava sin haber entrado en el kayak (porque el cálculo ha
+    /// fallado por poco), el kayak se coloca debajo de él para recogerlo en lugar de dejarlo morir.
     /// </summary>
     private void CatchPlayerWithKayak()
     {
         if (_p3Kayak == null || PlayerT == null || _pm == null || _pm.IsOnKayak) return;
         Vector3 k = _p3Kayak.transform.position;
-        if (PlayerT.position.y > k.y + 3f) return;   // aún cae: el kayak espera donde está
+        if (PlayerT.position.y > k.y + 3f) return;   // todavía está cayendo, así que el kayak espera donde está
         _p3Kayak.transform.position = new Vector3(PlayerT.position.x, k.y, PlayerT.position.z);
     }
 
-    // ── Ciclos: escudo + BloodSuckers → parte expuesta → golpe ──────────────
+    // -=+=- Ciclos: escudo y BloodSuckers, parte expuesta y golpe -=+=-
 
     private void StartP3Cycle(int cycle)
     {
         _p3Cycle = cycle;
-        LockRoundDifficulty();   // ciclo 1 → fácil, 2 → media, 3 → difícil (según golpes de esta fase)
+        LockRoundDifficulty();   // ciclo 1 fácil, 2 media y 3 difícil (según los golpes de esta fase)
         Phase3Tier t = P3Tier;
 
-        ClearP3Suckers();   // los de la oleada anterior (que chupaban al jefe) se desintegran
+        ClearP3Suckers();   // los de la oleada anterior (que drenaban al jefe) se desintegran
         ShieldOn();
-        // Flujo del ciclo: 1 beat de respiro → PINCHOS → TRIDENTE(S) → BLOODSUCKERS → parte expuesta.
+        // Flujo del ciclo: 1 beat de respiro, pinchos, tridente o tridentes, BloodSuckers y parte expuesta.
         _p3Step       = P3Step.Intro;
         _p3StepEnd    = AudioSettings.dspTime + BeatDuration;
         _p3ThrowsLeft = Mathf.Max(0, t.tridentThrows);
@@ -493,7 +496,7 @@ public partial class BossController
                                 $"{t.bloodSuckers} BloodSuckers (objetivo: {P3TargetName(cycle)}).");
     }
 
-    /// <summary>Tercer paso del ciclo: la oleada de BloodSuckers (chupan sangre de verdad).</summary>
+    /// <summary>Tercer paso del ciclo, la oleada de BloodSuckers, que drenan sangre de verdad.</summary>
     private void StartP3SuckerWave()
     {
         SpawnP3Suckers(P3Tier.bloodSuckers);
@@ -513,27 +516,27 @@ public partial class BossController
         (_phase3Targets != null && _phase3Targets.Length > 0) ? $"parte {i + 1}"
         : i == 0 ? "brazo izquierdo" : i == 1 ? "brazo derecho" : "cabeza";
 
-    // BloodSuckers ──────────────────────────────────────────────────────────
+    // -=+=- BloodSuckers -=+=-
 
-    // La oleada NO sale de golpe: los BloodSuckers aparecen DE UNO EN UNO, uno por beat, y van llenando la pantalla.
-    // Cada uno se elimina (se vuelve contra el jefe) mirándolo UN beat. Antes salían todos a la vez y, chupando
-    // juntos, dejaban al jugador sin sangre antes de que pudiera mirarlos.
+    // La oleada no sale de golpe, sino que los BloodSuckers aparecen de uno en uno, uno por beat, y van llenando la
+    // pantalla. Cada uno se elimina (se vuelve contra el jefe) mirándolo durante un beat. Si salieran todos a la vez,
+    // drenando juntos, dejarían al jugador sin sangre antes de que pudiera mirarlos.
     private readonly Queue<(Vector3 offset, bool life)> _p3SpawnQueue = new Queue<(Vector3, bool)>();
     private readonly List<Vector3> _p3PlannedOffsets = new List<Vector3>();
     private double _p3NextSpawnDsp;
 
-    /// <summary>Planifica la oleada (huecos bien repartidos) y la va soltando de uno en uno con UpdateP3SpawnQueue.</summary>
+    /// <summary>Planifica la oleada (con los huecos bien repartidos) y la va soltando de uno en uno con UpdateP3SpawnQueue.</summary>
     private void SpawnP3Suckers(int n)
     {
         n = Mathf.Max(1, n);
-        if (n % 2 == 0) n++;   // siempre IMPAR: la diadema queda simétrica con uno justo encima del jefe
+        if (n % 2 == 0) n++;   // siempre impar, para que la diadema quede simétrica, con uno justo encima del jefe
         _p3Suckers.Clear();
         _p3SuckerOffsets.Clear();
         _p3SpawnQueue.Clear();
         _p3PlannedOffsets.Clear();
 
-        // Una vez en la Fase 3: uno de los huecos de BloodSucker lo ocupa el ORBE DE VIDA (míralo → vida extra).
-        // Se añade un hueco más para que los BloodSuckers sigan siendo impares (la diadema queda simétrica).
+        // Una vez en la fase 3, uno de los huecos de BloodSucker lo ocupa el orbe de vida, que da una vida extra al
+        // mirarlo. Se añade un hueco más para que los BloodSuckers sigan siendo impares y la diadema quede simétrica.
         int slots   = n;
         int lifeIdx = -1;
         if (!_p3LifeSpawned) { slots = n + 1; lifeIdx = Random.Range(0, slots); }
@@ -545,7 +548,7 @@ public partial class BossController
             _p3SpawnQueue.Enqueue((offset, i == lifeIdx));
         }
 
-        // El primero en el próximo beat; los demás, uno por beat.
+        // El primero sale en el próximo beat, y los demás, uno por beat.
         BeatManager bm = _beatManager;
         _p3NextSpawnDsp = bm != null && bm.HasClock
             ? bm.DspAtBeat(System.Math.Floor(bm.ClockBeats) + 1.0)
@@ -553,7 +556,7 @@ public partial class BossController
         UpdateP3SpawnQueue();
     }
 
-    /// <summary>Suelta los BloodSuckers pendientes cuyo beat ya ha llegado (uno por beat).</summary>
+    /// <summary>Suelta los BloodSuckers pendientes cuyo beat ya ha llegado, uno por beat.</summary>
     private void UpdateP3SpawnQueue()
     {
         while (_p3SpawnQueue.Count > 0 && AudioSettings.dspTime >= _p3NextSpawnDsp)
@@ -584,12 +587,12 @@ public partial class BossController
 
         BloodSucker bs = go.GetComponentInChildren<BloodSucker>();
         if (bs == null) bs = go.AddComponent<BloodSucker>();
-        // Chupan sangre DE VERDAD, como los originales (con el drenaje de su prefab / valor por defecto).
-        // Al MIRARLOS no mueren: se giran hacia el escudo y le chupan la sangre al JEFE.
+        // Drenan sangre de verdad, como los originales (con el drenaje de su prefab o el valor por defecto). Al mirarlos
+        // no mueren, sino que se giran hacia el escudo y le drenan la sangre al jefe.
         bs.SetBasePosition(pos);
         bs.SetConvertTarget(SuckerTarget());
 
-        // Mirarlo EXACTAMENTE un beat (_suckerGazeBeats) lo elimina, también en los de prefab.
+        // Mirarlo exactamente un beat (_suckerGazeBeats) lo elimina, también en los de prefab.
         GazeSwitch gz = go.GetComponentInChildren<GazeSwitch>();
         if (gz != null) gz.Configure(_suckerGazeBeats * BeatDuration, _gazeMaxDistance);
 
@@ -599,9 +602,9 @@ public partial class BossController
     }
 
     /// <summary>
-    /// Hueco para un BloodSucker, bien REPARTIDO: cada uno en su franja de ancho (de izquierda a derecha, en
-    /// orden aleatorio) y, dentro de ella, la altura/profundidad que más lejos quede de los ya colocados
-    /// (mejor de 16 candidatos). Así cubren toda la zona sin amontonarse ni taparse.
+    /// Hueco para un BloodSucker, bien repartido. Cada uno va en su franja de ancho (de izquierda a derecha, en orden
+    /// aleatorio) y, dentro de ella, a la altura y profundidad más alejadas de los ya colocados (la mejor de 16
+    /// candidatas). Así cubren toda la zona sin amontonarse ni taparse.
     /// </summary>
     private Vector3 PickSuckerOffset(int i, int n)
     {
@@ -634,10 +637,10 @@ public partial class BossController
         return a;
     }
 
-    /// <summary>BloodSucker sencillo por código (si no hay prefab): esfera roja con mirada.</summary>
+    /// <summary>BloodSucker sencillo creado por código (si no hay prefab), una esfera roja con mirada.</summary>
     private GameObject BuildCodeSucker(Vector3 pos)
     {
-        GameObject go = RuntimeMaterials.Primitive(PrimitiveType.Sphere);   // trae su SphereCollider (para la mirada)
+        GameObject go = RuntimeMaterials.Primitive(PrimitiveType.Sphere);   // tiene su SphereCollider (para la mirada)
         go.name = "BloodSucker (código)";
         go.transform.position   = pos;
         go.transform.localScale = Vector3.one * 1.6f;
@@ -648,7 +651,7 @@ public partial class BossController
         return go;
     }
 
-    /// <summary>Posición del bicho: relativa al JEFE (viaja con él), por delante hacia el jugador, sobre la lava.</summary>
+    /// <summary>Posición del bicho, relativa al jefe (viaja con él), por delante hacia el jugador y sobre la lava.</summary>
     private Vector3 SuckerWorld(Vector3 offset)
     {
         Vector3 bp = transform.position;
@@ -656,27 +659,27 @@ public partial class BossController
         return new Vector3(bp.x + offset.x, LavaY() + offset.y, bp.z + dirZ * offset.z);
     }
 
-    /// <summary>Hacia dónde miran/chupan los BloodSuckers convertidos: el torso (centro del escudo).</summary>
+    /// <summary>Hacia dónde miran y drenan los BloodSuckers convertidos, que es el torso (el centro del escudo).</summary>
     private Transform SuckerTarget()
     {
         if (_p3TorsoRenderer == null) _p3TorsoRenderer = FindTorsoRenderer();
         return _p3TorsoRenderer != null ? _p3TorsoRenderer.transform : BossT;
     }
 
-    /// <summary>¿Todos los BloodSuckers de la oleada se han vuelto contra el jefe y ya le miran?</summary>
+    /// <summary>Indica si todos los BloodSuckers de la oleada se han vuelto contra el jefe y ya le miran.</summary>
     private bool AllSuckersTurned()
     {
-        if (_p3SpawnQueue.Count > 0) return false;   // aún faltan por salir
+        if (_p3SpawnQueue.Count > 0) return false;   // todavía faltan por salir
         foreach (BloodSucker bs in _p3Suckers)
         {
-            if (bs == null) continue;   // (si alguno se destruyó por otra vía, no bloquea)
+            if (bs == null) continue;   // si alguno se ha destruido por otra vía, no bloquea
             if (!bs.IsConverted || !bs.IsFacingTarget) return false;
-            if (!_p3RingPolar.TryGetValue(bs, out Vector4 st) || st.w < 0.5f) return false;   // aún no ha llegado
+            if (!_p3RingPolar.TryGetValue(bs, out Vector4 st) || st.w < 0.5f) return false;   // todavía no ha llegado
         }
         return true;
     }
 
-    /// <summary>Los bichos de la oleada anterior se desintegran (al empezar otro ciclo).</summary>
+    /// <summary>Los bichos de la oleada anterior se desintegran al empezar otro ciclo.</summary>
     private void ClearP3Suckers()
     {
         foreach (BloodSucker bs in _p3Suckers) if (bs != null) bs.DisintegrateNow();
@@ -688,8 +691,8 @@ public partial class BossController
         _p3SuckerOffsets.Clear();
     }
 
-    // Diadema de ojos: los BloodSuckers convertidos se colocan en ARCO alrededor del escudo, por ENCIMA del jefe,
-    // en un plano vertical de cara al jugador. Uno siempre justo encima; los demás alternan izq/der.
+    // Diadema de ojos. Los BloodSuckers convertidos se colocan en arco alrededor del escudo, por encima del jefe, en un
+    // plano vertical de cara al jugador. Uno queda siempre justo encima, y los demás alternan izquierda y derecha.
     [Header("Fase 3 — diadema de BloodSuckers")]
     [Tooltip("Metros por fuera del escudo a los que se colocan los ojos.")]
     [SerializeField] private float _suckerRingMargin = 3f;
@@ -701,7 +704,7 @@ public partial class BossController
     private float _p3RingRadius = 20f;
     private readonly List<BloodSucker> _p3Ring = new List<BloodSucker>();                 // en orden de conversión
     private readonly Dictionary<BloodSucker, Vector4> _p3RingPolar =
-        new Dictionary<BloodSucker, Vector4>();   // x = ángulo (º), y = radio, z = profundidad, w = 1 si ya ha llegado
+        new Dictionary<BloodSucker, Vector4>();   // x es el ángulo (°), y el radio, z la profundidad y w vale 1 si ya ha llegado
 
     private void UpdateP3Suckers()
     {
@@ -710,7 +713,7 @@ public partial class BossController
         Vector3 toP    = new Vector3(0f, 0f, dirZ == 0f ? 1f : dirZ);   // hacia el jugador (delante de la diadema)
         Vector3 right  = Vector3.right, up = Vector3.up;
 
-        // Registrar los recién convertidos (en orden) con su posición actual en coordenadas polares.
+        // Se registran los recién convertidos (en orden) con su posición actual en coordenadas polares.
         for (int i = _p3Suckers.Count - 1; i >= 0; i--)
         {
             if (_p3Suckers[i] == null) { _p3Suckers.RemoveAt(i); _p3SuckerOffsets.RemoveAt(i); continue; }   // eliminado
@@ -726,11 +729,11 @@ public partial class BossController
         }
         _p3Ring.RemoveAll(b => b == null);
 
-        // Los que aún te chupan a ti: siguen con el jefe, por delante.
+        // Los que todavía drenan al jugador siguen con el jefe, por delante.
         for (int i = 0; i < _p3Suckers.Count; i++)
             if (!_p3Suckers[i].IsConverted) _p3Suckers[i].SetBasePosition(SuckerWorld(_p3SuckerOffsets[i]));
 
-        // Los convertidos: vuelan ALREDEDOR del jefe (interpolando ángulo y radio) hasta su hueco en la diadema.
+        // Los convertidos vuelan alrededor del jefe (interpolando el ángulo y el radio) hasta su hueco en la diadema.
         int   k    = _p3Ring.Count;
         int   half = Mathf.Max(1, k / 2);                                  // huecos por lado
         float step = k <= 1 ? 0f : _suckerRingHalfArc / half;
@@ -738,7 +741,7 @@ public partial class BossController
         for (int j = 0; j < k; j++)
         {
             BloodSucker bs = _p3Ring[j];
-            // j = 0 arriba; luego +1, −1, +2, −2… (alternando izquierda / derecha)
+            // j = 0 arriba, y después +1, -1, +2, -2... (alternando izquierda y derecha)
             int   o      = j == 0 ? 0 : ((j + 1) / 2) * (j % 2 == 1 ? 1 : -1);
             float target = 90f + o * step;
 
@@ -755,17 +758,17 @@ public partial class BossController
         }
     }
 
-    // Escudo ─────────────────────────────────────────────────────────────────
+    // -=+=- Escudo -=+=-
 
     private void ShieldOn()
     {
         if (_p3Shield != null) return;
 
-        // CENTRO = el del TORSO (no el de todas las mallas: el tridente, los puños o los bichos lo descentraban).
+        // El centro es el del torso, no el de todas las mallas, ya que el tridente, los puños o los bichos lo descentrarían.
         _p3TorsoRenderer = FindTorsoRenderer();
         Vector3 center = TorsoCenter();
 
-        // RADIO: lo justo para envolver torso, cabeza y puños (sin el tridente).
+        // Radio justo para envolver el torso, la cabeza y los puños (sin el tridente)
         float radius = 5f;
         foreach (Renderer r in GetComponentsInChildren<Renderer>())
         {
@@ -784,7 +787,7 @@ public partial class BossController
 
         _p3Shield = RuntimeMaterials.Primitive(PrimitiveType.Sphere);
         _p3Shield.name = "BossShield";
-        Destroy(_p3Shield.GetComponent<Collider>());   // sin collider: no bloquea la mirada ni al kayak
+        Destroy(_p3Shield.GetComponent<Collider>());   // sin collider, para que no bloquee la mirada ni al kayak
         var mr = _p3Shield.GetComponent<Renderer>();
         mr.material = new Material(Shader.Find("Sprites/Default")) { color = _shieldColor };
         mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -796,8 +799,10 @@ public partial class BossController
 
     private Renderer _p3TorsoRenderer;
 
-    /// <summary>Malla del TORSO: la del propio cuerpo (BossT) o, si no tiene, la más grande del jefe que no sea
-    /// tridente, puño ni cabeza.</summary>
+    /// <summary>
+    /// Malla del torso, que es la del propio cuerpo (BossT) o, si no tiene, la más grande del jefe que no sea el
+    /// tridente, un puño ni la cabeza.
+    /// </summary>
     private Renderer FindTorsoRenderer()
     {
         Renderer own = BossT.GetComponent<Renderer>();
@@ -831,8 +836,8 @@ public partial class BossController
     private void UpdateP3Shield(double now)
     {
         if (_p3Shield == null) return;
-        _p3Shield.transform.position = TorsoCenter();   // sigue al torso (también al tambalearse/hundirse)
-        // Latido suave al ritmo (1 por beat).
+        _p3Shield.transform.position = TorsoCenter();   // sigue al torso (también al tambalearse y hundirse)
+        // Latido suave al ritmo (uno por beat)
         float pulse = 1f + 0.03f * Mathf.Sin((float)(now / BeatDuration) * Mathf.PI * 2f);
         _p3Shield.transform.localScale = Vector3.one * (_p3ShieldBaseScale * pulse);
     }
@@ -843,7 +848,7 @@ public partial class BossController
         _p3Shield = null;
     }
 
-    // Parte expuesta (mirada) ──────────────────────────────────────────────
+    // -=+=- Parte expuesta (mirada) -=+=-
 
     private void ExposeP3Part()
     {
@@ -867,7 +872,7 @@ public partial class BossController
         GazeSwitch gz;
         if (userGz != null)
         {
-            // El GazeSwitch que has puesto tú en la escena.
+            // El GazeSwitch colocado en la escena
             gz = userGz;
             gz.enabled = true;
             if (gz.GetComponentInChildren<Collider>() == null)
@@ -875,8 +880,8 @@ public partial class BossController
         }
         else
         {
-            // Automático: esfera (collider NO trigger) que envuelve la parte, en la capa 'Ignore Raycast' y con el
-            // rayo limitado a esa capa → nada la tapa (ni lava, ni kayak, ni otros colliders del jefe).
+            // Automático. Una esfera (collider sin trigger) envuelve la parte, en la capa 'Ignore Raycast', y el rayo se
+            // limita a esa capa, de forma que nada la tapa (ni la lava, ni el kayak, ni otros colliders del jefe).
             _p3GazeTarget = new GameObject("GazeTarget");
             _p3GazeTarget.transform.SetParent(part, false);
             _p3GazeTarget.transform.position = pb.center;
@@ -890,7 +895,7 @@ public partial class BossController
 
         gz.Configure(_gazeHoldBeats * BeatDuration, _gazeMaxDistance, part.GetComponentInChildren<Renderer>());
         gz.SetCamera(PlayerCamera());
-        // El jugador y su kayak NUNCA tapan la mirada (la cámara va sentada dentro del ataúd).
+        // El jugador y su kayak nunca tapan la mirada, ya que la cámara va sentada dentro del ataúd.
         gz.SetIgnoredRoots(PlayerT, _p3Kayak != null ? _p3Kayak.transform : null);
         gz.ResetSwitch();
         gz.OnActivated.RemoveListener(OnP3PartGazed);
@@ -908,10 +913,10 @@ public partial class BossController
     }
 
     /// <summary>
-    /// Al arrancar: localiza los GazeSwitch de la Fase 3 (los del array o, si falta alguno, el que ya tenga la
-    /// parte: LeftFist, RightFist, BossHead) y los APAGA, para que no se pueda dañar al jefe hasta que caiga
-    /// el escudo. Además anula los "TakeDamage" puestos a mano en su OnActivated: el golpe ya lo cuenta el jefe
-    /// al destruir la parte (si no, contaría doble).
+    /// Al empezar, localiza los GazeSwitch de la fase 3 (los del array o, si falta alguno, el que ya tenga la parte:
+    /// LeftFist, RightFist o BossHead) y los apaga, para que no se pueda dañar al jefe hasta que caiga el escudo. Además,
+    /// anula los "TakeDamage" puestos a mano en su OnActivated, ya que el golpe lo cuenta el jefe al destruir la parte
+    /// (si no, contaría doble).
     /// </summary>
     private void InitPhase3GazeSwitches()
     {
@@ -937,7 +942,7 @@ public partial class BossController
 
     private float _p3GazeDebugT;
 
-    /// <summary>Depuración (con Verbose): qué toca el rayo de la mirada y cuánto lleva cargado.</summary>
+    /// <summary>Depuración (con Verbose). Muestra qué toca el rayo de la mirada y cuánto lleva cargado.</summary>
     private void DebugP3Gaze()
     {
         if (!_verbose || _p3TargetGaze == null) return;
@@ -998,30 +1003,30 @@ public partial class BossController
         _p3sub = Phase3Sub.PartBreaking;
     }
 
-    private bool _p3PartDone;   // el golpe ya ha contado
+    private bool _p3PartDone;   // el golpe ya se ha contado
 
-    // ── Castigo al mirar una parte ─────────────────────────────────────────
-    //  • Mano (izq / der): el puño se REBELA y le PEGA en la cara a su jefe, por su lado, EN EL BEAT
-    //    ('P3PunchCount' puñetazos). Después vuelve a su sitio (sigue sirviendo para el tridente).
-    //  • Cabeza (la última): las DOS manos la agarran y la EMPUJAN hacia la lava → derrotado.
+    // -=+=- Castigo al mirar una parte -=+=-
+    //  - Mano (izquierda o derecha). El puño se rebela y golpea a su jefe en la cara, por su lado y en el beat
+    //    ('P3PunchCount' puñetazos). Después vuelve a su sitio, ya que sigue sirviendo para el tridente.
+    //  - Cabeza (la última). Las dos manos la agarran y la empujan hacia la lava, y el jefe queda derrotado.
 
     private enum P3BreakMode { Punch, HeadPush, Shrink }
     private P3BreakMode  _p3BreakMode;
     private BossFistSlam _p3PunchFist;
-    private BossFistSlam[] _p3Punchers = new BossFistSlam[0];   // 1 puño (1ª vez) o los 2 intercalados (2ª vez)
+    private BossFistSlam[] _p3Punchers = new BossFistSlam[0];   // 1 puño (la primera vez) o los 2 intercalados (la segunda)
     private Vector3[]    _p3PunchFrom = new Vector3[0];
     private bool[]       _p3PunchReleased = new bool[0];
     private int          _p3PunchFirstBeat, _p3PunchesDone, _p3PunchTotal;
     private float        _p3PunchStartB;
-    private const int    P3PunchCount     = 4;   // 1ª vez: un puño, 4 golpes
-    private const int    P3PunchCountBoth = 6;   // 2ª vez: los dos intercalados, 6 golpes (3 cada uno)
+    private const int    P3PunchCount     = 4;   // primera vez: un puño, 4 golpes
+    private const int    P3PunchCountBoth = 6;   // segunda vez: los dos intercalados, 6 golpes (3 cada uno)
     private const float  P3GrabBeats    = 1f;     // las manos van a por la cabeza
     private const float  P3PushBeats    = 3f;     // la hunden en la lava
     private float        _p3PushBaseSink, _p3PushExtra;
     private double       _p3PushStart;
     private readonly Vector3[] _p3GrabFrom = new Vector3[2];
 
-    // Retroceso de la cabeza al recibir el puñetazo.
+    // Retroceso de la cabeza al recibir el puñetazo
     private float  _p3HeadKick, _p3HeadKickSide;
 
     private BossFistSlam FistOf(Transform part)
@@ -1042,7 +1047,7 @@ public partial class BossController
             _p3BreakMode    = P3BreakMode.HeadPush;
             _p3PushStart    = AudioSettings.dspTime;
             _p3PushBaseSink = _p3SinkOffset;
-            // Hasta que la cabeza entera quede unos metros bajo la lava.
+            // Hasta que la cabeza entera queda unos metros bajo la lava
             Bounds hb = PartBounds(_head);
             _p3PushExtra = Mathf.Max(4f, hb.max.y - LavaY() + 4f);
             int i = 0;
@@ -1053,7 +1058,7 @@ public partial class BossController
         else if (_p3PunchFist != null && _p3PunchFist.gameObject.activeInHierarchy)
         {
             _p3BreakMode = P3BreakMode.Punch;
-            // 1ª vez: solo el puño mirado. 2ª vez: los DOS, intercalados (empieza el recién mirado).
+            // La primera vez, solo el puño mirado. La segunda, los dos intercalados (empezando por el recién mirado).
             BossFistSlam other = _p3PunchFist == _leftFist ? _rightFist : _leftFist;
             bool both = _p3Cycle >= 1 && other != null && other.gameObject.activeInHierarchy;
             _p3Punchers   = both ? new[] { _p3PunchFist, other } : new[] { _p3PunchFist };
@@ -1062,7 +1067,7 @@ public partial class BossController
             _p3PunchReleased = new bool[_p3Punchers.Length];
             for (int j = 0; j < _p3Punchers.Length; j++) _p3PunchFrom[j] = _p3Punchers[j].transform.position;
 
-            _p3PunchFirstBeat = CurrentBeat() + 2;   // 1 beat para echarse atrás; pega en beats enteros
+            _p3PunchFirstBeat = CurrentBeat() + 2;   // 1 beat para echarse atrás, y golpea en beats enteros
             _p3PunchStartB    = (float)((AudioSettings.dspTime - DspForBeat(_p3PunchFirstBeat)) / BeatDuration);
             _p3PunchesDone    = 0;
             if (_verbose) Debug.Log(both ? "[Boss] F3: ¡los DOS puños le pegan en la cara, intercalados!"
@@ -1082,7 +1087,7 @@ public partial class BossController
         }
     }
 
-    /// <summary>Punto de la CARA donde pega un puño de ese lado (side = +1 derecha / −1 izquierda, en X mundo).</summary>
+    /// <summary>Punto de la cara donde golpea un puño de ese lado (side = +1 derecha y -1 izquierda, en X del mundo).</summary>
     private Vector3 FaceContact(BossFistSlam fist, float side, float inset = 0.9f)
     {
         Bounds hb = _head != null ? PartBounds(_head) : new Bounds(BossT.position + Vector3.up * 10f, Vector3.one * 6f);
@@ -1098,13 +1103,13 @@ public partial class BossController
     }
 
     /// <summary>
-    /// Puñetazos EN EL BEAT a la cara, por el lado de cada puño. Con 2 puños se intercalan (golpe n → puño n % 2):
-    /// cada puño rebota tras su golpe, espera echado atrás y vuelve a pegar en su siguiente beat.
+    /// Puñetazos en el beat a la cara, por el lado de cada puño. Con 2 puños se intercalan (el golpe n lo da el puño n %
+    /// 2), y cada puño rebota después de su golpe, espera echado atrás y vuelve a golpear en su siguiente beat.
     /// </summary>
     private void UpdateP3Punch(double now)
     {
         int   count = _p3Punchers.Length;
-        float b     = (float)((now - DspForBeat(_p3PunchFirstBeat)) / BeatDuration);   // 0 = 1er golpe
+        float b     = (float)((now - DspForBeat(_p3PunchFirstBeat)) / BeatDuration);   // 0 es el primer golpe
 
         for (int j = 0; j < count; j++)
         {
@@ -1127,7 +1132,7 @@ public partial class BossController
             }
             else if (b < j)
             {
-                target = Vector3.Lerp(windback, contact, Sq(Mathf.InverseLerp(j - 0.2f, j, b)));   // 1er ¡pum!
+                target = Vector3.Lerp(windback, contact, Sq(Mathf.InverseLerp(j - 0.2f, j, b)));   // primer golpe
             }
             else if (b > lastIdx)
             {
@@ -1136,7 +1141,7 @@ public partial class BossController
                 if (b >= lastIdx + 0.4f)
                 {
                     _p3PunchReleased[j] = true;
-                    fist.ManualRelease(BeatDuration, 1f);                                           // a su sitio
+                    fist.ManualRelease(BeatDuration, 1f);                                           // vuelve a su sitio
                     continue;
                 }
             }
@@ -1150,14 +1155,14 @@ public partial class BossController
             fist.ManualHold(target, 60f);
         }
 
-        // Golpes que llegan (en el beat): la cabeza retrocede hacia el otro lado.
+        // Golpes que llegan (en el beat). La cabeza retrocede hacia el otro lado.
         while (_p3PunchesDone < _p3PunchTotal && b >= _p3PunchesDone)
         {
             BossFistSlam hitter = _p3Punchers[_p3PunchesDone % count];
             _p3PunchesDone++;
             _p3HeadKick     = 1f;
             _p3HeadKickSide = hitter != null ? SideOf(hitter) : 1f;
-            if (!_p3PartDone) { _p3PartDone = true; TakeDamage(1); }   // cuenta 1 golpe (con el 1er puñetazo)
+            if (!_p3PartDone) { _p3PartDone = true; TakeDamage(1); }   // cuenta un golpe (con el primer puñetazo)
             if (_state == BossState.Defeated) { _p3sub = Phase3Sub.Finished; return; }
         }
 
@@ -1170,7 +1175,7 @@ public partial class BossController
     {
         float b = (float)((now - _p3PushStart) / BeatDuration);
 
-        // Hundir: el jefe entero baja (ease-in, cada vez con más fuerza) mientras las manos le sujetan la cabeza.
+        // Hundimiento. El jefe entero baja (acelerando cada vez más) mientras las manos le sujetan la cabeza.
         float pu = Mathf.Clamp01((b - P3GrabBeats) / P3PushBeats);
         _p3SinkOffset = _p3PushBaseSink + _p3PushExtra * pu * pu;
 
@@ -1198,12 +1203,12 @@ public partial class BossController
         {
             _p3PartDone = true;
             TakeDamage(1);
-            if (_state != BossState.Defeated) Defeat();   // la cabeza bajo la lava: fin del jefe
+            if (_state != BossState.Defeated) Defeat();   // la cabeza está bajo la lava, fin del jefe
             _p3sub = Phase3Sub.Finished;
         }
     }
 
-    /// <summary>(Partes que no son puño ni cabeza) La parte tiembla, se encoge y desaparece.</summary>
+    /// <summary>Partes que no son un puño ni la cabeza. La parte tiembla, se encoge y desaparece.</summary>
     private void UpdateP3Shrink(double now)
     {
         float u = (float)((now - _p3BreakStart) / BeatDuration);
@@ -1227,7 +1232,7 @@ public partial class BossController
         if (u >= 2f) StartP3Cycle(_p3Cycle + 1);
     }
 
-    /// <summary>La cabeza retrocede y se ladea con cada puñetazo (y vuelve sola).</summary>
+    /// <summary>La cabeza retrocede y se ladea con cada puñetazo, y vuelve sola.</summary>
     private void UpdateP3HeadKick()
     {
         if (_head == null || !_headCaptured || _p3BreakMode == P3BreakMode.HeadPush) return;
@@ -1239,9 +1244,9 @@ public partial class BossController
         _head.localRotation = _headRestLocalRot * Quaternion.Euler(0f, _p3HeadKickSide * 10f * k, -_p3HeadKickSide * 14f * k);
     }
 
-    // Indicador de la parte a mirar ───────────────────────────────────────
-    // Halo que envuelve la parte (se llena de blanco al cargar la mirada) + haz de luz vertical visible desde
-    // lejos + texto "¡MÍRALO!" encima, mirando a la cámara.
+    // -=+=- Indicador de la parte que hay que mirar -=+=-
+    // Un halo envuelve la parte (y se llena de blanco al cargar la mirada), con un haz de luz vertical que se ve desde
+    // lejos y el texto "¡MÍRALO!" encima, mirando a la cámara.
 
     private GameObject _p3Marker;      // raíz del indicador
     private Renderer   _p3HaloR, _p3BeamR;
@@ -1297,14 +1302,14 @@ public partial class BossController
         float   pulse  = 1f + 0.12f * Mathf.Sin(beatPh);                 // late al ritmo
         Color   col    = Color.Lerp(_targetMarkerColor, Color.white, charge);
 
-        // Halo alrededor de la parte (más opaco cuanto más cargada la mirada).
+        // Halo alrededor de la parte, más opaco cuanto más cargada está la mirada
         Transform halo = _p3HaloR.transform;
         halo.position   = b.center;
         halo.localScale = Vector3.one * (_p3PartRadius * 2f * pulse);
         Color hc = col; hc.a = Mathf.Lerp(0.25f, 0.6f, charge) * (0.8f + 0.2f * Mathf.Sin(beatPh));
         _p3HaloR.material.color = hc;
 
-        // Haz vertical que sale de la parte hacia arriba (se ve desde lejos).
+        // Haz vertical que sale de la parte hacia arriba y se ve desde lejos
         const float beamH = 40f;
         Transform beam = _p3BeamR.transform;
         beam.position   = new Vector3(b.center.x, b.max.y + beamH * 0.5f, b.center.z);
@@ -1312,7 +1317,7 @@ public partial class BossController
         Color bc = col; bc.a = 0.35f;
         _p3BeamR.material.color = bc;
 
-        // Texto encima, mirando a la cámara y con tamaño constante en pantalla.
+        // Texto encima, mirando a la cámara y con un tamaño constante en pantalla
         Transform tt = _p3HintText.transform;
         tt.position = new Vector3(b.center.x, b.max.y + 2f, b.center.z);
         Camera cam = Camera.main;
@@ -1331,7 +1336,7 @@ public partial class BossController
         _p3Marker = null;
     }
 
-    // Secuencia de ataques del ciclo: UNO cada vez ───────────────────────────
+    // -=+=- Secuencia de ataques del ciclo, uno cada vez -=+=-
 
     private enum P3Step { Intro, Spikes, SpikesRest, Throw, ThrowRest }
     private P3Step _p3Step = P3Step.Intro;
@@ -1340,8 +1345,8 @@ public partial class BossController
     private bool   _p3ThrowStarted;
 
     /// <summary>
-    /// PINCHOS ('spikeSectionBeats') → respiro hasta que pasan los últimos → TRIDENTE lanzado ('tridentThrows'
-    /// veces, uno tras otro) → BLOODSUCKERS. Nada se solapa.
+    /// Pinchos ('spikeSectionBeats'), un respiro hasta que pasan los últimos, el tridente lanzado ('tridentThrows' veces,
+    /// uno detrás de otro) y los BloodSuckers. Ningún ataque se solapa con otro.
     /// </summary>
     private void UpdateP3Attacks(double now)
     {
@@ -1358,7 +1363,7 @@ public partial class BossController
 
             case P3Step.Spikes:
                 if (now < _p3StepEnd) { UpdateP3Spikes(now); break; }
-                // Respiro: deja que los últimos pinchos (que salen por delante) lleguen y pasen.
+                // Respiro, para que los últimos pinchos (que salen por delante) lleguen y pasen.
                 _p3Step    = P3Step.SpikesRest;
                 _p3StepEnd = now + (Mathf.Max(1f, _pillarLeadBeats) + 1f) * BeatDuration;
                 break;
@@ -1373,8 +1378,8 @@ public partial class BossController
             case P3Step.Throw:
                 if (_tridentSweep == null) { _p3ThrowsLeft = 0; _p3Step = P3Step.ThrowRest; _p3StepEnd = now; break; }
                 if (_tridentSweep.IsThrowInProgress) _p3ThrowStarted = true;
-                // Termina cuando lo ha cogido la otra mano (encadenado: lo sujeta para el siguiente) o, en el
-                // último, cuando ya está flotando en su sitio. (O si nunca llegó a arrancar.)
+                // Termina cuando lo ha cogido la otra mano (si se encadena, lo sujeta para el siguiente) o, en el último, cuando
+                // ya está flotando en su sitio, o si nunca llegó a lanzarse.
                 if ((_p3ThrowStarted && !_tridentSweep.IsThrowInProgress) || (!_p3ThrowStarted && now > _p3StepEnd))
                 {
                     _p3ThrowsLeft--;
@@ -1386,13 +1391,13 @@ public partial class BossController
     }
 
     /// <summary>
-    /// Lanza el tridente: MISMO wind-up, arco y velocidad que el barrido de la Fase 1 (empieza en un beat y
-    /// el paso por el jugador cae en beat entero), pero soltado, a la altura del torso sentado → SALTAR.
-    /// Lo coge la otra mano (el puño izquierdo) al final del arco.
+    /// Lanza el tridente, con la misma preparación, arco y velocidad que el barrido de la fase 1 (empieza en un beat y
+    /// pasa por el jugador en un beat entero), pero suelto y a la altura del torso del jugador sentado, por lo que hay
+    /// que saltar. Lo coge la otra mano (el puño izquierdo) al final del arco.
     /// </summary>
     private void StartP3Throw()
     {
-        int    b0      = CurrentBeat() + 1;                                   // arranca en el próximo beat
+        int    b0      = CurrentBeat() + 1;                                   // empieza en el próximo beat
         int    windup  = Mathf.Max(1, Mathf.RoundToInt(_tailWindupBeats));   // igual que el barrido
         double startAt = DspForBeat(b0);
         double contact = DspForBeat(b0 + windup);
@@ -1403,21 +1408,21 @@ public partial class BossController
             GetP3ThrowHands(out Transform throwHand, out Transform catchHand);
             if (_verbose) Debug.Log($"[Boss] F3: lanza con '{(throwHand != null ? throwHand.name : "—")}', " +
                                     $"lo coge '{(catchHand != null ? catchHand.name : "—")}'.");
-            // Si quedan más lanzamientos, la mano que lo coge lo SUJETA y lo relanza; solo el último lo deja en su sitio.
+            // Si quedan más lanzamientos, la mano que lo coge lo sujeta y lo vuelve a lanzar, y solo el último lo deja en su sitio.
             _tridentSweep.Throw(this, contact, SeatedTorsoY() + _throwPassHeightOffset, throwHand, catchHand,
                              -1f, _p3ThrowsLeft > 1);
         });
 
         _p3Step         = P3Step.Throw;
         _p3ThrowStarted = false;
-        _p3StepEnd      = startAt + BeatDuration;   // margen por si no arranca
+        _p3StepEnd      = startAt + BeatDuration;   // margen por si no llega a lanzarse
         if (_verbose) Debug.Log("[Boss] F3: ¡lanza el tridente! (salta cuando pase)");
     }
 
     /// <summary>
-    /// SIMÉTRICO: lanza la mano del lado donde FLOTA ahora el tridente y lo coge la otra, que lo deja flotando
-    /// en el lado simétrico (X → −X). El siguiente lanzamiento sale de ese lado, y así alternando.
-    /// Si una mano ya está destruida, la que queda lo lanza y el tridente vuelve solo a su sitio.
+    /// Lanzamiento simétrico. Lo lanza la mano del lado en el que flota el tridente y lo coge la otra, que lo deja
+    /// flotando en el lado simétrico (de X a -X). El siguiente lanzamiento sale de ese lado, y así sucesivamente. Si una
+    /// mano ya está destruida, la que queda lo lanza y el tridente vuelve solo a su sitio.
     /// </summary>
     private void GetP3ThrowHands(out Transform throwHand, out Transform catchHand)
     {
@@ -1432,7 +1437,7 @@ public partial class BossController
         catchHand = leftCloser ? rf : lf;
     }
 
-    // Altura del jugador SENTADO: la mínima registrada sobre la lava (saltar solo la sube).
+    // Altura del jugador sentado, que es la mínima registrada sobre la lava (saltar solo la aumenta).
     private float _p3SeatOffset = float.MaxValue;
 
     private void TrackSeatHeight()
@@ -1441,17 +1446,19 @@ public partial class BossController
         _p3SeatOffset = Mathf.Min(_p3SeatOffset, PlayerT.position.y - LavaY());
     }
 
-    /// <summary>Altura del TORSO del jugador sentado en el kayak (por donde pasa el tridente). No depende de
-    /// si en ese momento está saltando.</summary>
+    /// <summary>
+    /// Altura del torso del jugador sentado en el kayak, por donde pasa el tridente. No depende de si en ese momento está
+    /// saltando.
+    /// </summary>
     private float SeatedTorsoY()
     {
         if (PlayerT == null) return LavaY() + 2f;
-        if (_p3SeatOffset == float.MaxValue) return LavaY() + 2.2f;   // aún no se ha sentado: estimación
+        if (_p3SeatOffset == float.MaxValue) return LavaY() + 2.2f;   // todavía no se ha sentado, así que se estima
         float cy = _playerCC != null ? _playerCC.center.y * PlayerT.lossyScale.y : 1f;
         return LavaY() + _p3SeatOffset + cy;
     }
 
-    // Pinchos en la lava ─────────────────────────────────────────────────────
+    // -=+=- Pinchos en la lava -=+=-
 
     private void UpdateP3Spikes(double now)
     {
@@ -1470,8 +1477,10 @@ public partial class BossController
         _p3NextSpikeDSP = System.Math.Max(_p3NextSpikeDSP + gap, now + gap * 0.5);
     }
 
-    /// <summary>Pincho que emerge de la LAVA por delante. Capa Obstacle + ObstacleInfo (solo la cara FRONTAL
-    /// es letal): el kayak muere si lo embiste de proa; rozarlo de lado no.</summary>
+    /// <summary>
+    /// Pincho que sale de la lava por delante, en la capa Obstacle y con ObstacleInfo (solo la cara frontal es letal).
+    /// El kayak se rompe si lo embiste de proa, pero no si lo roza de lado.
+    /// </summary>
     private void SpawnLavaSpike(float worldX, bool tall, float extraLead)
     {
         if (_pillarPrefab == null || PlayerT == null) return;
@@ -1504,9 +1513,9 @@ public partial class BossController
         foreach (Transform c in go.transform) SetLayerRecursive(c.gameObject, layer);
     }
 
-    // Utilidades ────────────────────────────────────────────────────────────
+    // -=+=- Utilidades -=+=-
 
-    /// <summary>Altura de la superficie de la LAVA (capa Water) bajo el jugador. Se cachea.</summary>
+    /// <summary>Altura de la superficie de la lava (capa Water) bajo el jugador, que se guarda.</summary>
     private float LavaY()
     {
         if (_p3LavaFound) return _p3LavaY;
@@ -1518,7 +1527,7 @@ public partial class BossController
             _p3LavaFound = true;
             return _p3LavaY;
         }
-        return _lastGroundY - 2f;   // sin lava detectada: aproximación bajo el suelo
+        return _lastGroundY - 2f;   // sin lava detectada, se aproxima por debajo del suelo
     }
 
     private void RefreshGazeHUD()
@@ -1527,7 +1536,7 @@ public partial class BossController
         if (hud != null) hud.RefreshSwitches();
     }
 
-    /// <summary>Limpia todo lo de la Fase 3 (al derrotar al jefe).</summary>
+    /// <summary>Limpia todo lo de la fase 3, al derrotar al jefe.</summary>
     private void CleanupPhase3()
     {
         foreach (BloodSucker bs in _p3Suckers) if (bs != null) Destroy(bs.gameObject);
@@ -1544,9 +1553,7 @@ public partial class BossController
         if (_p3GazeTarget != null) { Destroy(_p3GazeTarget); _p3GazeTarget = null; }
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    //  FINAL: el jefe cae → sale terreno de la lava → se rompe el kayak → END al acabar la canción
-    // ══════════════════════════════════════════════════════════════════════════
+    // -=+=- Final: el jefe cae, sale terreno de la lava, se rompe el kayak y aparece el END al acabar la canción -=+=-
 
     [Header("Final (al derrotar al jefe)")]
     [Tooltip("END (prefab o el objeto de la escena). Sale del suelo COMO UNA PLATAFORMA MÁS del camino, colocado\n" +
@@ -1577,15 +1584,15 @@ public partial class BossController
     private VictoryStep _victory = VictoryStep.None;
     private double      _victoryT0, _victoryBreakAt, _victoryRiseLeft, _endRiseStart;
     private float       _victoryTopY, _victoryLogT;
-    private Transform   _endInst;          // el END que sale (instancia)
+    private Transform   _endInst;          // el END que aparece (instancia)
     private bool        _endSpawned;
     private Vector3     _endFrom, _endTo;
     private LevelEndManager _lem;
     private Vector3 EndTarget => _endTo + Vector3.up * _endHeightOffset;
 
     /// <summary>
-    /// Al empezar: si el END es un objeto de la ESCENA lo esconde (si es un PREFAB no se toca: se instancia al
-    /// final). Y bloquea el LevelEndManager: el fin de nivel lo lanza el jefe cuando acaba la canción.
+    /// Al empezar, si el END es un objeto de la escena, lo esconde (si es un prefab, no se toca, ya que se instancia al
+    /// final). Además, bloquea el LevelEndManager, ya que el fin del nivel lo lanza el jefe cuando acaba la canción.
     /// </summary>
     private void InitVictory()
     {
@@ -1610,7 +1617,7 @@ public partial class BossController
         _victory     = VictoryStep.WaitBreak;
     }
 
-    /// <summary>DSP en el que termina la canción entera (LDNM-END).</summary>
+    /// <summary>Instante DSP en el que termina la canción entera (LDNM-END).</summary>
     private double SongEndDSP =>
         _musicController != null && _musicController.EndFinishDSP > 0.0
             ? _musicController.EndFinishDSP
@@ -1628,7 +1635,7 @@ public partial class BossController
 
     private void UpdateVictory()
     {
-        // (Ajuste en vivo de la altura del END, también cuando ya ha terminado todo.)
+        // Ajuste en vivo de la altura del END, también cuando ya ha terminado todo.
         if (_victory == VictoryStep.Done)
         {
             if (_endInst != null) _endInst.position = EndTarget;
@@ -1642,12 +1649,12 @@ public partial class BossController
             case VictoryStep.WaitBreak:
             {
                 if (now < _victoryT0) break;
-                // 1) El terreno EMERGE de la lava bajo el jugador, ANIMADO (sube desde abajo con ease-out)…
+                // 1) El terreno sale de la lava bajo el jugador, con una animación (sube desde abajo y frena al final)...
                 float riseBeats = Mathf.Max(1f, _victoryRiseBeats);
                 float depth     = _victoryTerrainAboveLava + Mathf.Max(1f, _victoryRiseDepth);
                 if (_platformSpawner != null) _platformSpawner.Resume(_victoryTopY, riseBeats, depth);
 
-                // 2) …y el ataúd se rompe cuando la cara de arriba del terreno asoma por la lava.
+                // 2) ...y el ataúd se rompe cuando la cara de arriba del terreno asoma por la lava.
                 float f = Mathf.Clamp01((depth - _victoryTerrainAboveLava - 1f) / depth);
                 float u = 1f - Mathf.Sqrt(1f - f);
                 _victoryBreakAt  = now + u * riseBeats * BeatDuration;
@@ -1676,7 +1683,7 @@ public partial class BossController
                 Vector3 fwd    = VictoryForward;
                 float   walk   = _pm != null ? _pm.walkSpeed : 12f;
 
-                // ¿Dónde estará el jugador cuando acabe la canción? El END va AHÍ (con el jugador ya dentro).
+                // Se calcula dónde estará el jugador cuando acabe la canción, y el END se coloca ahí, con el jugador ya dentro.
                 float playerAlong = PlayerT != null ? Vector3.Dot(PlayerT.position, fwd) : 0f;
                 float along       = playerAlong + walk * (float)System.Math.Max(0.0, songEnd - now);
                 float entrance    = along - _endInsideMeters;
@@ -1697,7 +1704,7 @@ public partial class BossController
                     Debug.Log($"[Boss] FINAL: la canción acaba en {songEnd - now:F1} s · END {(_endSpawned ? "fuera" : "aún bajo tierra")}.");
                 }
 
-                // Termina LDNM-END: el jugador está dentro del END → fin de nivel (auto-movimiento + mirar alrededor).
+                // Al terminar LDNM-END, el jugador está dentro del END y termina el nivel (avance automático y mirar alrededor).
                 if (now >= songEnd)
                 {
                     if (_endInst != null) _endInst.position = EndTarget;
@@ -1716,8 +1723,8 @@ public partial class BossController
     }
 
     /// <summary>
-    /// Saca el END del suelo como una plataforma: su ENTRADA en 'entranceAlong' (eje de avance), centrado en el
-    /// camino y con su base a ras del terreno. El suelo se genera hasta el fondo del END y ahí se para.
+    /// Saca el END del suelo como una plataforma, con su entrada en 'entranceAlong' (sobre el eje de avance), centrado en
+    /// el camino y con la base a ras del terreno. El suelo se genera hasta el fondo del END y ahí se para.
     /// </summary>
     private void SpawnEnd(float entranceAlong, double now)
     {
@@ -1726,11 +1733,11 @@ public partial class BossController
 
         if (_endObject == null) _endInst = BuildBlockEnd(fwd);
         else if (_endObject.gameObject.scene.IsValid()) _endInst = _endObject;                          // objeto de la escena
-        else _endInst = Instantiate(_endObject.gameObject).transform;                                     // prefab → instancia
+        else _endInst = Instantiate(_endObject.gameObject).transform;                                     // prefab, así que se instancia
         _endInst.gameObject.SetActive(true);
         _endInst.name = "END";
 
-        // Medidas reales con las MALLAS (fiable aunque acabe de activarse).
+        // Medidas reales a partir de las mallas, que son fiables aunque se acabe de activar
         Bounds b = WorldMeshBounds(_endInst);
         float frontAlong = Vector3.Dot(b.center, fwd) - Vector3.Dot(b.extents, new Vector3(Mathf.Abs(fwd.x), Mathf.Abs(fwd.y), Mathf.Abs(fwd.z)));
         float depthAlong = 2f * (Vector3.Dot(b.center, fwd) - frontAlong);
@@ -1738,8 +1745,8 @@ public partial class BossController
         float centerX = _platformSpawner != null ? _platformSpawner.transform.position.x : 0f;
         Vector3 delta = fwd * (entranceAlong - frontAlong);
         delta.x += centerX - (b.center.x + delta.x);
-        // El PIVOTE del END es la cara de arriba de su suelo (0.5 de grosor por debajo): pivote a ras del terreno,
-        // igual que un jugador de pie en él estaría a y = 0 con el END en y = 0.
+        // El pivote del END es la cara de arriba de su suelo (con 0,5 de grosor por debajo), de forma que queda a ras del
+        // terreno, igual que un jugador de pie en él estaría en y = 0 con el END en y = 0.
         delta.y  = _victoryTopY - _endInst.position.y;
 
         _endTo   = _endInst.position + delta;
@@ -1747,14 +1754,14 @@ public partial class BossController
         _endInst.position = _endFrom;
         _endRiseStart = now;
 
-        // Suelo hasta el fondo del END (por si no tiene suelo propio) y ahí se acaba.
+        // Suelo hasta el fondo del END (por si no tiene suelo propio), y ahí se acaba.
         if (_platformSpawner != null) _platformSpawner.StopAfter(entranceAlong + depthAlong);
 
         Debug.Log($"[Boss] FINAL: sale el END '{_endInst.name}' (tamaño {b.size}) → destino {_endTo}. " +
                   "El jugador estará dentro cuando acabe la canción.", _endInst);
     }
 
-    /// <summary>Bounds en mundo de todas las mallas (MeshFilter/SkinnedMesh) bajo 't'.</summary>
+    /// <summary>Bounds en el mundo de todas las mallas (MeshFilter y SkinnedMesh) que hay bajo 't'.</summary>
     private static Bounds WorldMeshBounds(Transform t)
     {
         bool any = false; Bounds w = new Bounds(t.position, Vector3.one);
@@ -1789,8 +1796,8 @@ public partial class BossController
     }
 
     /// <summary>
-    /// END por código con LETRAS DE BLOQUES (cubos): se ve con cualquier pipeline de render (el texto 3D
-    /// antiguo puede no verse). Letras de 5×5 bloques de 2 m (≈10 m de alto), mirando al jugador.
+    /// END creado por código con letras de bloques (cubos), que se ve con cualquier pipeline de render. Las letras son de
+    /// 5×5 bloques de 2 m (unos 10 m de alto) y miran al jugador.
     /// </summary>
     private Transform BuildBlockEnd(Vector3 fwd)
     {

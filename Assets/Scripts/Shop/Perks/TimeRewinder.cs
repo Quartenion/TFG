@@ -4,17 +4,16 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// REBOBINADO (consumible «shield» de la tienda). Graba continuamente dónde estaba el jugador y hacia dónde miraba.
-/// Si choca contra un obstáculo y tiene rebobinados, en vez de morir:
-///   1. Todo se para y el jugador VUELVE HACIA ATRÁS por su propio recorrido (posición y mirada) en ~1 s, mientras
-///      la música suena al revés (efecto cinta).
-///   2. Aparece en el último momento SEGURO de hace al menos 4 beats: en el suelo y sin ninguna acción en curso
-///      (ni salto, ni dash, ni slide, ni wallrun…), alineado a un beat entero.
-///   3. La canción se retoma justo en ese punto y todo lo que va con el reloj de beats vuelve a ese instante.
-/// En el KAYAK rebobina también el kayak (vuelve con él a un momento en que ibas sentado flotando).
-/// En la TIROLINA te suelta y vuelves a un momento en que ibas a pie (antes de engancharte).
-/// No funciona en la pelea del jefe (ahí no hay modificadores de la tienda).
-/// Se añade solo al jugador en los niveles.
+/// Rebobinado (consumible "shield" de la tienda). Graba continuamente dónde estaba el jugador y hacia dónde miraba.
+/// Si choca contra un obstáculo y tiene rebobinados, en lugar de morir ocurre lo siguiente.
+///   1. Todo se para y el jugador vuelve hacia atrás por su propio recorrido (posición y mirada) en algo más de un
+///      segundo, mientras la música suena al revés, como una cinta.
+///   2. Aparece en el último momento seguro de hace al menos 4 beats, es decir, en el suelo y sin ninguna acción en
+///      curso (salto, dash, deslizamiento, carrera por la pared...), alineado con un beat entero.
+///   3. La canción se retoma justo en ese punto, y todo lo que depende del reloj de beats vuelve a ese instante.
+/// En el kayak también se rebobina el kayak, que vuelve a un momento en el que el jugador iba sentado y flotando. En
+/// la tirolina, el jugador se suelta y vuelve a un momento en el que iba a pie, antes de engancharse. No funciona en
+/// la pelea del jefe, en la que no hay modificadores de la tienda. Se añade solo al jugador en los niveles.
 /// </summary>
 public class TimeRewinder : MonoBehaviour
 {
@@ -31,14 +30,14 @@ public class TimeRewinder : MonoBehaviour
     private struct Sample
     {
         public float t; public Vector3 pos; public float yaw, pitch; public bool safe;
-        public KayakController kayak; public Vector3 kayakPos; public Quaternion kayakRot;   // (si ibas en kayak)
+        public KayakController kayak; public Vector3 kayakPos; public Quaternion kayakRot;   // si iba en el kayak
     }
     private readonly List<Sample> _buf = new List<Sample>();
 
     private PlayerMovement _pm;
     private bool _rewinding;
 
-    // ── Aparición automática ──────────────────────────────────────────────────
+    // -=+=- Aparición automática -=+=-
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
@@ -66,7 +65,7 @@ public class TimeRewinder : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    // ── Grabación ─────────────────────────────────────────────────────────────
+    // -=+=- Grabación -=+=-
 
     private void Update()
     {
@@ -75,10 +74,10 @@ public class TimeRewinder : MonoBehaviour
         if (bm == null || !bm.IsPlaying) return;
 
         float t = bm.SongTime;
-        // Si el tiempo de la canción ha ido hacia atrás (rebobinado, checkpoint…), se olvida lo "futuro".
+        // Si el tiempo de la canción ha ido hacia atrás (rebobinado, punto de control...), se olvida lo que quedaba por delante.
         while (_buf.Count > 0 && _buf[_buf.Count - 1].t >= t) _buf.RemoveAt(_buf.Count - 1);
 
-        // Seguro = a pie en el suelo sin ninguna acción, o sentado en el kayak flotando.
+        // Un momento es seguro si el jugador está a pie en el suelo sin ninguna acción, o sentado en el kayak y flotando.
         KayakController kayak = _pm.IsOnKayak ? CurrentKayak() : null;
         bool safe = kayak != null
             ? kayak.IsSeatedFloating
@@ -97,7 +96,7 @@ public class TimeRewinder : MonoBehaviour
 
     private KayakController _kayakCache;
 
-    /// <summary>El kayak en el que va sentado el jugador (si va en uno).</summary>
+    /// <summary>Kayak en el que va sentado el jugador, si va en uno.</summary>
     private KayakController CurrentKayak()
     {
         if (_kayakCache != null && _kayakCache.IsSeatedFloating) return _kayakCache;
@@ -106,18 +105,18 @@ public class TimeRewinder : MonoBehaviour
         return null;
     }
 
-    // ── Rebobinar ─────────────────────────────────────────────────────────────
+    // -=+=- Rebobinado -=+=-
 
     /// <summary>
-    /// Intenta rebobinar (gasta un rebobinado). Devuelve false si no se puede (kayak, tirolina, jefe, sin momento
-    /// seguro grabado…): entonces el choque sigue su curso normal.
+    /// Intenta rebobinar, gastando un rebobinado. Devuelve false si no se puede (kayak, tirolina, jefe, sin un momento
+    /// seguro grabado...), y en ese caso el choque sigue su curso normal.
     /// </summary>
     public bool TryRewind()
     {
         if (_rewinding || _pm == null) return false;
-        // (En la tirolina: se busca un momento a pie de antes de engancharse; los de la tirolina no son seguros.)
+        // En la tirolina, se busca un momento a pie de antes de engancharse, ya que los momentos en la tirolina no son seguros.
         KayakController nowKayak = _pm.IsOnKayak ? CurrentKayak() : null;
-        if (_pm.IsOnKayak && nowKayak == null) return false;   // (en el kayak pero no flotando sentado)
+        if (_pm.IsOnKayak && nowKayak == null) return false;   // en el kayak, pero no sentado y flotando
         var boss = FindAnyObjectByType<BossController>();
         if (boss != null && boss.FightInProgress) return false;
         BeatManager bm = BeatManager.Instance;
@@ -127,7 +126,7 @@ public class TimeRewinder : MonoBehaviour
         float beat = bm.BeatDuration;
         int   b    = Mathf.FloorToInt(now / beat) - Mathf.Max(1, rewindBeats);
 
-        // Beat entero más reciente (≥ N beats atrás) en el que el jugador estaba en un estado seguro.
+        // Beat entero más reciente, de hace N beats o más, en el que el jugador estaba en un estado seguro.
         float target = -1f;
         for (; b >= 0; b--)
         {
@@ -144,8 +143,9 @@ public class TimeRewinder : MonoBehaviour
     }
 
     /// <summary>
-    /// ¿Estado seguro alrededor de 't'? Vale el mismo modo que ahora (a pie / en ESTE kayak) y, si ahora vas en un
-    /// kayak, también ir A PIE ANTES de haberte montado en él (el ataúd volverá a su sitio de diseño).
+    /// Indica si el estado alrededor de 't' es seguro. Vale el mismo modo que ahora (a pie o en este kayak) y, si el
+    /// jugador va ahora en un kayak, también ir a pie antes de haberse subido a él, en cuyo caso el ataúd vuelve a su
+    /// posición original.
     /// </summary>
     private bool IsSafeAround(float t, float margin, KayakController kayak)
     {
@@ -163,7 +163,7 @@ public class TimeRewinder : MonoBehaviour
         return found;
     }
 
-    /// <summary>Posición y mirada del jugador en el segundo 't' de la canción (interpolando lo grabado).</summary>
+    /// <summary>Posición y mirada del jugador en el segundo 't' de la canción, interpolando lo grabado.</summary>
     private Sample PoseAt(float t)
     {
         if (t <= _buf[0].t) return _buf[0];
@@ -194,8 +194,8 @@ public class TimeRewinder : MonoBehaviour
         var rhythm = FindAnyObjectByType<RhythmInput>();
 
         _pm.enabled = false;
-        _pm.ForceExitZipline();                   // (si ibas colgado de la tirolina, te suelta)
-        if (kayak != null) kayak.BeginRewind();   // el kayak también vuelve atrás (sin física mientras tanto)
+        _pm.ForceExitZipline();                   // si iba colgado de la tirolina, se suelta
+        if (kayak != null) kayak.BeginRewind();   // el kayak también vuelve atrás, sin física mientras tanto
         if (rhythm != null) rhythm.enabled = false;
         if (em != null) em.SetPaused(true);
 
@@ -203,15 +203,15 @@ public class TimeRewinder : MonoBehaviour
         ReviveFX.ShowMessage(Loc.T("REBOBINADO", "REWIND"), left > 0 ? Loc.T($"Te quedan {left}", $"{left} left") : Loc.T("Era el último", "That was the last one"), new Color(0.25f, 0.55f, 1f, 0.5f));
         Debug.Log($"[Rebobinado] {from:F2} s → {to:F2} s (quedan {left}).");
 
-        // La música, hacia atrás (efecto cinta). Si el clip no admite pitch negativo, simplemente no suena.
+        // La música suena hacia atrás, como una cinta. Si el clip no admite pitch negativo, simplemente no suena.
         float dur = Mathf.Max(0.2f, rewindDuration);
         bm.SetPlaybackPitch(-Mathf.Clamp((from - to) / dur, 1f, 4f));
 
-        // Obstáculos que van con el reloj de la canción: también vuelven atrás.
+        // Los obstáculos que dependen del reloj de la canción también vuelven atrás.
         List<IRewindable> rewindables = FindRewindables();
 
-        // Volver por el propio recorrido (posición + mirada), acelerando al principio y frenando al final.
-        // El reloj del nivel sigue al instante que se muestra → osciladores, bloques que caen, etc. retroceden a la vez.
+        // El jugador vuelve por su propio recorrido (posición y mirada), acelerando al principio y frenando al final. El reloj
+        // del nivel sigue al instante que se muestra, por lo que los osciladores, los bloques que caen, etc. retroceden a la vez.
         float el = 0f;
         while (el < dur)
         {
@@ -226,30 +226,30 @@ public class TimeRewinder : MonoBehaviour
             {
                 if (p.kayak == kayak) kayak.ApplyRewindPose(p.kayakPos, p.kayakRot);
                 else if (kayak.HasBeenActivated && shown < kayak.ActivatedSongTime)
-                    kayak.ApplyRewindPose(kayak.StartPosition, kayak.StartRotation);   // (antes de montarte: en su sitio)
+                    kayak.ApplyRewindPose(kayak.StartPosition, kayak.StartRotation);   // antes de subirse, en su posición original
             }
             _pm.ApplyRewindPose(p.pos, p.yaw, p.pitch);
             yield return null;
         }
         Sample end = PoseAt(to);
         if (kayak != null && end.kayak == kayak) kayak.ApplyRewindPose(end.kayakPos, end.kayakRot);
-        // ¿Se vuelve a un momento en que aún NO ibas en este kayak? Entonces el ataúd vuelve a su estado de diseño.
+        // Si se vuelve a un momento en el que el jugador todavía no iba en este kayak, el ataúd vuelve a su estado original.
         bool kayakReset = kayak != null && end.kayak != kayak && kayak.HasBeenActivated && to < kayak.ActivatedSongTime;
         _pm.ApplyRewindPose(end.pos, end.yaw, end.pitch);
         while (_buf.Count > 0 && _buf[_buf.Count - 1].t > to) _buf.RemoveAt(_buf.Count - 1);
 
-        // Retomar la canción justo en ese punto (y con ella el reloj de beats de todo el nivel).
+        // La canción se retoma justo en ese punto, y con ella el reloj de beats de todo el nivel.
         bm.SetPlaybackPitch(0f);
         double dspStart = AudioSettings.dspTime + 0.12;
         bm.StartMusicFromAt(to, dspStart);
-        RewindAll(rewindables);                    // (reloj definitivo: cada obstáculo queda como estaba en 'to')
+        RewindAll(rewindables);                    // reloj definitivo, con cada obstáculo como estaba en 'to'
         while (AudioSettings.dspTime < dspStart) yield return null;
 
-        // Otros ataúdes que te montaste DESPUÉS del punto al que vuelves: también a su sitio.
+        // Los otros ataúdes a los que el jugador se subió después del punto al que vuelve también vuelven a su posición.
         foreach (KayakController k in FindObjectsByType<KayakController>())
             if (k != kayak && k.HasBeenActivated && to < k.ActivatedSongTime && !k.IsSeatedFloating) k.ResetToStart();
 
-        if (kayakReset) kayak.ResetToStart();     // (te baja del kayak: vuelves a ir a pie)
+        if (kayakReset) kayak.ResetToStart();     // baja al jugador del kayak, que vuelve a ir a pie
         _pm.ResetMotionAfterRewind();
         if (kayak != null && !kayakReset) kayak.EndRewind();
         _pm.enabled = true;
@@ -258,7 +258,7 @@ public class TimeRewinder : MonoBehaviour
         _rewinding = false;
     }
 
-    /// <summary>Todos los IRewindable del nivel (también los desactivados: p. ej. bloques que se ocultaron al acabar).</summary>
+    /// <summary>Todos los IRewindable del nivel, también los desactivados, por ejemplo bloques que se ocultaron al terminar.</summary>
     private static List<IRewindable> FindRewindables()
     {
         var list = new List<IRewindable>();
@@ -271,7 +271,7 @@ public class TimeRewinder : MonoBehaviour
     {
         foreach (IRewindable r in list)
         {
-            if (r is Object o && o == null) continue;   // (destruido entretanto)
+            if (r is Object o && o == null) continue;   // destruido mientras tanto
             try { r.OnTimeRewind(); }
             catch (System.Exception ex) { Debug.LogException(ex); }
         }
@@ -279,14 +279,14 @@ public class TimeRewinder : MonoBehaviour
 }
 
 /// <summary>
-/// Objetos del nivel que dependen del reloj de la canción (osciladores, bloques que caen, bolas de fuego, pinchos…)
-/// y que tienen que VOLVER ATRÁS con el Rebobinado.
+/// Objetos del nivel que dependen del reloj de la canción (osciladores, bloques que caen, bolas de fuego, pinchos...)
+/// y que tienen que volver atrás con el Rebobinado.
 ///
-/// TimeRewinder llama a OnTimeRewind() en cada frame de la animación de rebobinado (con el reloj del BeatManager
-/// apuntando al instante que se está mostrando) y una vez más al retomar la canción. En ese momento
-/// BeatManager.ScheduledStartDSP ya representa el nuevo tiempo, así que cada objeto solo tiene que recalcular sus
-/// instantes DSP y colocarse en el estado que le toca AHORA (sin disparar sonidos de cosas que ya pasaron).
-/// Tiene que ser idempotente: se llama muchas veces seguidas.
+/// TimeRewinder llama a OnTimeRewind() en cada fotograma de la animación del rebobinado, con el reloj del BeatManager
+/// apuntando al instante que se está mostrando, y una vez más al retomar la canción. En ese momento,
+/// BeatManager.ScheduledStartDSP ya representa el nuevo tiempo, así que cada objeto solo tiene que volver a calcular sus
+/// instantes DSP y colocarse en el estado que le corresponde, sin reproducir sonidos de cosas que ya pasaron. Como se
+/// llama muchas veces seguidas, el resultado tiene que ser el mismo aunque se llame varias veces.
 /// </summary>
 public interface IRewindable
 {

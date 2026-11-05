@@ -6,18 +6,14 @@ using UnityEngine.UI;
 using static SimpleUI;
 
 /// <summary>
-/// TIENDA (versión simple, se construye sola por código). Ábrela con ShopUI.Open().
+/// Tienda, en una versión simple que se construye sola por código. Se abre con ShopUI.Open().
 ///
-///   TIENDA                               Monedas · Muescas   [Comprar muesca]
-///   [Pestaña][Pestaña][Pestaña]...      ┌──────── ficha ────────┐
-///   ┌───── rejilla (casillas) ─────┐    │ Nombre                │
-///   │ [ ] [ ] [ ] [ ] [ ]          │    │ Descripción           │
-///   │ [ ] [ ] [ ] ...              │    │ [Equipar]             │
-///   └──────────────────────────────┘    │ [Comprar]             │
-///               [Salir (Esc)]           └───────────────────────┘
+/// Arriba están el título, las monedas, las muescas y el botón para comprar muescas, y debajo, las pestañas. A la
+/// izquierda hay una rejilla de casillas con los objetos, y a la derecha, la ficha del objeto elegido, con su nombre,
+/// su descripción y los botones de equipar y comprar. Abajo está el botón de salir (Esc).
 ///
-/// Sin colores ni bordes redondeados a propósito. Lo común (abrir/cerrar, pestañas, rejilla, pie) está en
-/// GridPanel; colores y letra en SimpleUI.cs.
+/// No tiene colores ni bordes redondeados a propósito. Lo común (abrir y cerrar, pestañas, rejilla y pie) está en
+/// GridPanel, y los colores y la letra, en SimpleUI.cs.
 /// </summary>
 public class ShopUI : GridPanel<ShopUI, ShopUI.Entry>
 {
@@ -26,15 +22,15 @@ public class ShopUI : GridPanel<ShopUI, ShopUI.Entry>
     protected override void OnOpened()
     {
         _openedAt = Time.unscaledTime;
-        StudyTelemetry.ShopEvent("abrir", "", 0);   // (modo prueba)
+        StudyTelemetry.ShopEvent("abrir", "", 0);   // modo prueba
     }
 
     protected override void OnClosing() =>
-        StudyTelemetry.ShopEvent("cerrar", "", 0, Time.unscaledTime - _openedAt);   // (modo prueba)
+        StudyTelemetry.ShopEvent("cerrar", "", 0, Time.unscaledTime - _openedAt);   // modo prueba
 
-    // ── Estado ────────────────────────────────────────────────────────────────
+    // -=+=- Estado -=+=-
 
-    /// <summary>Una casilla de la rejilla: un objeto de la tienda.</summary>
+    /// <summary>Una casilla de la rejilla, que corresponde a un objeto de la tienda.</summary>
     public class Entry : GridPanelCell
     {
         public ShopItem item;
@@ -45,7 +41,7 @@ public class ShopUI : GridPanel<ShopUI, ShopUI.Entry>
     private TextMeshProUGUI _dName, _dInfo, _dDesc, _dState, _dEquipLabel, _dBuyLabel;
     private Button _dEquip, _dBuy;
 
-    // ── Construcción ──────────────────────────────────────────────────────────
+    // -=+=- Construcción -=+=-
 
     protected override string CanvasName => "ShopCanvas";
     protected override string Title      => Loc.T("TIENDA", "SHOP");
@@ -91,12 +87,12 @@ public class ShopUI : GridPanel<ShopUI, ShopUI.Entry>
         _dBuy.onClick.AddListener(Buy);
     }
 
-    // ── Pestañas y rejilla ────────────────────────────────────────────────────
+    // -=+=- Pestañas y rejilla -=+=-
 
     protected override void FillTab(int tab)
     {
-        // Solo lo que se puede comprar ya (lo de niveles posteriores no aparece):
-        // primero los consumibles y después las mejoras, por nivel de desbloqueo.
+        // Solo aparece lo que ya se puede comprar (lo de los niveles posteriores no), primero los consumibles y después las
+        // mejoras, ordenadas por el nivel en el que se desbloquean.
         var items = ShopCatalog.Load().items;
         foreach (ShopItem it in items)
             if (it != null && it.kind == ShopItemKind.Consumable && !it.IsLocked) AddEntry(new Entry { item = it }, it.Name);
@@ -106,7 +102,7 @@ public class ShopUI : GridPanel<ShopUI, ShopUI.Entry>
                     AddEntry(new Entry { item = it }, it.Name);
     }
 
-    // ── Refresco ──────────────────────────────────────────────────────────────
+    // -=+=- Actualización -=+=-
 
     protected override void Refresh()
     {
@@ -166,7 +162,7 @@ public class ShopUI : GridPanel<ShopUI, ShopUI.Entry>
         }
     }
 
-    // ── Acciones ──────────────────────────────────────────────────────────────
+    // -=+=- Acciones -=+=-
 
     private void Buy()
     {
@@ -186,7 +182,7 @@ public class ShopUI : GridPanel<ShopUI, ShopUI.Entry>
         if (!PlayerProgress.SetUpgradeEnabled(it.id, on))
             Toast(Loc.T($"No hay muescas libres ({it.Name} ocupa {Notches.CostOf(it.id)}, te quedan {Notches.Free}).",
                          $"No free notches ({it.Name} uses {Notches.CostOf(it.id)}, you have {Notches.Free} left)."));
-        else StudyTelemetry.ShopEvent(on ? "equipar" : "quitar", it.id, 0);   // (modo prueba)
+        else StudyTelemetry.ShopEvent(on ? "equipar" : "quitar", it.id, 0);   // modo prueba
         Refresh();
     }
 

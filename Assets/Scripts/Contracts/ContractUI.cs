@@ -6,41 +6,38 @@ using UnityEngine.UI;
 using static SimpleUI;
 
 /// <summary>
-/// PUESTO DE CONTRATOS (versión simple, mismo estilo que la tienda). Se abre con ContractUI.Open() desde el
-/// puesto físico del freeroam (ContractStand).
+/// Puesto de contratos, en una versión simple con el mismo estilo que la tienda. Se abre con ContractUI.Open() desde
+/// el puesto físico de la zona de inicio (ContractStand).
 ///
-///   CONTRATOS                               Monedas · Firmados · Por cobrar
-///   [Contratos][Cobrados]                  ┌──────── ficha ────────┐
-///   ┌───── rejilla (casillas) ─────┐       │ Nombre / Descripción  │
-///   │ [ ] [ ] [ ] [ ] [ ] [ ]      │       │ [Elegir / Cobrar…]    │
-///   │ ...                          │       │ Hoja de firma         │
-///   └──────────────────────────────┘       │ [Firmar] [Borrar]     │
-///               [Salir (Esc)]              └───────────────────────┘
+/// Arriba están el título, las monedas, los contratos firmados y los que quedan por cobrar, y debajo, las pestañas
+/// "Contratos" y "Cobrados". A la izquierda hay una rejilla de casillas, y a la derecha, la ficha del contrato
+/// elegido, con su nombre, su descripción, el botón para elegirlo o cobrarlo y la hoja de firma con los botones de
+/// firmar y borrar. Abajo está el botón de salir (Esc).
 ///
-///   • ELEGIR → va a la hoja de firma. Firma con el ratón en el recuadro y pulsa FIRMAR: quedan activos
-///              (máx. ContractCatalog.MaxActive a la vez).
-///   • RESCINDIR → quitas uno firmado.   • COBRAR → cumplido: te llevas las monedas.
-/// Lo común (abrir/cerrar, pestañas, rejilla, pie) está en GridPanel; colores y letra en SimpleUI.cs.
+///   - Elegir lleva a la hoja de firma. El jugador firma con el ratón en el recuadro y pulsa Firmar, y los contratos
+///     elegidos quedan activos (como máximo ContractCatalog.MaxActive a la vez).
+///   - Rescindir quita un contrato firmado, y Cobrar entrega las monedas de un contrato cumplido.
+/// Lo común (abrir y cerrar, pestañas, rejilla y pie) está en GridPanel, y los colores y la letra, en SimpleUI.cs.
 /// </summary>
 public class ContractUI : GridPanel<ContractUI, ContractUI.Entry>
 {
-    // ── LAYOUT propio (el común está en GridPanel) ────────────────────────────
+    // -=+=- Distribución propia (la común está en GridPanel) -=+=-
     private const float PadH = 150f;          // alto del recuadro de firma
     private const float MinInk = 120f;        // trazo mínimo para que cuente como firma
 
-    // ── Estado ────────────────────────────────────────────────────────────────
+    // -=+=- Estado -=+=-
 
     public class Entry : GridPanelCell { public ContractDef def; }
 
-    private const int ClaimedTab = 1;         // 0 = Contratos (por hacer / firmados / por cobrar), 1 = Cobrados
-    private readonly List<string> _chosen = new List<string>();   // elegidos, pendientes de firmar
+    private const int ClaimedTab = 1;         // 0 es Contratos (por hacer, firmados y por cobrar) y 1, Cobrados
+    private readonly List<string> _chosen = new List<string>();   // elegidos y pendientes de firmar
 
     private TextMeshProUGUI _wallet;
     private TextMeshProUGUI _dName, _dInfo, _dDesc, _dState, _dActionLabel, _sheet, _signLabel;
     private Button _dAction, _sign;
     private SignaturePad _pad;
 
-    // ── Construcción ──────────────────────────────────────────────────────────
+    // -=+=- Construcción -=+=-
 
     protected override string CanvasName => "ContractCanvas";
     protected override string Title      => Loc.T("CONTRATOS", "CONTRACTS");
@@ -90,12 +87,12 @@ public class ContractUI : GridPanel<ContractUI, ContractUI.Entry>
         clear.onClick.AddListener(() => _pad.Clear());
     }
 
-    // ── Pestañas y rejilla ────────────────────────────────────────────────────
+    // -=+=- Pestañas y rejilla -=+=-
 
     protected override void FillTab(int tab)
     {
-        // «Contratos»: los de ESTE nivel + los cumplidos de otros niveles que falten por cobrar.
-        // «Cobrados»: todos los ya cobrados (de cualquier nivel).
+        // "Contratos" muestra los de este nivel y los cumplidos de otros niveles que faltan por cobrar, y "Cobrados",
+        // todos los ya cobrados, de cualquier nivel.
         int lv = ContractCatalog.CurrentLevel;
         for (int tier = 1; tier <= 3; tier++)
             foreach (ContractDef d in ContractCatalog.All)
@@ -114,9 +111,9 @@ public class ContractUI : GridPanel<ContractUI, ContractUI.Entry>
         AddEntry(new Entry { def = d }, title);
     }
 
-    // ── Refresco ──────────────────────────────────────────────────────────────
+    // -=+=- Actualización -=+=-
 
-    /// <summary>Firmados de este nivel (el máximo es por nivel).</summary>
+    /// <summary>Contratos firmados de este nivel, ya que el máximo es por nivel.</summary>
     private static int ActiveCount => ContractCatalog.ActiveHere().Count;
 
     private static string State(ContractDef d, bool chosen)
@@ -181,7 +178,7 @@ public class ContractUI : GridPanel<ContractUI, ContractUI.Entry>
         _signLabel.text = _chosen.Count > 0 ? Loc.T($"Firmar ({_chosen.Count})", $"Sign ({_chosen.Count})") : Loc.T("Firmar", "Sign");
     }
 
-    // ── Acciones ──────────────────────────────────────────────────────────────
+    // -=+=- Acciones -=+=-
 
     private void OnAction()
     {
@@ -206,13 +203,13 @@ public class ContractUI : GridPanel<ContractUI, ContractUI.Entry>
         Refresh();
     }
 
-    /// <summary>Firma la hoja: todos los elegidos pasan a estar activos.</summary>
+    /// <summary>Firma la hoja, por lo que todos los contratos elegidos pasan a estar activos.</summary>
     private void Sign()
     {
         if (_chosen.Count == 0) { Toast(Loc.T("Elige primero algún contrato.", "Choose a contract first.")); return; }
         if (_pad.Ink < MinInk)  { Toast(Loc.T("Firma en el recuadro con el ratón.", "Sign in the box with the mouse.")); return; }
 
-        // (Copia: al activar cada uno salta PlayerProgress.OnChanged → Refresh, que limpia _chosen.)
+        // Se hace una copia, ya que al activar cada uno se lanza PlayerProgress.OnChanged, que llama a Refresh y vacía _chosen.
         var toSign = new List<string>(_chosen);
         _chosen.Clear();
         int n = 0;

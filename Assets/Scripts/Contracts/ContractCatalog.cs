@@ -3,42 +3,42 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>Lo que un contrato OBLIGA a hacer mientras está firmado (además de su objetivo).</summary>
+/// <summary>Lo que un contrato obliga a hacer mientras está firmado, además de su objetivo.</summary>
 [Flags]
 public enum ContractRule
 {
     None       = 0,
-    MovesOnBeat = 1 << 0,   // salto, dash, slide y remo solo funcionan en el beat
+    MovesOnBeat = 1 << 0,   // saltar, hacer dash, deslizarse y remar solo funcionan en el beat
     NoShop      = 1 << 1,   // sin mejoras ni consumibles de la tienda durante el nivel
-    PressLimit  = 1 << 2,   // «Contrarreloj»: pasarte de ContractCatalog.PressLimitFor(nivel) pulsaciones = GAME OVER
+    PressLimit  = 1 << 2,   // "Contrarreloj": pasarse de ContractCatalog.PressLimitFor(nivel) pulsaciones es game over
 }
 
 /// <summary>Datos del final del nivel con los que se comprueban los contratos.</summary>
 public struct LevelResult
 {
-    public float accuracy;       // % de beats sincronizados (LevelEndManager)
-    public float energyPercent;  // 0..1 de energía al llegar a la meta
+    public float accuracy;       // porcentaje de beats sincronizados (LevelEndManager)
+    public float energyPercent;  // energía al llegar a la meta, de 0 a 1
     public int   runCoins;       // monedas recogidas en la partida
     public float songBeats;      // beats de la canción que han pasado hasta llegar a la meta
 }
 
-/// <summary>Un contrato: objetivo que el jugador firma en el puesto y que cobra al completar un nivel cumpliéndolo.</summary>
+/// <summary>Un contrato, que es un objetivo que el jugador firma en el puesto y que cobra al completar un nivel cumpliéndolo.</summary>
 public class ContractDef
 {
     public string id, titleEs, titleEn;
     public Func<string> descFn;
     public string title       => Loc.T(titleEs, titleEn);
     public string description => descFn != null ? descFn() : "";
-    public int    level;         // nivel del juego al que pertenece (1, 2, 3): solo cuenta jugando ese nivel
-    public int    tier;          // 1 = encargo, 2 = contrato, 3 = gran contrato
+    public int    level;         // nivel del juego al que pertenece (1, 2 o 3), ya que solo cuenta jugando ese nivel
+    public int    tier;          // 1 es un encargo, 2 un contrato y 3 un gran contrato
     public int    reward;        // monedas
     public ContractRule rules;
-    /// <summary>Se puede cumplir A MITAD de nivel (objetivos de "consigue N…"): se cobra en cuanto se cumple.</summary>
+    /// <summary>Se puede cumplir a mitad de nivel (objetivos del tipo "consigue N..."), y se cobra en cuanto se cumple.</summary>
     public bool midLevel;
 
-    public Func<LevelResult, bool> check;    // ¿cumplido al terminar el nivel?
-    public Func<string>            progress; // texto en directo para el HUD (null = sin progreso visible)
-    public Func<bool>              broken;   // ¿ya es imposible en esta partida? (null = nunca se rompe antes del final)
+    public Func<LevelResult, bool> check;    // si se ha cumplido al terminar el nivel
+    public Func<string>            progress; // texto en directo para el HUD (null si no se muestra el progreso)
+    public Func<bool>              broken;   // si ya es imposible en esta partida (null si nunca se incumple antes del final)
 
     public static string TierName(int tier) =>
         tier >= 3 ? Loc.T("Gran contrato", "Big contract") : tier == 2 ? Loc.T("Contrato", "Contract") : Loc.T("Encargo", "Job");
@@ -48,18 +48,18 @@ public class ContractDef
 }
 
 /// <summary>
-/// LISTA DE CONTRATOS. Cada contrato existe UNA VEZ POR NIVEL (Level1, Level2, Level3), con objetivo y pago cada vez
-/// mayores: se firma en el puesto de ese nivel, solo cuenta jugando ese nivel y se cobra una vez.
-/// Los números de cada nivel están en los arrays { nivel 1, nivel 2, nivel 3 } de abajo: ajústalos aquí.
+/// Lista de contratos. Cada contrato existe una vez por nivel (Level1, Level2 y Level3), con un objetivo y un pago cada
+/// vez mayores. Se firma en el puesto de ese nivel, solo cuenta jugando ese nivel y se cobra una vez. Los números de
+/// cada nivel están en los arrays { nivel 1, nivel 2, nivel 3 } de abajo, que es donde se ajustan.
 /// </summary>
 public static class ContractCatalog
 {
-    /// <summary>Cuántos contratos se pueden tener firmados a la vez EN CADA NIVEL.</summary>
+    /// <summary>Cuántos contratos se pueden tener firmados a la vez en cada nivel.</summary>
     public const int MaxActive = 3;
 
     public const int Levels = 3;
 
-    /// <summary>Pulsaciones máximas de «Contrarreloj» en cada nivel (la siguiente es game over).</summary>
+    /// <summary>Pulsaciones máximas de "Contrarreloj" en cada nivel. La siguiente es game over.</summary>
     private static readonly int[] PressLimits = { 100, 90, 80 };
     public static int PressLimitFor(int level) => PressLimits[Mathf.Clamp(level, 1, Levels) - 1];
 
@@ -73,7 +73,7 @@ public static class ContractCatalog
         return null;
     }
 
-    /// <summary>Nivel actual: el de la escena «LevelN»; fuera de un nivel (menú), el último alcanzado.</summary>
+    /// <summary>Nivel actual, que es el de la escena "LevelN" o, fuera de un nivel (en el menú), el último alcanzado.</summary>
     public static int CurrentLevel
     {
         get
@@ -84,11 +84,11 @@ public static class ContractCatalog
         }
     }
 
-    /// <summary>Contratos firmados del nivel actual (los de otros niveles siguen firmados, esperando a su nivel).</summary>
+    /// <summary>Contratos firmados del nivel actual. Los de otros niveles siguen firmados, a la espera de su nivel.</summary>
     public static List<ContractDef> ActiveHere()
     {
         var list = new List<ContractDef>();
-        if (StudySession.Active && !StudySession.ShopAllowed) return list;   // (modo prueba: contratos solo en las partes 4-5)
+        if (StudySession.Active && !StudySession.ShopAllowed) return list;   // modo prueba: solo hay contratos en las partes que los usan
         int lv = CurrentLevel;
         foreach (string id in PlayerProgress.ActiveContracts)
         {
@@ -98,18 +98,18 @@ public static class ContractCatalog
         return list;
     }
 
-    /// <summary>Beats de la canción que llevan sonando ahora mismo.</summary>
+    /// <summary>Beats de la canción que han sonado hasta ahora.</summary>
     public static float SongBeatsNow()
     {
         BeatManager bm = BeatManager.Instance;
         return bm != null && bm.BeatDuration > 0f ? bm.SongTime / bm.BeatDuration : 0f;
     }
 
-    // ── Definición ────────────────────────────────────────────────────────────
+    // -=+=- Definición -=+=-
 
     private static List<ContractDef> _build;
 
-    /// <summary>Crea las 3 versiones (una por nivel) de un contrato. 'v' = valor del objetivo en cada nivel.</summary>
+    /// <summary>Crea las 3 versiones de un contrato, una por nivel. 'v' es el valor del objetivo en cada nivel.</summary>
     private static void Add(string id, int tier, (string es, string en) title, int[] reward, int[] v,
                             Func<int, string> desc, Func<int, Func<LevelResult, bool>> check,
                             Func<int, Func<string>> progress = null, Func<int, Func<bool>> broken = null,
@@ -132,7 +132,7 @@ public static class ContractCatalog
         _build = new List<ContractDef>();
         int[] none = { 0, 0, 0 };
 
-        // ── ENCARGOS (fáciles) ────────────────────────────────────────────────
+        // -=+=- Encargos (fáciles) -=+=-
         Add("first", 1, ("Primer encargo", "First job"), new[] { 30, 45, 60 }, none,
             x => Loc.T("Completa este nivel. Sin más.", "Complete this level. That's it."),
             x => r => true);
@@ -161,7 +161,7 @@ public static class ContractCatalog
             x => r => RunStats.Wallruns >= x,
             x => () => $"{RunStats.Wallruns}/{x} wallruns", midLevel: true);
 
-        // ── CONTRATOS (medios) ────────────────────────────────────────────────
+        // -=+=- Contratos (medios) -=+=-
         Add("clean", 2, ("Sin rasguños", "Not a scratch"), new[] { 120, 180, 250 }, none,
             x => Loc.T("Completa este nivel sin usar vidas extra, Adrenalina, Paracaídas, checkpoints ni rebobinados.",
                         "Complete this level without using extra lives, Adrenaline, Parachute, checkpoints or rewinds."),
@@ -188,7 +188,7 @@ public static class ContractCatalog
             x => r => RunStats.BestStreak >= x,
             x => () => Loc.T($"racha {RunStats.Streak} (mejor {RunStats.BestStreak}/{x})", $"streak {RunStats.Streak} (best {RunStats.BestStreak}/{x})"), midLevel: true);
 
-        // ── GRANDES CONTRATOS (difíciles) ─────────────────────────────────────
+        // -=+=- Grandes contratos (difíciles) -=+=-
         Add("presses", 3, ("Contrarreloj", "Against the clock"), new[] { 300, 400, 500 }, PressLimits,
             x => Loc.T($"Pásate este nivel con solo {x} pulsaciones. Si pulsas una vez más: GAME OVER " +
                        "(sin vidas extra ni checkpoints). El Auto-latido no funciona durante este reto.",

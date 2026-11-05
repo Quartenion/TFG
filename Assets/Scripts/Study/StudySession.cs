@@ -2,15 +2,16 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// MODO PRUEBA (estudio con jugadores). Todo se juega en la escena «Tutorial» (ver CourseBuilder), a 100 BPM:
-///   0. Tutorial (tras el consentimiento): cada obstáculo 3 veces, con explicaciones. NO es una parte del estudio: no
-///      se registran datos. Al terminarlo, en la sala, empieza el estudio.
-///   1. Recorrido de estudio con la configuración A o B. ┐ el orden (AB / BA) se sortea por participante. Los dos
-///   2. Recorrido con la otra configuración.             ┘ recorridos son EL MISMO (fijo, de fácil a difícil).
-/// Si choca o se queda sin energía reaparece en el último checkpoint (gratis): todos juegan el recorrido completo.
-/// Tras cada parte el jugador vuelve a la SALA del tutorial: allí StudyHub enseña el cuestionario corto y la siguiente
-/// parte, que empieza al cruzar la PUERTA GRANDE. Las puertas pequeñas, la tienda y los contratos están cerrados durante
-/// todo el estudio, y no hay mejoras (todos juegan igual).
+/// Modo prueba (estudio con jugadores). Todo se juega en la escena "Tutorial" (ver CourseBuilder), a 100 BPM.
+///   0. Tutorial, después del consentimiento, en el que cada obstáculo se repite 3 veces con explicaciones. No forma
+///      parte del estudio, por lo que no se registran datos. Al terminarlo, el estudio empieza en la sala.
+///   1. Recorrido del estudio con la configuración A o B.
+///   2. Recorrido con la otra configuración.
+///   El orden (AB o BA) se sortea para cada participante, y los dos recorridos son el mismo (fijo, de fácil a difícil).
+/// Si el jugador choca o se queda sin energía, reaparece en el último punto de control (gratis), así que todos juegan
+/// el recorrido completo. Después de cada parte, el jugador vuelve a la sala del tutorial, donde StudyHub muestra el
+/// cuestionario corto y la siguiente parte, que empieza al cruzar la puerta grande. Las puertas pequeñas, la tienda y
+/// los contratos están cerrados durante todo el estudio, y no hay mejoras, para que todos jueguen en las mismas condiciones.
 /// </summary>
 public static class StudySession
 {
@@ -18,41 +19,43 @@ public static class StudySession
     {
         public string scene, titleEs, titleEn, descEs, descEn;
         public string title       => Loc.T(titleEs, titleEn);
-        public string description => Keybinds.Fix(Loc.T(descEs, descEn));   // (teclas de Ajustes → Controles)
+        public string description => Keybinds.Fix(Loc.T(descEs, descEn));   // teclas de Ajustes > Controles
         public StudyConfig.Profile config;
-        public bool tutorial, questionnaire, preference, shop;   // tutorial = carteles de consejos (práctica y mecánicas nuevas de los niveles 2 y 3)
-        public CourseMode course;   // qué se construye en la escena «Tutorial» (ver CourseBuilder)
-        public int round;           // nº de recorrido (cambia el orden de los obstáculos)
+        public bool tutorial, questionnaire, preference, shop;   // tutorial: carteles de consejos (práctica y mecánicas nuevas de los niveles 2 y 3)
+        public CourseMode course;   // qué se construye en la escena "Tutorial" (ver CourseBuilder)
+        public int round;           // número de recorrido, que cambia el orden de los obstáculos
     }
 
     public const string MenuScene = "MainMenu";
-    public const string CourseScene = "Tutorial";   // escena del nivel tutorial / de estudio (CourseBuilder)
+    public const string CourseScene = "Tutorial";   // escena del nivel tutorial y del estudio (CourseBuilder)
 
-    /// <summary>¿Se ha dado ya el presupuesto de la tienda (parte 4)?</summary>
+    /// <summary>Indica si ya se ha dado el presupuesto de la tienda, en las partes que la usan.</summary>
     public static bool ShopBudgetGiven { get; private set; }
 
-    /// <summary>Parte 4: monedas fijas para que todos puedan comprar algo (además de las ganadas).</summary>
+    /// <summary>Da una cantidad fija de monedas, además de las ganadas, para que todos puedan comprar algo en las partes con tienda.</summary>
     public static void GiveShopBudget()
     {
         if (ShopBudgetGiven || !Active) return;
         ShopBudgetGiven = true;
         PlayerProgress.AddCoins(StudySettings.ShopBudget);
     }
-    public const int MainParts = 2;   // 2 recorridos (A y B), los dos obligatorios (el tutorial va antes y no cuenta)
+    public const int MainParts = 2;   // 2 recorridos (A y B), los dos obligatorios. El tutorial va antes y no cuenta.
 
     public static bool   Active { get; private set; }
-    /// <summary>¿Ha empezado ya el estudio (se ha cruzado la puerta grande para el primer recorrido)? Antes, en la sala
-    /// del tutorial, se pueden practicar los obstáculos por las puertas pequeñas.</summary>
+    /// <summary>
+    /// Indica si ya ha empezado el estudio, es decir, si se ha cruzado la puerta grande para el primer recorrido. Antes,
+    /// en la sala del tutorial, se pueden practicar los obstáculos por las puertas pequeñas.
+    /// </summary>
     public static bool   RunsStarted { get; private set; }
-    /// <summary>¿Ya se ha visto en la sala la pantalla de la primera parte? (Al volver de practicar no se repite.)</summary>
+    /// <summary>Indica si ya se ha visto en la sala la pantalla de la primera parte, que no se repite al volver de practicar.</summary>
     public static bool   RoomIntroSeen;
 
-    /// <summary>¿Se ha completado ya la prueba entera en este equipo? (Hasta entonces, el botón JUGAR del menú está en gris.)</summary>
+    /// <summary>Indica si ya se ha completado la prueba entera en este equipo. Hasta entonces, el botón JUGAR del menú está en gris.</summary>
     public static bool StudyCompleted => PlayerPrefs.GetInt("Study.Completed", 0) == 1;
     public static void MarkStudyCompleted()
     {
         PlayerPrefs.SetInt("Study.Completed", 1);
-        // (El código se guarda: lo que juegue después en el modo normal se registra con el mismo código, parte «libre».)
+        // El código se guarda, de forma que lo que se juegue después en el modo normal se registra con el mismo código, como parte "libre".
         PlayerPrefs.SetString("Study.Participant", Participant);
         PlayerPrefs.SetInt("Study.Simulated", Simulated ? 1 : 0);
         PlayerPrefs.SetString("Study.Order", OrderAB ? "AB" : "BA");
@@ -65,8 +68,8 @@ public static class StudySession
     public static string SavedOrder       => PlayerPrefs.GetString("Study.Order", "");
 
     /// <summary>
-    /// Jugando DESPUÉS de completar la prueba (modo normal desde JUGAR), fuera del menú: también se registran datos
-    /// (parte «libre»), con el mismo código. Igual en la práctica libre de dentro de la prueba.
+    /// Indica si se está jugando después de completar la prueba (modo normal desde JUGAR), fuera del menú. En ese caso
+    /// también se registran datos, como parte "libre" y con el mismo código. Lo mismo ocurre en la práctica libre de la prueba.
     /// </summary>
     public static bool PostStudyPlay =>
         SceneManager.GetActiveScene().name != MenuScene &&
@@ -75,33 +78,34 @@ public static class StudySession
     public static bool RoomRunsPending() => Active && !RunsStarted && RoomIntroSeen;
     public static string Participant { get; private set; } = "";
     public static bool   OrderAB { get; private set; }
-    public static int    Step { get; private set; } = -1;      // parte actual (0..Plan.Length-1)
+    public static int    Step { get; private set; } = -1;      // parte actual (de 0 a Plan.Length - 1)
     public static int    Attempts { get; private set; }        // intentos en la parte actual
-    public static bool   PartCompleted { get; private set; }   // ¿llegó a la meta en esta parte?
-    public static bool   AwaitingReturn { get; private set; }  // jugando una parte; al volver al menú, cuestionario
+    public static bool   PartCompleted { get; private set; }   // si ha llegado a la meta en esta parte
+    public static bool   AwaitingReturn { get; private set; }  // jugando una parte, y al volver al menú, cuestionario
 
     public static Part[] Plan { get; private set; }
 
-    /// <summary>Jugando una parte de la prueba (no la práctica libre).</summary>
+    /// <summary>Indica si se está jugando una parte de la prueba (no la práctica libre).</summary>
     public static bool InLevel => Active && AwaitingReturn && !FreePlay && SceneManager.GetActiveScene().name != MenuScene;
 
     /// <summary>
-    /// Dentro de la prueba fuera del menú: el tutorial, la sala, las prácticas de las puertas y los recorridos. Salir de
-    /// aquí al menú (pausa o SALIR del game over) es ABANDONAR la prueba (ver AbandonDialog).
+    /// Indica si se está dentro de la prueba y fuera del menú, es decir, en el tutorial, la sala, las prácticas de las
+    /// puertas o los recorridos. Salir de aquí al menú (desde la pausa o con el botón de salir del game over) cuenta como
+    /// abandonar la prueba (ver AbandonDialog).
     /// </summary>
     public static bool InSession => Active && !FreePlay && SceneManager.GetActiveScene().name != MenuScene;
 
     /// <summary>
-    /// PRÁCTICA LIBRE (tras las 3 partes principales): repetir el último nivel con TODO desbloqueado (tienda con todas
-    /// las mejoras, monedas de práctica, contratos), sin límite de intentos, sin cuestionario y SIN registrar datos.
-    /// Al volver al menú la partida guardada queda exactamente como estaba (lo comprado en la práctica no cuenta).
+    /// Práctica libre, después de las partes principales. Se repite el último nivel con todo desbloqueado (la tienda con
+    /// todas las mejoras, monedas de práctica y contratos), sin límite de intentos, sin cuestionario y sin registrar datos.
+    /// Al volver al menú, la partida guardada queda exactamente como estaba, por lo que lo comprado en la práctica no cuenta.
     /// </summary>
     public static bool FreePlay { get; private set; }
     public static bool InFreePlay => Active && FreePlay && SceneManager.GetActiveScene().name != MenuScene;
     public const int FreePlayCoins = 5000;
     private static string _freePlaySave;
 
-    /// <summary>Nivel que se acaba de jugar (el que se repite en la práctica libre).</summary>
+    /// <summary>Nivel que se acaba de jugar, que es el que se repite en la práctica libre.</summary>
     public static Part LastPlayed => Plan[Mathf.Clamp(Step - 1, 0, Plan.Length - 1)];
 
     public static void StartFreePlay()
@@ -118,7 +122,7 @@ public static class StudySession
         SceneManager.LoadScene(LastPlayed.scene);
     }
 
-    /// <summary>De vuelta en el menú tras la práctica libre: todo como estaba.</summary>
+    /// <summary>De vuelta en el menú después de la práctica libre, todo vuelve a estar como antes.</summary>
     public static void EndFreePlay()
     {
         if (!FreePlay) return;
@@ -132,22 +136,22 @@ public static class StudySession
     public static bool TutorialStep => InLevel && Step >= 0 && Plan[Step].tutorial;
     public static Part Current => Plan[Mathf.Clamp(Step, 0, Plan.Length - 1)];
 
-    /// <summary>¿Se puede usar la tienda (y cuentan las mejoras) en esta parte?</summary>
+    /// <summary>Indica si en esta parte se puede usar la tienda y cuentan las mejoras.</summary>
     public static bool ShopAllowed => (InLevel && Current.shop) || InFreePlay;
 
-    // ── Inicio / fin ──────────────────────────────────────────────────────────
+    // -=+=- Inicio y fin -=+=-
 
     /// <summary>
-    /// Sesión SIMULADA (para probar en el editor desde la escena Tutorial): todo igual, pero el código empieza por
-    /// «TEST-» y los datos NO se envían al formulario (solo se guardan en el CSV local).
+    /// Sesión simulada, para probar en el editor desde la escena Tutorial. Todo funciona igual, pero el código empieza por
+    /// "TEST-" y los datos no se envían al formulario, sino que solo se guardan en el CSV local.
     /// </summary>
     public static bool Simulated { get; private set; }
 
-    /// <summary>Empieza una sesión nueva: código anónimo, orden sorteado y plan de partes.</summary>
+    /// <summary>Empieza una sesión nueva, con un código anónimo, el orden sorteado y el plan de partes.</summary>
     public static void Begin(bool simulated = false)
     {
         Simulated = simulated;
-        const string abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // sin 0/O ni 1/I
+        const string abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // sin 0, O, 1 ni I
         var rng = new System.Random();
         char[] code = new char[5];
         for (int i = 0; i < code.Length; i++) code[i] = abc[rng.Next(abc.Length)];
@@ -175,10 +179,10 @@ public static class StudySession
         Attempts = 0;
         RunsStarted = false;
         RoomIntroSeen = false;
-        CourseBuilder.ResetTutorialRun();   // (prueba nueva —p. ej. tras abandonar—: el tutorial vuelve a explicarlo todo)
+        CourseBuilder.ResetTutorialRun();   // en una prueba nueva (por ejemplo, después de abandonar), el tutorial vuelve a explicarlo todo
         ShopBudgetGiven = false;
         Active = true;
-        PlayerProgress.Suspended = true;   // tienda, mejoras y consumibles fuera: todos juegan igual
+        PlayerProgress.Suspended = true;   // sin tienda, mejoras ni consumibles, para que todos jueguen igual
         Debug.Log($"[Estudio] Sesión {Participant}, orden {(OrderAB ? "AB" : "BA")}.");
     }
 
@@ -192,8 +196,9 @@ public static class StudySession
     }
 
     /// <summary>
-    /// El participante sale al menú desde la pausa a mitad de la prueba: queda DESCALIFICADO. Se registra el abandono,
-    /// se cierra la sesión y se borra el progreso de la partida, así la prueba vuelve a empezar desde cero (código nuevo).
+    /// El participante sale al menú desde la pausa a mitad de la prueba, por lo que queda descalificado. Se registra el
+    /// abandono, se cierra la sesión y se borra el progreso de la partida, de forma que la prueba vuelve a empezar desde
+    /// cero, con un código nuevo.
     /// </summary>
     public static void Abort()
     {
@@ -207,10 +212,10 @@ public static class StudySession
         PartCompleted = false;
         Participant = "";
         CheckpointSystem.Clear();
-        PlayerProgress.ResetAll();   // (solo se puede llegar aquí en la versión de prueba)
+        PlayerProgress.ResetAll();   // solo se puede llegar aquí en la versión de prueba
     }
 
-    // ── Partes ────────────────────────────────────────────────────────────────
+    // -=+=- Partes -=+=-
 
     /// <summary>Carga el nivel de la parte actual con su configuración.</summary>
     public static void StartPart()
@@ -220,8 +225,8 @@ public static class StudySession
     }
 
     /// <summary>
-    /// Deja lista la parte actual (configuración, intentos…) SIN cargar la escena: en la sala del tutorial la carga la
-    /// puerta grande al cruzarla. En el estudio no hay mejoras ni consumibles (todos juegan igual).
+    /// Prepara la parte actual (configuración, intentos...) sin cargar la escena, ya que en la sala del tutorial la carga
+    /// la puerta grande al cruzarla. En el estudio no hay mejoras ni consumibles, para que todos jueguen igual.
     /// </summary>
     public static void PreparePart()
     {
@@ -234,7 +239,7 @@ public static class StudySession
         CheckpointSystem.Clear();
     }
 
-    /// <summary>Pasa a la siguiente parte (o termina). Devuelve false si ya no quedan.</summary>
+    /// <summary>Pasa a la siguiente parte o termina la prueba. Devuelve false si ya no quedan partes.</summary>
     public static bool NextPart()
     {
         Step++;
@@ -245,8 +250,8 @@ public static class StudySession
     public static void NotifyAttemptEnded(bool completed) { if (completed) PartCompleted = true; }
 
     /// <summary>
-    /// Lo llama GameOverManager al pulsar «Reintentar». Si ya se han gastado los intentos de esta parte, se vuelve
-    /// al menú (siguiente paso de la prueba) en vez de recargar el nivel. Devuelve true si se ha encargado él.
+    /// Lo llama GameOverManager al pulsar "Reintentar". Si ya se han gastado los intentos de esta parte, se vuelve al
+    /// menú (siguiente paso de la prueba) en lugar de recargar el nivel. Devuelve true si se ha encargado de ello.
     /// </summary>
     public static bool OnRestartRequested()
     {
@@ -257,10 +262,10 @@ public static class StudySession
         return true;
     }
 
-    /// <summary>De vuelta en el menú tras una parte: ya no se está jugando.</summary>
+    /// <summary>De vuelta en el menú después de una parte, por lo que ya no se está jugando.</summary>
     public static void ReturnedToMenu() => AwaitingReturn = false;
 
-    // ── Al cargar un nivel ────────────────────────────────────────────────────
+    // -=+=- Al cargar un nivel -=+=-
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
@@ -272,7 +277,7 @@ public static class StudySession
     private static void OnSceneLoaded(Scene s, LoadSceneMode m)
     {
         if (!Active || s.name == MenuScene) return;
-        // Al terminar el nivel, se vuelve al menú (cuestionario + siguiente parte) en vez de ir al siguiente nivel.
+        // Al terminar el nivel, se vuelve al menú (cuestionario y siguiente parte) en lugar de ir al siguiente nivel.
         foreach (var end in Object.FindObjectsByType<LevelEndManager>()) end.SetNextScene(MenuScene);
     }
 }

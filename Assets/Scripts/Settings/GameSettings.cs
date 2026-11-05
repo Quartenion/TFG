@@ -2,13 +2,13 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// AJUSTES del jugador (volumen general y sensibilidad del ratón), guardados en PlayerPrefs.
-/// Los usan el menú principal y el menú de pausa; PlayerMovement lee la sensibilidad.
+/// Ajustes del jugador (volumen general y sensibilidad del ratón), guardados en PlayerPrefs. Los usan el menú
+/// principal y el menú de pausa, y PlayerMovement lee la sensibilidad.
 /// </summary>
 public static class GameSettings
 {
     private const string VolumeKey = "MasterVolume";
-    private const string SensKey   = "LookSensitivity";   // (multiplicador; 1 = la sensibilidad de siempre)
+    private const string SensKey   = "LookSensitivity";   // multiplicador, donde 1 es la sensibilidad normal
 
     public const float SensMin = 0.2f, SensMax = 3f;
 
@@ -28,23 +28,23 @@ public static class GameSettings
 
     private const string LookKey = "CameraLook";
 
-    /// <summary>¿Se mueve la cámara con el ratón durante el nivel? (Ajustes → «Cámara con ratón».)</summary>
+    /// <summary>Indica si la cámara se mueve con el ratón durante el nivel (Ajustes > "Cámara con ratón").</summary>
     public static bool CameraLook
     {
         get => PlayerPrefs.GetInt(LookKey, 1) == 1;
         set { PlayerPrefs.SetInt(LookKey, value ? 1 : 0); PlayerPrefs.Save(); }
     }
 
-    /// <summary>Niveles en los que hace falta mirar (enemigos que se desactivan mirándolos): la cámara va siempre con el ratón.</summary>
+    /// <summary>Niveles en los que hace falta mirar (enemigos que se desactivan mirándolos), en los que la cámara siempre se mueve con el ratón.</summary>
     public static bool LookRequired => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Level3";
 
-    /// <summary>Lo que se aplica de verdad: la opción del jugador, salvo en los niveles donde hace falta mirar.</summary>
+    /// <summary>Valor que se aplica realmente, que es la opción del jugador salvo en los niveles en los que hace falta mirar.</summary>
     public static bool CameraLookActive => CameraLook || LookRequired;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Boot() => AudioListener.volume = Volume;
 
-    /// <summary>Prepara los dos sliders (rango y valor guardado) y engancha sus cambios.</summary>
+    /// <summary>Prepara los dos sliders (rango y valor guardado) y conecta sus cambios.</summary>
     public static void BindSliders(Slider volume, Slider sensitivity, VolumePreview preview)
     {
         if (volume != null)
@@ -63,12 +63,12 @@ public static class GameSettings
 }
 
 /// <summary>
-/// Metrónomo de prueba: mientras se mueve el slider de volumen (y un rato después) suenan los «tics» generados por
+/// Metrónomo de prueba. Mientras se mueve el slider de volumen, y un rato después, suenan los tics generados por
 /// código, para oír el volumen elegido. Suena aunque el juego esté en pausa (AudioListener.pause).
-///   • Bpm        : tempo de los tics (el de la música de fondo).
-///   • SyncTo     : (opcional) AudioSource con la música que suena: los tics caen EN sus beats.
-///   • SyncOffset : segundos desde el inicio de la canción hasta su primer beat.
-/// Llama a Ping() al cambiar el volumen y a Update() cada frame.
+///   - Bpm es el tempo de los tics, que es el de la música de fondo.
+///   - SyncTo es opcional, y es el AudioSource con la música que suena, para que los tics caigan en sus beats.
+///   - SyncOffset son los segundos desde el inicio de la canción hasta su primer beat.
+/// Hay que llamar a Ping() al cambiar el volumen y a Update() en cada fotograma.
 /// </summary>
 public class VolumePreview
 {
@@ -108,7 +108,7 @@ public class VolumePreview
 
         double now = AudioSettings.dspTime;
         if (_next < now) _next = NextBeat(now + 0.05, now);       // empieza en el próximo beat
-        if (_next - now < 0.1)                                    // programar el siguiente tic
+        if (_next - now < 0.1)                                    // se programa el siguiente tic
         {
             if (_clicks == null) { _clicks = new MetronomeClicks(_host); _clicks.IgnoreListenerPause = true; }
             long index = Synced ? (long)System.Math.Round((_next - Anchor(now)) / Beat) : _count++;

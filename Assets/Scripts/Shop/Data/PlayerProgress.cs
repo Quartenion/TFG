@@ -3,22 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-/// <summary>
-/// Datos guardados de la partida (JSON en Application.persistentDataPath/save.json).
-/// </summary>
+/// <summary>Datos guardados de la partida, en JSON, en Application.persistentDataPath/save.json.</summary>
 [Serializable]
 public class SaveData
 {
     public int coins;                                        // monedas en el monedero
     public int totalCoinsEarned;                             // estadística
-    public List<SaveEntry> upgrades    = new List<SaveEntry>();   // id → nivel comprado
-    public List<SaveEntry> consumables = new List<SaveEntry>();   // id → cantidad
-    public List<string>    activeContracts = new List<string>();  // contratos firmados (sin cumplir)
+    public List<SaveEntry> upgrades    = new List<SaveEntry>();   // id y nivel comprado
+    public List<SaveEntry> consumables = new List<SaveEntry>();   // id y cantidad
+    public List<string>    activeContracts = new List<string>();  // contratos firmados y sin cumplir
     public List<string>    doneContracts   = new List<string>();  // contratos ya cumplidos
-    public List<string>    claimedContracts = new List<string>(); // cumplidos Y ya cobrados en el puesto
-    public List<string>    equippedUpgrades = new List<string>(); // MUESCAS: mejoras compradas que llevas PUESTAS
-    public int             notchesBought;                         // muescas extra compradas (además de las 3 base)
-    public int             levelReached;                               // nivel más alto al que has llegado (desbloqueos de la tienda)
+    public List<string>    claimedContracts = new List<string>(); // cumplidos y ya cobrados en el puesto
+    public List<string>    equippedUpgrades = new List<string>(); // muescas: mejoras compradas que el jugador lleva equipadas
+    public int             notchesBought;                         // muescas extra compradas, además de las 3 iniciales
+    public int             levelReached;                               // nivel más alto al que ha llegado el jugador, para los desbloqueos de la tienda
 
     [Serializable]
     public class SaveEntry
@@ -30,17 +28,17 @@ public class SaveData
 }
 
 /// <summary>
-/// PROGRESO DEL JUGADOR (estático, accesible desde cualquier escena):
-///   • Monedas del monedero (AddCoins / TrySpendCoins).
-///   • Mejoras permanentes por niveles (GetLevel / SetLevel).
-///   • Consumibles con cantidad (GetCount / AddCount / TryUseConsumable).
-/// Se guarda solo en disco en cada cambio. Los sistemas del juego lo consultan al arrancar
-/// (p. ej. «¿qué nivel tiene el auto-beater?», «¿quedan vidas extra?»).
+/// Progreso del jugador, estático y accesible desde cualquier escena.
+///   - Monedas del monedero (AddCoins y TrySpendCoins).
+///   - Mejoras permanentes por niveles (GetLevel y SetLevel).
+///   - Consumibles con cantidad (GetCount, AddCount y TryUseConsumable).
+/// Se guarda en disco automáticamente con cada cambio. Los sistemas del juego lo consultan al arrancar, por ejemplo
+/// para saber qué nivel tiene el Auto-latido o si quedan vidas extra.
 /// </summary>
 public static class PlayerProgress
 {
-    public static event Action<int> OnCoinsChanged;   // nuevas monedas totales
-    public static event Action      OnChanged;        // cualquier cambio (compras, consumibles…)
+    public static event Action<int> OnCoinsChanged;   // nuevo total de monedas
+    public static event Action      OnChanged;        // cualquier cambio (compras, consumibles...)
 
     private static SaveData _data;
     private static string   SavePath => Path.Combine(Application.persistentDataPath, "save.json");
@@ -54,7 +52,7 @@ public static class PlayerProgress
         }
     }
 
-    // ── Monedas ───────────────────────────────────────────────────────────────
+    // -=+=- Monedas -=+=-
 
     public static int Coins => Data.coins;
 
@@ -78,11 +76,11 @@ public static class PlayerProgress
         return true;
     }
 
-    // ── Mejoras (permanentes, por niveles) ────────────────────────────────────
+    // -=+=- Mejoras permanentes, por niveles -=+=-
 
     /// <summary>
-    /// Con Suspended = true TODAS las mejoras y consumibles cuentan como 0 (la pelea del jefe se juega sin
-    /// modificadores). Lo guardado no se toca: al terminar la pelea vuelve todo.
+    /// Con Suspended = true, todas las mejoras y consumibles cuentan como 0, ya que la pelea del jefe se juega sin
+    /// modificadores. Lo guardado no se toca, así que al terminar la pelea todo vuelve a estar como antes.
     /// </summary>
     public static bool Suspended
     {
@@ -91,33 +89,33 @@ public static class PlayerProgress
         {
             if (_suspended == value) return;
             _suspended = value;
-            OnChanged?.Invoke();   // (que los sistemas se actualicen: jeringuilla, HUD…)
+            OnChanged?.Invoke();   // para que los sistemas se actualicen (jeringuilla, HUD...)
         }
     }
     private static bool _suspended;
 
     /// <summary>
-    /// Nivel EFECTIVO de una mejora (el que usan los sistemas del juego): 0 si está suspendida (jefe / contrato
-    /// «A pelo») o si el jugador la ha APAGADO en la tienda.
+    /// Nivel efectivo de una mejora, que es el que usan los sistemas del juego. Vale 0 si está suspendida (jefe o
+    /// contrato "A pelo") o si el jugador la ha apagado en la tienda.
     /// </summary>
     public static int GetLevel(string id)
     {
-        // Modo prueba y nivel tutorial: el CROSSHAIR RÍTMICO va siempre puesto (los demás perks como siempre).
+        // En el modo prueba y el nivel tutorial, el "Crosshair rítmico" va siempre equipado, y el resto de mejoras funcionan como siempre.
         if (id == ShopIds.RhythmSight && (StudySession.Active || (CourseBuilder.Instance != null && !LevelEndManager.Finished))) return Mathf.Max(1, Get(Data.upgrades, id));
         return _suspended || !Data.equippedUpgrades.Contains(id) ? 0 : Get(Data.upgrades, id);
     }
 
 
-    /// <summary>Nivel COMPRADO de una mejora (aunque esté apagada o suspendida). Para la tienda y los desbloqueos.</summary>
+    /// <summary>Nivel comprado de una mejora, aunque esté apagada o suspendida. Se usa en la tienda y para los desbloqueos.</summary>
     public static int GetOwnedLevel(string id) => Get(Data.upgrades, id);
 
-    // ── Muescas (mejoras EQUIPADAS) ───────────────────────────────────────────
+    // -=+=- Muescas (mejoras equipadas) -=+=-
 
-    /// <summary>¿La mejora está EQUIPADA en una muesca? (solo las equipadas funcionan)</summary>
+    /// <summary>Indica si la mejora está equipada en una muesca, ya que solo funcionan las equipadas.</summary>
     public static bool IsUpgradeEnabled(string id) => Data.equippedUpgrades.Contains(id);
     public static IReadOnlyList<string> EquippedUpgrades => Data.equippedUpgrades;
 
-    /// <summary>Equipa / quita una mejora. Equipar falla si no la tienes o no hay muescas libres (ver Notches).</summary>
+    /// <summary>Equipa o quita una mejora. Equipar falla si el jugador no la tiene o si no hay muescas libres (ver Notches).</summary>
     public static bool SetUpgradeEnabled(string id, bool enabled)
     {
         if (enabled == IsUpgradeEnabled(id)) return true;
@@ -134,7 +132,7 @@ public static class PlayerProgress
 
     public static int NotchesBought => Data.notchesBought;
 
-    /// <summary>Nivel más alto al que has llegado (1, 2, 3…). Desbloquea objetos de la tienda (ShopUnlocks).</summary>
+    /// <summary>Nivel más alto al que ha llegado el jugador (1, 2, 3...), que desbloquea objetos de la tienda (ShopUnlocks).</summary>
     public static int LevelReached => Data.levelReached;
 
     public static void ReachLevel(int level)
@@ -159,7 +157,7 @@ public static class PlayerProgress
         OnChanged?.Invoke();
     }
 
-    // ── Consumibles (se gastan) ───────────────────────────────────────────────
+    // -=+=- Consumibles, que se gastan -=+=-
 
     public static int GetCount(string id)
     {
@@ -173,7 +171,7 @@ public static class PlayerProgress
         OnChanged?.Invoke();
     }
 
-    /// <summary>Gasta 1 unidad del consumible si hay. Devuelve si se ha podido.</summary>
+    /// <summary>Gasta una unidad del consumible, si hay. Devuelve si se ha podido.</summary>
     public static bool TryUseConsumable(string id)
     {
         int n = GetCount(id);
@@ -182,7 +180,7 @@ public static class PlayerProgress
         return true;
     }
 
-    // ── Contratos ─────────────────────────────────────────────────────────────
+    // -=+=- Contratos -=+=-
 
     public static IReadOnlyList<string> ActiveContracts => Data.activeContracts;
     public static bool IsContractActive(string id) => Data.activeContracts.Contains(id);
@@ -193,14 +191,14 @@ public static class PlayerProgress
         if (active == IsContractActive(id)) return;
         if (active) Data.activeContracts.Add(id); else Data.activeContracts.Remove(id);
         Save();
-        StudyTelemetry.ContractEvent(active ? "firmar" : "rescindir", id);   // (modo prueba)
+        StudyTelemetry.ContractEvent(active ? "firmar" : "rescindir", id);   // modo prueba
         OnChanged?.Invoke();
     }
 
-    /// <summary>¿Cumplido pero todavía SIN cobrar? (hay que ir al puesto de contratos a por el dinero)</summary>
+    /// <summary>Indica si el contrato está cumplido, pero todavía sin cobrar, por lo que hay que ir al puesto de contratos a por el dinero.</summary>
     public static bool IsContractClaimable(string id) => Data.doneContracts.Contains(id) && !Data.claimedContracts.Contains(id);
 
-    /// <summary>Cobra un contrato cumplido: suma 'reward' monedas y lo marca como cobrado. Devuelve si se ha podido.</summary>
+    /// <summary>Cobra un contrato cumplido, suma 'reward' monedas y lo marca como cobrado. Devuelve si se ha podido.</summary>
     public static bool ClaimContract(string id, int reward)
     {
         if (!IsContractClaimable(id)) return false;
@@ -208,23 +206,23 @@ public static class PlayerProgress
         Data.coins += Mathf.Max(0, reward);
         Data.totalCoinsEarned += Mathf.Max(0, reward);
         Save();
-        StudyTelemetry.ContractEvent("cobrar", id);   // (modo prueba)
+        StudyTelemetry.ContractEvent("cobrar", id);   // modo prueba
         OnCoinsChanged?.Invoke(Data.coins);
         OnChanged?.Invoke();
         return true;
     }
 
-    /// <summary>Marca el contrato como cumplido (deja de estar activo). No paga: se cobra en el puesto (ClaimContract).</summary>
+    /// <summary>Marca el contrato como cumplido, por lo que deja de estar activo. No paga, ya que se cobra en el puesto (ClaimContract).</summary>
     public static void CompleteContract(string id)
     {
         Data.activeContracts.Remove(id);
         if (!Data.doneContracts.Contains(id)) Data.doneContracts.Add(id);
         Save();
-        StudyTelemetry.ContractEvent("cumplido", id);   // (modo prueba)
+        StudyTelemetry.ContractEvent("cumplido", id);   // modo prueba
         OnChanged?.Invoke();
     }
 
-    /// <summary>(Debug) Olvida los contratos cumplidos (se podrán volver a firmar).</summary>
+    /// <summary>Depuración. Olvida los contratos cumplidos, que se podrán volver a firmar.</summary>
     public static void ClearDoneContracts()
     {
         Data.doneContracts.Clear();
@@ -233,7 +231,7 @@ public static class PlayerProgress
         OnChanged?.Invoke();
     }
 
-    // ── Guardado ──────────────────────────────────────────────────────────────
+    // -=+=- Guardado -=+=-
 
     public static void Load()
     {
@@ -261,7 +259,7 @@ public static class PlayerProgress
         catch (Exception e) { Debug.LogWarning($"[Progreso] No se pudo guardar la partida: {e.Message}"); }
     }
 
-    /// <summary>Copia de toda la partida guardada (modo prueba: práctica libre, para dejarlo todo como estaba después).</summary>
+    /// <summary>Copia de toda la partida guardada. Se usa en la práctica libre del modo prueba, para dejarlo todo como estaba después.</summary>
     public static string Snapshot() => JsonUtility.ToJson(Data);
 
     /// <summary>Vuelve a una copia hecha con <see cref="Snapshot"/>.</summary>
@@ -270,12 +268,12 @@ public static class PlayerProgress
         if (string.IsNullOrEmpty(json)) return;
         try { _data = JsonUtility.FromJson<SaveData>(json); } catch { return; }
         try { File.WriteAllText(SavePath, json); } catch (Exception e) { Debug.LogWarning($"[Progreso] No se pudo guardar: {e.Message}"); }
-        Load();   // (rellena listas vacías)
+        Load();   // rellena las listas vacías
         OnCoinsChanged?.Invoke(Data.coins);
         OnChanged?.Invoke();
     }
 
-    /// <summary>(Debug) Borra toda la partida guardada.</summary>
+    /// <summary>Depuración. Borra toda la partida guardada.</summary>
     public static void ResetAll()
     {
         _data = new SaveData();
@@ -284,7 +282,7 @@ public static class PlayerProgress
         OnChanged?.Invoke();
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -=+=- Funciones auxiliares -=+=-
 
     private static int Get(List<SaveData.SaveEntry> list, string id)
     {

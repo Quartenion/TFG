@@ -8,13 +8,13 @@ using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// REGISTRO DE DATOS del modo prueba: durante la prueba (StudySession.Active) y, después de completarla, también en el
-/// modo normal y en la práctica libre (StudySession.PostStudyPlay), con el mismo código y la parte «libre».
-/// Un «intento» va desde que empieza a sonar la música del nivel hasta que el jugador llega a la meta, muere o sale.
-/// Por cada intento (y por cada cuestionario dentro del juego) se genera UNA línea de texto separada por «;» que:
-///   1. se añade a un CSV local (Application.persistentDataPath/Estudio/&lt;código&gt;.csv) y
-///   2. se envía al formulario oculto de Google Forms (StudySettings), que la guarda en una hoja de cálculo.
-/// La primera fila de ese CSV (Header / QHeader) dice qué es cada columna.
+/// Registro de datos del modo prueba. Se registran datos durante la prueba (StudySession.Active) y, después de
+/// completarla, también en el modo normal y en la práctica libre (StudySession.PostStudyPlay), con el mismo código y
+/// como parte "libre". Un intento va desde que empieza a sonar la música del nivel hasta que el jugador llega a la
+/// meta, muere o sale. Por cada intento (y por cada cuestionario dentro del juego) se genera una línea de texto con
+/// los campos separados por ";", que se añade a un CSV local (Application.persistentDataPath/Estudio/&lt;código&gt;.csv)
+/// y se envía al formulario oculto de Google Forms (StudySettings), que la guarda en una hoja de cálculo. La primera
+/// fila de ese CSV (Header y QHeader) indica qué es cada columna.
 /// </summary>
 public class StudyTelemetry : MonoBehaviour
 {
@@ -25,9 +25,9 @@ public class StudyTelemetry : MonoBehaviour
         "tiempo_azul_s;entradas_azul;saltos;dashes;slides;wallruns;monedas;mejoras_equipadas;" +
         "monedas_recogidas;monedas_nivel_total;contratos_activos;contratos_fallados;ronda;obstaculo;orden_obstaculos" + RowTail;
 
-    /// <summary>Obstáculo en el que está el jugador ahora (lo pone CourseBuilder): con qué se ha chocado al morir.</summary>
+    /// <summary>Obstáculo en el que está ahora el jugador (lo indica CourseBuilder), para saber con qué se ha chocado al morir.</summary>
     public static string CurrentObstacle = "";
-    /// <summary>Orden de los obstáculos del recorrido de esta parte (lo pone CourseBuilder; vacío en el tutorial).</summary>
+    /// <summary>Orden de los obstáculos del recorrido de esta parte (lo indica CourseBuilder, y está vacío en el tutorial).</summary>
     public static string CourseOrder = "";
 
     public const string QHeader = "tipo;participante;fecha_utc;version;parte;nivel;config;orden;p1;p2;p3;p4;p5;p6;p7;p8;preferencia" + RowTail;
@@ -38,20 +38,20 @@ public class StudyTelemetry : MonoBehaviour
 
     public const string AbandonHeader = "tipo;participante;fecha_utc;version;parte;nivel;intentos" + RowTail;
 
-    /// <summary>Al final de CADA fila: nº de fila de la sesión (para quitar duplicados) y verificación (HMAC).</summary>
+    /// <summary>Campos que van al final de cada fila, el número de fila de la sesión (para quitar duplicados) y la verificación (HMAC).</summary>
     private const string RowTail = ";fila;verificacion";
 
     private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
     private static StudyTelemetry _runner;
 
-    // ── Intento en curso ──────────────────────────────────────────────────────
+    // -=+=- Intento en curso -=+=-
     private static bool  _open;
     private static float _startSong;
     private static int   _n, _perf, _good, _miss;
     private static double _sumOff, _sumAbs, _sumSq;
     private static float _actionCost, _missLost, _blueLost, _recovered;
     private static double _energyIntegral; private static float _energyTime, _energyMin, _blueTime;
-    // Copia de lo último visto (por si el intento se cierra al cambiar de escena, cuando ya no existe el nivel).
+    // Copia de los últimos valores, por si el intento se cierra al cambiar de escena, cuando el nivel ya no existe.
     private static string _level;
     private static float _songNow, _beatDur = 1f, _maxE = 100f;
     private static int _presses, _bestStreak, _blueEntries, _jumps, _dashes, _slides, _wallruns;
@@ -71,9 +71,9 @@ public class StudyTelemetry : MonoBehaviour
         SceneManager.activeSceneChanged += (from, to) => { if (_open) EndAttempt("salida"); };
     }
 
-    // ── Llamadas desde el juego ───────────────────────────────────────────────
+    // -=+=- Llamadas desde el juego -=+=-
 
-    /// <summary>Clic del jugador: desfase con el beat (s, + = tarde) y resultado.</summary>
+    /// <summary>Clic del jugador, con su desfase respecto al beat (en segundos, positivo si es tarde) y su resultado.</summary>
     public static void Click(float offsetSeconds, TimingResult r)
     {
         if (!_open) return;
@@ -88,7 +88,7 @@ public class StudyTelemetry : MonoBehaviour
     public static void BlueLost(float amount)   { if (_open) _blueLost += amount; }
     public static void Recovered(float amount)  { if (_open) _recovered += amount; }
 
-    /// <summary>Cierra el intento (completado, muerte…) y lo registra. 'accuracy' = % de sincronía (solo si llega a la meta).</summary>
+    /// <summary>Cierra el intento (completado, muerte...) y lo registra. 'accuracy' es el porcentaje de sincronía, solo si llega a la meta.</summary>
     public static void EndAttempt(string result, float accuracy = -1f)
     {
         if (!_open) return;
@@ -120,9 +120,10 @@ public class StudyTelemetry : MonoBehaviour
         Submit(string.Join(";", f), Header);
     }
 
-    // ── Quién, qué parte y si se registra ──
-    /// <summary>¿Se registra ahora? Durante la prueba (no en su práctica libre) o jugando después de completarla.</summary>
-    private static bool Recording => (StudySession.Active && !StudySession.FreePlay) || StudySession.PostStudyPlay;
+    // -=+=- Quién juega, qué parte y si se registra -=+=-
+    /// <summary>Indica si ahora se registran datos, lo que ocurre durante la prueba (salvo en su práctica libre) o al jugar después de completarla.</summary>
+    private static bool Recording => !DebugLevelSelect.Active &&   // con el menú de depuración abierto no se registra nada
+                                      ((StudySession.Active && !StudySession.FreePlay) || StudySession.PostStudyPlay);
     private static bool Extra => StudySession.PostStudyPlay;
     private static string Who => StudySession.Active && !string.IsNullOrEmpty(StudySession.Participant)
                                  ? StudySession.Participant : StudySession.SavedParticipant;
@@ -133,7 +134,7 @@ public class StudyTelemetry : MonoBehaviour
 
     private static string Clean(string s) => (s ?? "").Replace(";", ",");
 
-    /// <summary>Respuestas del cuestionario corto del juego (1-7) tras una parte.</summary>
+    /// <summary>Respuestas del cuestionario corto del juego (de 1 a 7) después de una parte.</summary>
     public static void Questionnaire(int part, string level, StudyConfig.Profile cfg, int[] answers, string preference)
     {
         var f = new List<string>
@@ -146,7 +147,7 @@ public class StudyTelemetry : MonoBehaviour
         Submit(string.Join(";", f), QHeader);
     }
 
-    /// <summary>Contratos (partes 4-5): firmar, rescindir, cumplido y cobrar.</summary>
+    /// <summary>Contratos firmados, rescindidos, cumplidos y cobrados.</summary>
     public static void ContractEvent(string evt, string id)
     {
         if (!Recording) return;
@@ -161,8 +162,8 @@ public class StudyTelemetry : MonoBehaviour
     }
 
     /// <summary>
-    /// El participante se SALTA una sección (botón del game over tras morir 3 veces en ella): fila «salto_seccion» con
-    /// el nº de checkpoint desde el que salta y el obstáculo en el que estaba.
+    /// El participante se salta una sección con el botón del game over, después de morir 3 veces en ella. Se registra una
+    /// fila "salto_seccion" con el número del punto de control desde el que salta y el obstáculo en el que estaba.
     /// </summary>
     public static void SectionSkipped(int checkpoint, string obstacle)
     {
@@ -176,7 +177,7 @@ public class StudyTelemetry : MonoBehaviour
         Submit(string.Join(";", f), null);
     }
 
-    /// <summary>El participante abandona la prueba desde la pausa (queda descalificado).</summary>
+    /// <summary>El participante abandona la prueba desde la pausa, por lo que queda descalificado.</summary>
     public static void Abandon()
     {
         if (!StudySession.Active) return;
@@ -188,7 +189,7 @@ public class StudyTelemetry : MonoBehaviour
         Submit(string.Join(";", f), null);
     }
 
-    /// <summary>Tienda (partes 4-5): abrir/cerrar (con duración), compras, equipar/quitar y muescas.</summary>
+    /// <summary>Tienda: abrirla y cerrarla (con la duración), compras, equipar y quitar mejoras, y muescas.</summary>
     public static void ShopEvent(string evt, string item, int price, float duration = -1f)
     {
         if (!Recording) return;
@@ -204,7 +205,7 @@ public class StudyTelemetry : MonoBehaviour
 
     private static string F(double v) => v.ToString("0.###", Inv);
 
-    // ── Muestreo continuo ─────────────────────────────────────────────────────
+    // -=+=- Muestreo continuo -=+=-
 
     private void Update()
     {
@@ -218,7 +219,7 @@ public class StudyTelemetry : MonoBehaviour
         Snapshot();
         if (em == null) return;
 
-        float e = em.MaxSyringe > 0f ? em.Energy / em.MaxSyringe : 0f;   // 0..1 rojo, 1..2 azul
+        float e = em.MaxSyringe > 0f ? em.Energy / em.MaxSyringe : 0f;   // de 0 a 1 en rojo y de 1 a 2 en azul
         float dt = Time.deltaTime;
         _energyIntegral += e * dt; _energyTime += dt;
         if (e < _energyMin) _energyMin = e;
@@ -229,7 +230,7 @@ public class StudyTelemetry : MonoBehaviour
     private static void Snapshot()
     {
         BeatManager bm = BeatManager.Instance;
-        // (Solo mientras suena la música del nivel: al cargar otra escena RunStats se pone a cero.)
+        // Solo mientras suena la música del nivel, ya que al cargar otra escena RunStats se pone a cero.
         if (bm == null || !bm.IsPlaying) return;
         _songNow = bm.SongTime; _beatDur = bm.BeatDuration;
         _runCoins = LevelCoins.RunCoins;
@@ -264,7 +265,7 @@ public class StudyTelemetry : MonoBehaviour
         _part = PartLabel;
         _coins = PlayerProgress.Coins;
         _equipped = PlayerProgress.Suspended ? "" : string.Join("|", PlayerProgress.EquippedUpgrades);
-        _levelCoins = FindObjectsByType<Coin>().Length;   // monedas que hay en el nivel (para el % recogido)
+        _levelCoins = FindObjectsByType<Coin>().Length;   // monedas que hay en el nivel, para calcular el porcentaje recogido
         _runCoins = 0;
         var active = ContractCatalog.ActiveHere();
         _contracts = string.Join("|", active.ConvertAll(c => c.id));
@@ -278,17 +279,17 @@ public class StudyTelemetry : MonoBehaviour
         StudySession.NotifyAttemptStarted();
     }
 
-    // ── Guardado y envío ──────────────────────────────────────────────────────
+    // -=+=- Guardado y envío -=+=-
 
     private static int _rowSeq;
     private static string _rowSession;
 
     private static void Submit(string line, string header)
     {
-        // Sin saltos de línea (cada envío es UNA fila) y con nº de fila + verificación al final.
+        // Sin saltos de línea, ya que cada envío es una fila, y con el número de fila y la verificación al final.
         line = line.Replace("\r", " ").Replace("\n", " ");
-        // (El nº de fila se guarda por código: al volver a abrir el juego para jugar en modo normal sigue contando, así
-        //  no se repite y no parece un duplicado.)
+        // El número de fila se guarda para cada código, por lo que, al volver a abrir el juego para jugar en el modo normal,
+        // sigue contando y no se repite, para que no parezca un duplicado.
         string who = Who;
         if (_rowSession != who) { _rowSession = who; _rowSeq = PlayerPrefs.GetInt("Study.Row." + who, 0); }
         line += ";" + (++_rowSeq).ToString(Inv);
@@ -306,16 +307,16 @@ public class StudyTelemetry : MonoBehaviour
         catch (Exception e) { Debug.LogWarning($"[Estudio] No se pudo guardar el CSV: {e.Message}"); }
 
         Debug.Log($"[Estudio] {line}");
-        if (!Simulated && _runner != null && IsSafeUrl(StudySettings.DataFormUrl) && !string.IsNullOrEmpty(StudySettings.DataEntryId))
+        if (!Simulated && !DebugLevelSelect.Active && _runner != null && IsSafeUrl(StudySettings.DataFormUrl) && !string.IsNullOrEmpty(StudySettings.DataEntryId))
             _runner.StartCoroutine(Post(line));
     }
 
-    /// <summary>Solo HTTPS y solo al host permitido (Google Forms).</summary>
+    /// <summary>Solo se envía por HTTPS y al servidor permitido (Google Forms).</summary>
     public static bool IsSafeUrl(string url) =>
         Uri.TryCreate(url, UriKind.Absolute, out Uri u) && u.Scheme == Uri.UriSchemeHttps &&
         string.Equals(u.Host, StudySettings.AllowedHost, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>Verificación de la fila: 8 primeros caracteres de HMAC-SHA256(fila, RowKey).</summary>
+    /// <summary>Verificación de la fila, con los 8 primeros caracteres de HMAC-SHA256(fila, RowKey).</summary>
     private static string Sign(string line)
     {
         using (var h = new System.Security.Cryptography.HMACSHA256(System.Text.Encoding.UTF8.GetBytes(StudySettings.RowKey)))
@@ -335,14 +336,14 @@ public class StudyTelemetry : MonoBehaviour
             {
                 req.timeout = StudySettings.RequestTimeoutSeconds;
                 req.redirectLimit = 3;
-                req.downloadHandler = new DownloadHandlerBuffer();   // (la respuesta no se lee ni se interpreta)
+                req.downloadHandler = new DownloadHandlerBuffer();   // la respuesta no se lee ni se interpreta
                 yield return req.SendWebRequest();
                 if (req.result == UnityWebRequest.Result.Success) yield break;
 #if UNITY_WEBGL && !UNITY_EDITOR
-                // En la web, Google no deja leer la respuesta (CORS) pero la fila SÍ llega: no se reintenta (duplicados).
+                // En la web, Google no deja leer la respuesta (CORS), pero la fila sí llega, así que no se reintenta para no duplicarla.
                 yield break;
 #endif
-                // Error del servidor que rechaza la fila (4xx): reintentar no sirve.
+                // Si el servidor rechaza la fila (error 4xx), no sirve de nada reintentar.
                 if (req.result == UnityWebRequest.Result.ProtocolError && req.responseCode >= 400 && req.responseCode < 500)
                 {
                     Debug.LogWarning($"[Estudio] El formulario rechazó la fila (HTTP {req.responseCode}). Queda en el CSV local.");

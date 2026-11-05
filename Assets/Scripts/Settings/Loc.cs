@@ -2,10 +2,10 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// IDIOMA del juego: español (por defecto) o inglés. Se elige en Ajustes (menú principal y pausa) y se guarda.
-///   • Textos escritos en código:  Loc.T("Saltar", "Jump")  → devuelve el del idioma actual.
-///   • Textos de escenas/prefabs:  componente LocalizedText (campos Español / English).
-///   • Al cambiar de idioma se lanza Loc.OnChanged (los LocalizedText y las pantallas abiertas se refrescan).
+/// Idioma del juego, español (por defecto) o inglés. Se elige en los ajustes (menú principal y pausa) y se guarda.
+///   - Los textos escritos en el código usan Loc.T("Saltar", "Jump"), que devuelve el del idioma actual.
+///   - Los textos de las escenas y los prefabs usan el componente LocalizedText (campos Español y English).
+///   - Al cambiar de idioma se lanza Loc.OnChanged, y los LocalizedText y las pantallas abiertas se actualizan.
 /// </summary>
 public static class Loc
 {
@@ -39,9 +39,9 @@ public static class Loc
     /// <summary>Devuelve el texto en el idioma actual.</summary>
     public static string T(string es, string en) => English && !string.IsNullOrEmpty(en) ? en : es;
 
-    /// <summary>Pasa al siguiente idioma (botón de Ajustes).</summary>
+    /// <summary>Pasa al siguiente idioma (botón de los ajustes).</summary>
     public static void Cycle() => Current = English ? Language.Es : Language.En;
 
-    /// <summary>Texto del botón de idioma en Ajustes.</summary>
+    /// <summary>Texto del botón de idioma en los ajustes.</summary>
     public static string ButtonLabel => English ? "LANGUAGE: ENGLISH" : "IDIOMA: ESPAÑOL";
 }

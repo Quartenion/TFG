@@ -1,20 +1,19 @@
 using UnityEngine;
 
-// El enum LethalFaces ahora vive en ObstacleInfo.cs (es la configuración del obstáculo).
+// El enum LethalFaces está en ObstacleInfo.cs, ya que forma parte de la configuración del obstáculo.
 
 /// <summary>
-/// Detector de obstáculos DEL JUGADOR (a pie / tirolina). Va SÓLO en el jugador.
-/// Cuando el jugador choca con un objeto del layer "Obstacle", lee qué caras son
-/// letales del <see cref="ObstacleInfo"/> de ese obstáculo y, si la cara golpeada
-/// es letal, dispara el Game Over.
+/// Detector de obstáculos del jugador cuando va a pie o en la tirolina. Este componente solo va en el jugador. Cuando
+/// el jugador choca con un objeto de la capa "Obstacle", lee del <see cref="ObstacleInfo"/> de ese obstáculo qué
+/// caras son letales y, si la cara golpeada lo es, lanza el game over.
 ///
-/// La detección del kayak la gestiona <see cref="KayakController"/> aparte.
+/// Los choques del kayak los gestiona <see cref="KayakController"/> por separado.
 ///
-/// SETUP:
-///   1. En Edit > Project Settings > Tags and Layers: crea el layer "Obstacle".
-///   2. Asigna ese layer a cada objeto peligroso y ponle un <see cref="ObstacleInfo"/>.
-///   3. Este componente va en el jugador. Asigna el GameOverManager de la escena.
-///   4. defaultLethalFaces se usa sólo si un obstáculo no tiene ObstacleInfo.
+/// Configuración.
+///   1. En Edit > Project Settings > Tags and Layers se crea la capa "Obstacle".
+///   2. Se asigna esa capa a cada objeto peligroso y se le añade un <see cref="ObstacleInfo"/>.
+///   3. Este componente se añade al jugador y se le asigna el GameOverManager de la escena.
+///   4. defaultLethalFaces solo se usa si un obstáculo no tiene ObstacleInfo.
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
 public class ObstacleCollision : MonoBehaviour
@@ -45,7 +44,7 @@ public class ObstacleCollision : MonoBehaviour
     private bool _dead;
     private int  _obstacleLayer = -1;
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    // -=+=- Ciclo de vida -=+=-
 
     private void Start()
     {
@@ -59,28 +58,27 @@ public class ObstacleCollision : MonoBehaviour
             Debug.Log($"[ObstacleCollision] Layer \"{obstacleLayerName}\" encontrado en índice {_obstacleLayer}.");
     }
 
-    // ── Detección (CC desactivado: tirolina y kayak) ──────────────────────────
+    // -=+=- Detección con el CharacterController desactivado (tirolina y kayak) -=+=-
 
     private void Update()
     {
         if (_dead || _obstacleLayer == -1) return;
         if (playerMovement == null) return;
 
-        // Solo la tirolina necesita detección manual: el CC está desactivado y no hay
-        // Rigidbody en el jugador que genere eventos de trigger.
-        // En kayak, KayakController gestiona su propia detección de obstáculos.
+        // Solo la tirolina necesita detección manual, ya que el CharacterController está desactivado y el jugador no
+        // tiene un Rigidbody que genere eventos de trigger. En el kayak, KayakController detecta sus propios obstáculos.
         if (!playerMovement.IsOnZipline) return;
 
         Collider[] hits = Physics.OverlapSphere(transform.position, ziplineDetectRadius, 1 << _obstacleLayer);
 
         foreach (Collider hit in hits)
         {
-            // Sin normal de contacto exacta → aproximar: dirección desde el centro
-            // del obstáculo hasta el jugador (equivale a la normal de salida).
+            // Como no hay una normal de contacto exacta, se aproxima con la dirección desde el centro del obstáculo hasta el
+            // jugador, que equivale a la normal de salida.
             Vector3 approxNormal = (transform.position - hit.bounds.center).normalized;
             LethalFaces face = ClassifyNormal(approxNormal);
 
-            if ((FacesOf(hit.gameObject) & face) == 0) continue; // cara no letal, ignorar
+            if ((FacesOf(hit.gameObject) & face) == 0) continue; // cara no letal, se ignora
 
             if (verbose)
                 Debug.Log($"[ObstacleCollision] Obstáculo detectado (tirolina): \"{hit.name}\"  cara: {face}");
@@ -89,7 +87,7 @@ public class ObstacleCollision : MonoBehaviour
         }
     }
 
-    // ── Detección (CC activo: movimiento normal) ──────────────────────────────
+    // -=+=- Detección con el CharacterController activo (movimiento normal) -=+=-
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
@@ -97,7 +95,7 @@ public class ObstacleCollision : MonoBehaviour
         if (hit.gameObject.layer != _obstacleLayer) return;
         if (playerMovement != null && playerMovement.IsSliding) return;
 
-        // hit.normal es la normal real de la superficie → clasificación precisa
+        // hit.normal es la normal real de la superficie, por lo que la cara se clasifica con precisión.
         LethalFaces face = ClassifyNormal(hit.normal);
         if ((FacesOf(hit.gameObject) & face) == 0) return;
 
@@ -112,7 +110,7 @@ public class ObstacleCollision : MonoBehaviour
         if (other.gameObject.layer != _obstacleLayer) return;
         if (playerMovement != null && playerMovement.IsSliding) return;
 
-        // Sin normal de contacto → aproximar igual que en el caso de OverlapSphere
+        // Sin normal de contacto, se aproxima igual que con OverlapSphere.
         Vector3 approxNormal = (transform.position - other.bounds.center).normalized;
         LethalFaces face = ClassifyNormal(approxNormal);
         if ((FacesOf(other.gameObject) & face) == 0) return;
@@ -122,11 +120,11 @@ public class ObstacleCollision : MonoBehaviour
         Die(other.gameObject);
     }
 
-    // ── Configuración del obstáculo ───────────────────────────────────────────
+    // -=+=- Configuración del obstáculo -=+=-
 
     /// <summary>
-    /// Devuelve las caras letales del obstáculo golpeado. Cada obstáculo define las
-    /// suyas en su <see cref="ObstacleInfo"/>; si no tiene, se usa el fallback.
+    /// Devuelve las caras letales del obstáculo golpeado. Cada obstáculo define las suyas en su
+    /// <see cref="ObstacleInfo"/> y, si no tiene, se usan las caras por defecto.
     /// </summary>
     private LethalFaces FacesOf(GameObject obstacle)
     {
@@ -134,14 +132,14 @@ public class ObstacleCollision : MonoBehaviour
         return info != null ? info.lethalFaces : defaultLethalFaces;
     }
 
-    // ── Game Over ─────────────────────────────────────────────────────────────
+    // -=+=- Game over -=+=-
 
     private BlockAbility _block;
 
     /// <summary>
-    /// Bloques ROMPIBLES: si el jugador choca con uno mientras tiene la Q activa, se rompe en vez de matarle
-    /// (red de seguridad por si el choque ocurre en el mismo frame, antes de que BlockAbility lo rompa). Si ya
-    /// estaba roto (sus colliders aún no se han apagado del todo), el choque se ignora.
+    /// Bloques rompibles. Si el jugador choca con uno mientras tiene la Q activa, el bloque se rompe en lugar de matarle.
+    /// Sirve por si el choque ocurre en el mismo fotograma, antes de que BlockAbility lo rompa. Si ya estaba roto (y sus
+    /// colliders todavía no se han desactivado del todo), el choque se ignora.
     /// </summary>
     private bool SavedByBreakable(GameObject obstacle)
     {
@@ -163,27 +161,23 @@ public class ObstacleCollision : MonoBehaviour
             Debug.LogError("[ObstacleCollision] GameOverManager NO está asignado en el Inspector.");
             return;
         }
-        // Con ESCUDO (tienda) el obstáculo se rompe y sigues vivo (se sigue detectando lo siguiente).
+        // Con el escudo (tienda), el obstáculo se rompe y el jugador sigue vivo, y se siguen detectando los siguientes obstáculos.
         _dead = gameOverManager.TryKillByObstacle(obstacle);
     }
 
-    // ── Clasificación de cara ────────────────────────────────────────────────
+    // -=+=- Clasificación de la cara -=+=-
 
     /// <summary>
-    /// Determina qué cara de un obstáculo fue golpeada a partir de la normal de
-    /// la superficie en world space.
+    /// Determina qué cara del obstáculo se ha golpeado a partir de la normal de la superficie en coordenadas del mundo.
     ///
-    /// Lógica: se encuentra el eje dominante de <paramref name="worldNormal"/>.
-    /// Para el eje Y se usan direcciones absolutas (Top/Bottom).
-    /// Para los ejes horizontales se usa la dirección de AVANCE del jugador (no la mirada),
-    /// de forma que "Front" es siempre la cara que el jugador golpea de frente al correr,
-    /// aunque esté mirando de lado.
+    /// Se busca el eje dominante de <paramref name="worldNormal"/>. Para el eje Y se usan direcciones absolutas (Top y
+    /// Bottom), y para los ejes horizontales se usa la dirección en la que avanza el jugador, no la de la mirada, de forma
+    /// que "Front" es siempre la cara que el jugador golpea de frente al correr, aunque esté mirando hacia un lado.
     /// </summary>
     private LethalFaces ClassifyNormal(Vector3 worldNormal)
     {
-        // Dirección de AVANCE del auto-runner (independiente de hacia dónde mire el jugador).
-        // Antes se usaba transform.forward (que gira con la mirada): al mirar de lado, un choque
-        // frontal se clasificaba como lateral y no disparaba el Game Over. Ese era el bug.
+        // Dirección en la que avanza el jugador, que no depende de hacia dónde mire. Si se usara transform.forward, que gira
+        // con la mirada, al mirar hacia un lado un choque frontal se clasificaría como lateral y no lanzaría el game over.
         Vector3 rawFwd = playerMovement != null
             ? playerMovement.RunForward
             : Vector3.forward;
@@ -191,20 +185,19 @@ public class ObstacleCollision : MonoBehaviour
         if (fwd.sqrMagnitude < 0.001f) fwd = Vector3.forward;
         fwd = fwd.normalized;
 
-        // Vector lateral derecho relativo al avance del jugador
-        // Cross(up, fwd): si fwd=(0,0,1) → right=(1,0,0) ✓
+        // Vector lateral derecho respecto al avance del jugador. Con Cross(up, fwd), si fwd = (0,0,1), right = (1,0,0).
         Vector3 right = Vector3.Cross(Vector3.up, fwd).normalized;
 
         // Proyecciones sobre los tres ejes
         float dotY   = worldNormal.y;
-        float dotFwd = Vector3.Dot(worldNormal, fwd);   // <0 → cara enfrenta al jugador (Front)
-        float dotRt  = Vector3.Dot(worldNormal, right); // >0 → cara hacia la derecha del jugador
+        float dotFwd = Vector3.Dot(worldNormal, fwd);   // si es menor que 0, la cara está de frente al jugador (Front)
+        float dotRt  = Vector3.Dot(worldNormal, right); // si es mayor que 0, la cara mira hacia la derecha del jugador
 
         float absY   = Mathf.Abs(dotY);
         float absFwd = Mathf.Abs(dotFwd);
         float absRt  = Mathf.Abs(dotRt);
 
-        // Eje dominante → cara correspondiente
+        // El eje dominante indica la cara.
         if (absY >= absFwd && absY >= absRt)
             return dotY > 0f ? LethalFaces.Top : LethalFaces.Bottom;
 

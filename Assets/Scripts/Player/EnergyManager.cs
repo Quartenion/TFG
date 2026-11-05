@@ -3,21 +3,20 @@ using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Modelo de la jeringuilla:
-///  - Hay UNA sola variable: la sangre que esta en la jeringuilla (S).
-///  - Energia del jugador = MaxSangre - S. Cuanta menos sangre en la jeringuilla,
-///    mas energia tiene el jugador en el cuerpo / corazon.
-///  - Si la jeringuilla se llena por completo -> el corazon se queda sin sangre -> muerte.
+/// Funcionamiento de la jeringuilla.
+///  - Solo hay una variable, la sangre que hay en la jeringuilla (S).
+///  - La energía del jugador es MaxSangre - S, por lo que, cuanta menos sangre hay en la jeringuilla, más energía
+///    tiene el jugador en el corazón.
+///  - Si la jeringuilla se llena por completo, el corazón se queda sin sangre y el jugador muere.
 ///
-/// Acciones:
-///  - Pasivo: la sangre va llenando la jeringuilla (la energia se va consumiendo).
-///  - Acciones (saltar, correr): tambien anaden sangre a la jeringuilla.
-///  - Hit en modo rojo: quita sangre de la jeringuilla (devuelve sangre al corazon).
-///    La cantidad escala con el timing: Perfect = 1.5x, Good = 1.0x.
-///  - Miss en modo rojo: anade sangre extra (penalizacion).
-///  - Modo azul (bonus): la jeringuilla se vacia y los hits anaden sangre azul.
-///    Riesgo: cuanto mas acumulas, mas cerca del limite.
-///    Recompensa: al fallar, se inyecta toda la sangre azul de golpe -> energia + boost.
+/// Cómo cambia la sangre.
+///  - Con el tiempo, la sangre va llenando la jeringuilla poco a poco, es decir, la energía se va consumiendo.
+///  - Las acciones (saltar, hacer dash, deslizarse...) también añaden sangre a la jeringuilla.
+///  - Un acierto en modo rojo quita sangre de la jeringuilla y la devuelve al corazón. La cantidad depende del
+///    resultado, ya que Perfect da 1,5 veces lo que da Good.
+///  - Un fallo en modo rojo añade sangre extra como penalización.
+///  - En el modo azul (bonus), la jeringuilla roja está vacía y los aciertos añaden sangre azul. Cuanta más sangre
+///    azul se acumula, más cerca está el límite, y al fallar se pierde toda.
 /// </summary>
 public class EnergyManager : MonoBehaviour
 {
@@ -66,72 +65,69 @@ public class EnergyManager : MonoBehaviour
     public UnityEvent OnEnergyFull;
     public UnityEvent<float> OnRedHit;
     public UnityEvent<float> OnRedMiss;
-    public UnityEvent<float> OnBlueLost;   // fallo con sangre azul: se pierde toda (cantidad perdida)
+    public UnityEvent<float> OnBlueLost;   // fallo con sangre azul: se pierde toda (recibe la cantidad perdida)
 
     /// <summary>Empieza la Sobrecarga (duración en beats). Lo usa el efecto visual.</summary>
     public static event System.Action<float> OverloadStarted;
-    /// <summary>Empieza el Respiro (fracción de sangre azul perdida 0..1, duración en beats).</summary>
+    /// <summary>Empieza el Respiro (fracción de sangre azul perdida, de 0 a 1, y duración en beats).</summary>
     public static event System.Action<float, float> GraceStarted;
     public UnityEvent OnBlueDepleted;
     public UnityEvent<float> OnBlueModeEntered;
 
     private float _syringe;
     private bool  _isBlueMode;
-    private bool  _paused;   // congela el llenado pasivo (rebobinado, fin de nivel)
+    private bool  _paused;   // congela el llenado pasivo (rebobinado y fin de nivel)
     private float _lastDrainTime = -999f;   // último instante en que un BloodSucker drenó sangre
 
     public float SyringeBlood => _syringe;
     public float MaxSyringe => _maxSyringe;
 
     /// <summary>
-    /// Energia disponible para gastar.
-    /// Rojo:  hueco libre en la jeringuilla (0..maxSyringe).
-    /// Azul:  energia base (100%) + sangre azul bonus (0..maxSyringe) = maxSyringe..2*maxSyringe.
+    /// Energía disponible para gastar. En rojo es el hueco libre en la jeringuilla (de 0 a maxSyringe). En azul es la
+    /// energía base (100 %) más la sangre azul (de 0 a maxSyringe), es decir, de maxSyringe a 2 * maxSyringe.
     /// </summary>
     public float Energy => _isBlueMode
-        ? (_maxSyringe + _syringe)   // base 100% + bonus azul
-        : (_maxSyringe - _syringe);  // hueco disponible (energia roja)
+        ? (_maxSyringe + _syringe)   // base del 100 % más el bonus azul
+        : (_maxSyringe - _syringe);  // hueco disponible (energía roja)
 
     /// <summary>
-    /// 0..1 de energia disponible.
-    /// En azul usa solo la porcion bonus (0..1) para no romper el display de la UI.
+    /// Energía disponible, de 0 a 1. En azul solo usa la parte del bonus (de 0 a 1), para que la interfaz se muestre bien.
     /// </summary>
     public float EnergyPercent => _maxSyringe > 0f
         ? (_isBlueMode
-            ? Mathf.Clamp01(_syringe / _maxSyringe)   // 0..1 del bonus azul
-            : Mathf.Clamp01(Energy   / _maxSyringe))  // 0..1 de energia roja
+            ? Mathf.Clamp01(_syringe / _maxSyringe)   // bonus azul, de 0 a 1
+            : Mathf.Clamp01(Energy   / _maxSyringe))  // energía roja, de 0 a 1
         : 0f;
 
-    /// <summary>0..1 de cuanta sangre hay en la jeringuilla.</summary>
+    /// <summary>Cantidad de sangre que hay en la jeringuilla, de 0 a 1.</summary>
     public float SyringePercent => _maxSyringe > 0f ? Mathf.Clamp01(_syringe / _maxSyringe) : 0f;
 
     public bool IsBlueMode => _isBlueMode;
     public bool IsDead => !godMode && !_isBlueMode && _syringe >= _maxSyringe;
 
-    /// <summary>True si un BloodSucker ha drenado sangre en los últimos 0.15 s. Lo usa la barra para parpadear.</summary>
+    /// <summary>Indica si un BloodSucker ha drenado sangre en los últimos 0,15 s. Lo usa la barra para parpadear.</summary>
     public bool IsBeingDrained => Time.time - _lastDrainTime < 0.15f;
 
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        if (GetComponent<OverloadFX>() == null) gameObject.AddComponent<OverloadFX>();   // (efecto de Sobrecarga / Respiro)
+        if (GetComponent<OverloadFX>() == null) gameObject.AddComponent<OverloadFX>();   // efecto de la Sobrecarga y del Respiro
         _baseMaxSyringe = _maxSyringe;
         ApplyShopUpgrades();
-        // Todos los niveles empiezan con la jeringuilla VACÍA: ni sangre roja ni azul (energía al 100 %).
-        // (Ya no hay "sangre inicial" configurable en el Inspector.)
+        // Todos los niveles empiezan con la jeringuilla vacía, sin sangre roja ni azul, es decir, con la energía al 100 %.
         _syringe    = 0f;
         _isBlueMode = false;
 
-        // EXCEPCIÓN — «Buen desayuno» (tienda): empiezas el nivel ya en MODO AZUL, con la barra azul al
-        // 20 / 40 / 60 % según el nivel de la mejora.
+        // Excepción con "Buen desayuno" (tienda). El nivel empieza ya en modo azul, con la barra azul al 20, 40 o 60 %
+        // según el nivel de la mejora.
         int breakfast = PlayerProgress.GetLevel(ShopIds.StartBoost);
         if (breakfast > 0)
         {
             _isBlueMode = true;
             _syringe    = _maxSyringe * Mathf.Clamp01(0.2f * breakfast);
         }
-        PlayerProgress.OnChanged += ApplyShopUpgrades;   // (si se compra en la tienda del freeroam, al momento)
+        PlayerProgress.OnChanged += ApplyShopUpgrades;   // si se compra en la tienda de la zona de inicio, se aplica al momento
     }
 
     private void OnDestroy()
@@ -140,36 +136,36 @@ public class EnergyManager : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    // ── Mejoras de la tienda ────────────────────────────────────────────────────
+    // -=+=- Mejoras de la tienda -=+=-
     private float _baseMaxSyringe;
 
-    private int _streak;   // aciertos seguidos (para «Racha»)
+    private int _streak;   // aciertos seguidos, para "Racha"
 
-    /// <summary>Aciertos seguidos en modo rojo (se reinicia al fallar).</summary>
+    /// <summary>Aciertos seguidos en modo rojo. Se reinicia al fallar.</summary>
     public int Streak => _streak;
 
-    /// <summary>«Sangre azul»: la sangre azul se gasta un 25 % / 50 % más despacio.</summary>
+    /// <summary>"Sangre azul". La sangre azul se gasta un 25 o un 50 % más despacio.</summary>
     public static float BlueDecayMultiplier
     {
         get { int l = PlayerProgress.GetLevel(ShopIds.BlueBoost); return l <= 0 ? 1f : l == 1 ? 0.75f : 0.5f; }
     }
 
-    /// <summary>«Coagulante»: pérdida pasiva −15 % / −30 %.</summary>
+    /// <summary>"Coagulante". La pérdida pasiva baja un 15 o un 30 %.</summary>
     public static float PassiveMultiplier
     {
         get { int l = PlayerProgress.GetLevel(ShopIds.SlowBleed); return l <= 0 ? 1f : l == 1 ? 0.85f : 0.7f; }
     }
 
-    /// <summary>«Piel gruesa»: los drenajes (BloodSuckers, golpes) quitan −25 % / −50 %.</summary>
+    /// <summary>"Piel gruesa". Los drenajes (BloodSuckers y golpes) quitan un 25 o un 50 % menos.</summary>
     public static float DrainMultiplier
     {
         get { int l = PlayerProgress.GetLevel(ShopIds.DrainGuard); return l <= 0 ? 1f : l == 1 ? 0.75f : 0.5f; }
     }
 
-    /// <summary>«Metabolismo eficiente»: las acciones cuestan un 5 % menos por nivel.</summary>
+    /// <summary>"Metabolismo eficiente". Las acciones cuestan un 5 % menos por cada nivel.</summary>
     public static float ActionCostMultiplier => 1f - 0.05f * PlayerProgress.GetLevel(ShopIds.Efficient);
 
-    /// <summary>«Pulso fuerte»: cada acierto devuelve +15 % / +30 % / +50 % de sangre.</summary>
+    /// <summary>"Pulso fuerte". Cada acierto devuelve un 15, un 30 o un 50 % más de sangre.</summary>
     public static float PulseMultiplier
     {
         get
@@ -179,7 +175,7 @@ public class EnergyManager : MonoBehaviour
         }
     }
 
-    /// <summary>«Jeringuilla grande»: +10 % de capacidad por nivel. Conserva la sangre que ya hay.</summary>
+    /// <summary>"Jeringuilla grande". Un 10 % más de capacidad por nivel, conservando la sangre que ya hay.</summary>
     private void ApplyShopUpgrades()
     {
         if (_baseMaxSyringe <= 0f) _baseMaxSyringe = _maxSyringe;
@@ -198,8 +194,8 @@ public class EnergyManager : MonoBehaviour
     private float _steadyHoldTime;
 
     /// <summary>
-    /// ¿Está el jugador MANTENIENDO el corazón (clic izquierdo sostenido, con la mejora «Corazón firme»)?
-    /// Mientras tanto no se pierde sangre pasivamente (los fallos, golpes y BloodSuckers siguen contando).
+    /// Indica si el jugador está manteniendo el corazón (clic izquierdo sostenido, con la mejora "Corazón firme").
+    /// Mientras tanto no se pierde sangre de forma pasiva, aunque los fallos, los golpes y los BloodSuckers siguen contando.
     /// </summary>
     public bool IsHoldingHeart { get; private set; }
 
@@ -209,8 +205,8 @@ public class EnergyManager : MonoBehaviour
         bool playing = BeatManager.Instance == null || BeatManager.Instance.IsPlaying;
         bool pressed = owned && playing && Mouse.current != null && (Mouse.current.leftButton.isPressed || Mouse.current.rightButton.isPressed);
         _steadyHoldTime = pressed ? _steadyHoldTime + Time.deltaTime : 0f;
-        // En cuanto la mano se queda cerrada (ver HandAnimationController) ya cuenta; si no hay mano visible
-        // (p. ej. en el kayak), vale con mantener el clic '_steadyHoldDelay' segundos.
+        // En cuanto la mano se queda cerrada (ver HandAnimationController) ya cuenta. Si no hay mano visible, por ejemplo
+        // en el kayak, basta con mantener el clic '_steadyHoldDelay' segundos.
         IsHoldingHeart  = pressed && (HandAnimationController.IsHandHeld || _steadyHoldTime >= _steadyHoldDelay);
     }
 
@@ -218,20 +214,19 @@ public class EnergyManager : MonoBehaviour
     {
         UpdateSteadyHeart();
 
-        // God Mode: congelar toda la lógica de energía (sin llenado pasivo, sin muerte por jeringuilla).
+        // Modo Dios: se congela toda la lógica de energía, sin llenado pasivo ni muerte por la jeringuilla.
         if (godMode) return;
 
-        // Pausada (rebobinado, fin de nivel): la jeringuilla no cambia sola.
+        // En pausa (rebobinado o fin de nivel), la jeringuilla no cambia sola.
         if (_paused) return;
 
-        // No aplicar cambios pasivos antes de que empiece el juego.
-        // Cuando BeatManager no está reproduciendo (juego no iniciado), congelamos todo.
+        // Antes de que empiece la partida, es decir, mientras BeatManager no está reproduciendo, no se aplican cambios pasivos.
         if (BeatManager.Instance != null && !BeatManager.Instance.IsPlaying) return;
 
         if (_isBlueMode)
         {
             if (_blueDecayPerSecond > 0f && _syringe > 0f)
-                ChangeSyringe(-_blueDecayPerSecond * BlueDecayMultiplier * Time.deltaTime);   // («Sangre azul»)
+                ChangeSyringe(-_blueDecayPerSecond * BlueDecayMultiplier * Time.deltaTime);   // "Sangre azul"
 
             if (_syringe <= 0f)
             {
@@ -241,20 +236,17 @@ public class EnergyManager : MonoBehaviour
         }
         else
         {
-            // Corazón firme: mientras lo mantienes, no se pierde sangre pasivamente.
+            // "Corazón firme": mientras se mantiene el corazón, no se pierde sangre de forma pasiva.
             if (_passiveFillPerSecond > 0f && _syringe < _maxSyringe && !IsHoldingHeart)
-                ChangeSyringe(_passiveFillPerSecond * PassiveMultiplier * Time.deltaTime);    // («Coagulante»)
+                ChangeSyringe(_passiveFillPerSecond * PassiveMultiplier * Time.deltaTime);    // "Coagulante"
         }
     }
 
-    // =========================================================================
-    // API publica
-    // =========================================================================
+    // -=+=- API pública -=+=-
 
     /// <summary>
-    /// Acierto en modo rojo con resultado de timing.
-    /// Perfect = 1.5x de la cantidad base. Good = 1.0x.
-    /// Si el overflow supera la sangre disponible, entra en modo azul automaticamente.
+    /// Acierto en modo rojo. Perfect da 1,5 veces la cantidad base y Good la da una vez. Si lo que se recupera supera
+    /// la sangre que hay en la jeringuilla, se entra automáticamente en modo azul.
     /// </summary>
     public float HitRed(TimingResult timing)
     {
@@ -262,15 +254,15 @@ public class EnergyManager : MonoBehaviour
 
         float timingMultiplier;
         if (timing == TimingResult.Perfect)
-            timingMultiplier = PlayerProgress.GetLevel(ShopIds.Perfectionist) > 0 ? 2f : 1.5f;   // («Perfeccionista»)
+            timingMultiplier = PlayerProgress.GetLevel(ShopIds.Perfectionist) > 0 ? 2f : 1.5f;   // "Perfeccionista"
         else
             timingMultiplier = 1.0f;
 
-        float subtract = _hitInjectAmount * timingMultiplier * PulseMultiplier;   // (mejora «Pulso fuerte»)
+        float subtract = _hitInjectAmount * timingMultiplier * PulseMultiplier;   // mejora "Pulso fuerte"
 
-        // «Segundo aliento»: con poca energía, los aciertos valen el doble.
+        // "Segundo aliento": con poca energía, los aciertos valen el doble.
         if (PlayerProgress.GetLevel(ShopIds.SecondWind) > 0 && EnergyPercent < 0.2f) subtract *= 2f;
-        // «Racha»: desde 8 aciertos seguidos, +25 %.
+        // "Racha": a partir de 8 aciertos seguidos, un 25 % más.
         _streak++;
         if (PlayerProgress.GetLevel(ShopIds.Streak) > 0 && _streak >= 8) subtract *= 1.25f;
         float redAvailable = _syringe;
@@ -283,7 +275,7 @@ public class EnergyManager : MonoBehaviour
             return subtract;
         }
 
-        // Overflow: vacia el rojo y el sobrante se convierte en azul
+        // Si sobra, se vacía la sangre roja y lo que sobra se convierte en sangre azul.
         float overflow = subtract - redAvailable;
 
         if (redAvailable > 0f)
@@ -292,7 +284,7 @@ public class EnergyManager : MonoBehaviour
             OnRedHit?.Invoke(redAvailable);
         }
 
-        if (BlueBroken) return redAvailable;   // (jeringuilla azul rota tras un golpe del jefe: no se llena)
+        if (BlueBroken) return redAvailable;   // la jeringuilla azul está rota después de un golpe del jefe, así que no se llena
 
         _isBlueMode = true;
         ChangeSyringe(overflow);
@@ -302,24 +294,24 @@ public class EnergyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Fallo en modo rojo: anade sangre extra (penalizacion).
-    /// <paramref name="penaltyScale"/> escala la penalizacion (1 = normal). Lo usan el kayak (fallar remando
-    /// cuesta mas) y el anti-spam de RhythmInput (cada clic fallido de mas en el mismo beat cuesta el doble).
+    /// Fallo en modo rojo, que añade sangre extra como penalización. <paramref name="penaltyScale"/> multiplica la
+    /// penalización (1 es lo normal). Lo usan el kayak, ya que fallar remando cuesta más, y el anti-spam de RhythmInput,
+    /// en el que cada clic de más en el mismo beat cuesta el doble.
     /// </summary>
     public float MissRed(float penaltyScale = 1f)
     {
         if (_isBlueMode) return 0f;
-        _streak = 0;                // (se rompe la racha)
+        _streak = 0;                // se rompe la racha
 
         float before = _syringe;
-        ChangeSyringe(_missAbsorbAmount * Mathf.Max(0f, penaltyScale) * StudyConfig.MissPenaltyMult);   // (modo prueba)
+        ChangeSyringe(_missAbsorbAmount * Mathf.Max(0f, penaltyScale) * StudyConfig.MissPenaltyMult);   // modo prueba
         float absorbed = _syringe - before;
         StudyTelemetry.MissPenalty(absorbed);
         if (absorbed > 0f) OnRedMiss?.Invoke(absorbed);
         return absorbed;
     }
 
-    /// <summary>Acierto en modo bonus: acumula sangre azul.</summary>
+    /// <summary>Acierto en modo bonus, que acumula sangre azul.</summary>
     public void HitBlue()
     {
         if (!_isBlueMode) return;
@@ -327,9 +319,8 @@ public class EnergyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Fallo en modo bonus: se PIERDE toda la sangre azul (sin ningún impulso) y empieza el «Respiro»: durante
-    /// unos beats las ventanas de acierto son más amplias, más cuanta más sangre azul se haya perdido.
-    /// Devuelve la cantidad perdida.
+    /// Fallo en modo bonus. Se pierde toda la sangre azul y empieza el "Respiro", en el que durante unos beats las
+    /// ventanas de acierto son más amplias, tanto más cuanta más sangre azul se haya perdido. Devuelve la cantidad perdida.
     /// </summary>
     public float LoseBlue()
     {
@@ -337,7 +328,7 @@ public class EnergyManager : MonoBehaviour
         float lost = _syringe;
         float frac = _maxSyringe > 0f ? Mathf.Clamp01(lost / _maxSyringe) : 0f;
         StudyTelemetry.BlueLost(lost);
-        _overloadUntil = double.NegativeInfinity;   // (fallar corta la Sobrecarga)
+        _overloadUntil = double.NegativeInfinity;   // fallar corta la Sobrecarga
         ChangeSyringe(-_syringe);
         if (frac > 0f)
         {
@@ -349,22 +340,22 @@ public class EnergyManager : MonoBehaviour
         return lost;
     }
 
-    // ── Sobrecarga y Respiro ───────────────────────────────────────────────
+    // -=+=- Sobrecarga y Respiro -=+=-
     private double _overloadUntil = double.NegativeInfinity;
     private double _graceUntil = double.NegativeInfinity;
     private float _graceFrac;
 
-    /// <summary>Beat actual de la canción (el reloj del BeatManager); muy negativo si no hay canción.</summary>
+    /// <summary>Beat actual de la canción, según el reloj del BeatManager. Es muy negativo si no hay canción.</summary>
     private static double SongBeat()
     {
         BeatManager bm = BeatManager.Instance;
         return bm != null && bm.HasClock ? bm.ClockBeats : double.NegativeInfinity;
     }
 
-    /// <summary>¿Está en Sobrecarga? (jeringuilla azul llenada del todo hace menos de _overloadBeats beats)</summary>
+    /// <summary>Indica si está en Sobrecarga, es decir, si la jeringuilla azul se llenó del todo hace menos de _overloadBeats beats.</summary>
     public bool IsOverloaded => SongBeat() < _overloadUntil;
 
-    /// <summary>Multiplicador de las ventanas de acierto por el «Respiro» (1 = normal).</summary>
+    /// <summary>Multiplicador de las ventanas de acierto por el "Respiro" (1 es lo normal).</summary>
     public static float GraceWindowMultiplier
     {
         get
@@ -381,44 +372,39 @@ public class EnergyManager : MonoBehaviour
         OverloadStarted?.Invoke(_overloadBeats);
     }
 
-    /// <summary>Sale del modo bonus sin inyectar.</summary>
+    /// <summary>Sale del modo bonus sin inyectar la sangre azul.</summary>
     public void ExitBlueMode()
     {
         _isBlueMode = false;
     }
 
-    /// <summary>
-    /// Intenta gastar energia (saltar, correr, dash...).
-    /// Devuelve true si la accion pudo realizarse.
-    /// </summary>
+    /// <summary>Intenta gastar energía en una acción (saltar, hacer dash...). Devuelve true si la acción se puede realizar.</summary>
     public bool TrySpend(float amount)
     {
         if (amount <= 0f) return true;
-        if (IsOverloaded) return true;   // Sobrecarga: las acciones no gastan energía
-        // Antes de empezar el nivel (freeroam / 3-2-1-¡YA!) el EnergyManager está desactivado: las acciones no gastan.
+        if (IsOverloaded) return true;   // en Sobrecarga, las acciones no gastan energía
+        // Antes de empezar el nivel (zona de inicio o cuenta atrás), el EnergyManager está desactivado y las acciones no gastan energía.
         if (!isActiveAndEnabled || _paused) return true;
-        amount *= ActionCostMultiplier * StudyConfig.ActionCostMult;   // «Metabolismo eficiente» (tienda) · modo prueba
-        if (godMode)      return true;  // God Mode: acción siempre permitida, sin coste
+        amount *= ActionCostMultiplier * StudyConfig.ActionCostMult;   // "Metabolismo eficiente" (tienda) y modo prueba
+        if (godMode)      return true;  // modo Dios: la acción siempre se permite, sin coste
         if (_isBlueMode || Energy >= amount || CanOverspendWithExtraLife) StudyTelemetry.ActionCost(amount);
 
         if (_isBlueMode)
         {
-            // Energia total en azul = 100% base + bonus azul.
-            // Se consume del bonus azul primero. Si el bonus no cubre el coste,
-            // el exceso se absorbe como sangre roja (sale del modo azul).
-            // La accion SIEMPRE se permite.
+            // En azul, la energía total es la base del 100 % más el bonus azul. Primero se gasta el bonus azul y, si no
+            // cubre el coste, el resto se convierte en sangre roja y se sale del modo azul. En este modo, la acción siempre se permite.
             if (_syringe >= amount)
             {
-                // El bonus cubre el coste entero
+                // El bonus cubre el coste entero.
                 ChangeSyringe(-amount);
             }
             else
             {
-                // Gastar todo el bonus azul y convertir el exceso en sangre roja
+                // Se gasta todo el bonus azul y lo que falta se convierte en sangre roja.
                 float excess = amount - _syringe;
-                ChangeSyringe(-_syringe);   // drena todo el azul → syringe = 0
+                ChangeSyringe(-_syringe);   // se vacía todo el azul, por lo que syringe = 0
                 _isBlueMode = false;
-                ChangeSyringe(excess);      // absorbe el exceso como sangre roja
+                ChangeSyringe(excess);      // lo que falta se añade como sangre roja
                 OnBlueDepleted?.Invoke();
             }
             return true;
@@ -426,8 +412,8 @@ public class EnergyManager : MonoBehaviour
 
         if (Energy < amount)
         {
-            // Sin energía suficiente PERO con VIDAS EXTRA: la acción se permite igual. La jeringuilla se llena, el
-            // corazón se queda seco y se gasta una vida extra (vuelves con el corazón a tope en el siguiente beat).
+            // Sin energía suficiente, pero con vidas extra, la acción se permite igual. La jeringuilla se llena, el corazón se
+            // queda sin sangre y se gasta una vida extra, con la que el jugador vuelve con el corazón lleno en el siguiente beat.
             if (!CanOverspendWithExtraLife) return false;
             ChangeSyringe(amount);
             return true;
@@ -436,28 +422,22 @@ public class EnergyManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>¿Se pueden hacer acciones sin energía? Sí mientras quede alguna VIDA EXTRA (se gastará al secarse).</summary>
+    /// <summary>Indica si se pueden hacer acciones sin energía, lo que ocurre mientras quede alguna vida extra.</summary>
     public static bool CanOverspendWithExtraLife => PlayerProgress.GetCount(ShopIds.ExtraLife) > 0;
 
-    /// <summary>Restaura energia gratis. Resta de la jeringuilla.</summary>
+    /// <summary>Devuelve energía gratis, quitando sangre de la jeringuilla.</summary>
     public void Restore(float amount)
     {
         if (amount > 0f) ChangeSyringe(-amount);
     }
 
     /// <summary>
-    /// Drena sangre del jugador de forma continua: la añade a la jeringuilla (= pierde energía).
-    /// Lo llama el BloodSucker cada frame. En God Mode o modo azul no tiene efecto. Marca
-    /// IsBeingDrained para que la barra parpadee. Si la jeringuilla se llena, dispara la muerte
-    /// (OnSyringeFull) igual que llenarla por fallos.
-    /// </summary>
-    /// <summary>
-    /// GOLPE (ataques del jefe): quita 'fraction' de TODA la sangre que se puede llegar a tener, contando la roja y la
-    /// azul (el máximo total es 2 × la jeringuilla: 100 % rojo + 100 % azul). 0.25 = un cuarto.
-    ///   • En azul: primero se gasta la sangre azul; si no llega, se sale del azul y el resto sale de la roja.
-    ///   • En rojo: la jeringuilla se llena esa cantidad (si se llena del todo, mueres por sangre; vidas extra y
-    ///     Adrenalina funcionan).
-    /// God Mode lo ignora. «Piel gruesa» lo reduce.
+    /// Golpe de un ataque del jefe. Quita 'fraction' de toda la sangre que se puede llegar a tener, contando la roja y la
+    /// azul (el máximo total es dos jeringuillas, 100 % de roja y 100 % de azul), por lo que 0.25 es un cuarto.
+    ///   - En azul, primero se gasta la sangre azul y, si no llega, se sale del azul y el resto sale de la roja.
+    ///   - En rojo, la jeringuilla se llena esa cantidad. Si se llena del todo, el jugador muere, aunque las vidas extra
+    ///     y la Adrenalina siguen funcionando.
+    /// El modo Dios lo ignora y "Piel gruesa" lo reduce.
     /// </summary>
     public void TakeHitFraction(float fraction)
     {
@@ -467,27 +447,27 @@ public class EnergyManager : MonoBehaviour
         if (_isBlueMode)
         {
             if (_syringe > amount) { ChangeSyringe(-amount); return; }   // solo baja el azul
-            amount -= _syringe;                                          // se acaba el azul…
+            amount -= _syringe;                                          // se acaba el azul...
             _isBlueMode = false;
             ChangeSyringe(-_syringe);
             OnBlueDepleted?.Invoke();
         }
-        ChangeSyringe(amount);                                           // …y el resto, sangre roja
+        ChangeSyringe(amount);                                           // ...y el resto sale de la sangre roja
     }
 
     /// <summary>
-    /// Golpe del JEFE: si estás en modo azul, se pierde TODA la sangre azul (y nada más); si no, la jeringuilla se
-    /// llena 'redFraction' de la roja (0.5 = media jeringuilla; dos golpes seguidos sin azul = muerte).
+    /// Golpe del jefe. En modo azul se pierde toda la sangre azul, y nada más. Si no, la jeringuilla se llena
+    /// 'redFraction' de sangre roja (0.5 es media jeringuilla, así que dos golpes seguidos sin azul matan al jugador).
     /// </summary>
     public void TakeBossHit(float redFraction)
     {
         if (godMode) return;
         _lastDrainTime = Time.time;
-        // Tras un golpe del jefe la jeringuilla azul queda ROTA unos segundos: no se puede volver a llenar.
+        // Después de un golpe del jefe, la jeringuilla azul queda rota unos segundos y no se puede volver a llenar.
         _blueBrokenUntil = Time.time + _blueBrokenSeconds;
         if (_isBlueMode)
         {
-            // El azul hace de ESCUDO: se rompe (sonido de cristal) y absorbe el golpe entero.
+            // La sangre azul hace de escudo, que se rompe (con un sonido de cristal) y absorbe el golpe entero.
             _isBlueMode = false;
             ChangeSyringe(-_syringe);
             OnBlueDepleted?.Invoke();
@@ -505,27 +485,32 @@ public class EnergyManager : MonoBehaviour
     [Range(0f, 1f)] [SerializeField] private float _shieldBreakVolume = 0.9f;
     private float _blueBrokenUntil = -10f;
 
-    /// <summary>¿La jeringuilla azul está rota (golpe reciente del jefe)? Mientras, los aciertos no dan azul.</summary>
+    /// <summary>Indica si la jeringuilla azul está rota por un golpe reciente del jefe. Mientras tanto, los aciertos no dan azul.</summary>
     public bool BlueBroken => Time.time < _blueBrokenUntil;
 
+    /// <summary>
+    /// Drena sangre del jugador de forma continua, añadiéndola a la jeringuilla, por lo que pierde energía. Lo llama el
+    /// BloodSucker en cada fotograma, y no tiene efecto en modo Dios ni en modo azul. Activa IsBeingDrained para que la
+    /// barra parpadee. Si la jeringuilla se llena, el jugador muere (OnSyringeFull), igual que al llenarla por fallos.
+    /// </summary>
     public void DrainBlood(float amount)
     {
         if (amount <= 0f) return;
-        if (godMode || _isBlueMode) return;   // en God Mode / bonus azul no te pueden chupar sangre
+        if (godMode || _isBlueMode) return;   // en modo Dios o en modo azul, no se puede drenar sangre
         _lastDrainTime = Time.time;
-        amount *= DrainMultiplier;   // («Piel gruesa»)
-        ChangeSyringe(amount);                // positivo = llena la jeringuilla = pierde energía
+        amount *= DrainMultiplier;   // "Piel gruesa"
+        ChangeSyringe(amount);                // positivo: llena la jeringuilla, por lo que se pierde energía
     }
 
     /// <summary>
-    /// Pausa/reanuda la lógica pasiva de la jeringuilla (llenado y decay del azul). La usan el Rebobinado
-    /// y el fin de nivel.
+    /// Pausa o reanuda la lógica pasiva de la jeringuilla (el llenado y el gasto de la sangre azul). La usan el
+    /// Rebobinado y el fin de nivel.
     /// </summary>
     public void SetPaused(bool paused) => _paused = paused;
 
     /// <summary>
-    /// Coloca la jeringuilla directamente (fin del nivel tutorial: se vacía animada, la roja y la azul).
-    /// 'blue' = sigue en modo azul (con value &gt; 0).
+    /// Fija directamente la sangre de la jeringuilla. Se usa al final del nivel tutorial, que vacía las dos jeringuillas
+    /// con una animación. 'blue' indica si sigue en modo azul (con value &gt; 0).
     /// </summary>
     public void SetSyringeDirect(float value, bool blue)
     {
@@ -536,13 +521,11 @@ public class EnergyManager : MonoBehaviour
         OnEnergyChanged?.Invoke(EnergyPercent);
     }
 
-    // =========================================================================
-    // Internals
-    // =========================================================================
+    // -=+=- Funciones internas -=+=-
 
     private void ChangeSyringe(float delta)
     {
-        // Tutorial frenando / parado: la jeringuilla no se llena (ni fallos ni costes) → no se puede morir ahí.
+        // Mientras el tutorial frena o está parado, la jeringuilla no se llena (ni por fallos ni por costes), así que no se puede morir.
         if (delta > 0f && !_isBlueMode && TutorialGate.Busy) return;
         float prev = _syringe;
         _syringe = Mathf.Clamp(_syringe + delta, 0f, _maxSyringe);
@@ -552,11 +535,10 @@ public class EnergyManager : MonoBehaviour
             OnSyringeChanged?.Invoke(SyringePercent);
             OnEnergyChanged?.Invoke(EnergyPercent);
 
-            // Jeringuilla AZUL llena del todo → Sobrecarga.
+            // Si la jeringuilla azul se llena del todo, empieza la Sobrecarga.
             if (_isBlueMode && _syringe >= _maxSyringe && prev < _maxSyringe) StartOverload();
 
-            // OnSyringeFull = muerte. Solo dispara en modo rojo.
-            // En modo azul (bonus), llenar la jeringuilla NO mata al jugador.
+            // OnSyringeFull significa la muerte, y solo se lanza en modo rojo, ya que en modo azul llenar la jeringuilla no mata al jugador.
             if (!_isBlueMode && _syringe >= _maxSyringe && prev < _maxSyringe)
                 OnSyringeFull?.Invoke();
 

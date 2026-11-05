@@ -7,33 +7,33 @@ using UnityEngine.UI;
 using static SimpleUI;
 
 /// <summary>
-/// MODO TUTORIAL DEL NIVEL 1 (se crea solo en Level1 la primera vez que se juega, o si se activa en Ajustes).
+/// Modo tutorial del nivel 1. Se crea solo en Level1 la primera vez que se juega, o si se activa en los ajustes.
 ///
-/// Hasta el beat <see cref="S.endBeat"/>, antes de CADA acción del guion
-/// (<see cref="TutorialLevel1Steps.Steps"/>):
-///   1. La acción cae como una NOTA en el monitor del corazón (llega justo en su beat).
-///   2. Un beat antes, el jugador y la música se van FRENANDO hasta pararse justo en ese beat.
-///   3. La pantalla se oscurece, se ILUMINA el obstáculo y sale el texto («Pulsa ESPACIO para saltar»).
-///   4. El jugador hace la acción (ese instante, en el beat) y todo vuelve a arrancar poco a poco.
-/// El movimiento lateral es libre siempre. Si el jugador hace la acción por su cuenta mientras frena, no se para.
+/// Hasta el beat <see cref="S.endBeat"/>, antes de cada acción del guion (<see cref="TutorialLevel1Steps.Steps"/>)
+/// ocurre lo siguiente.
+///   1. La acción cae como una nota en el monitor del corazón, y llega justo en su beat.
+///   2. Un beat antes, el jugador y la música se van frenando hasta pararse justo en ese beat.
+///   3. La pantalla se oscurece, se ilumina el obstáculo y aparece el texto ("Pulsa ESPACIO para saltar").
+///   4. El jugador hace la acción en ese instante, en el beat, y todo vuelve a arrancar poco a poco.
+/// El movimiento lateral siempre es libre. Si el jugador hace la acción por su cuenta mientras el juego frena, no se para.
 ///
-/// Explicaciones que salen UNA SOLA VEZ (se recuerdan aunque mueras): la energía (al empezar), el primer clic fallado,
-/// la primera vez que entra sangre azul y el primer fallo con sangre azul.
+/// Algunas explicaciones salen una sola vez y se recuerdan aunque el jugador muera: la energía (al empezar), el primer
+/// clic fallado, la primera vez que entra sangre azul y el primer fallo con sangre azul.
 ///
-/// CÓMO SE FRENA EL TIEMPO: el reloj del BeatManager (todo el nivel depende de él) avanza a velocidad 'speed'
-/// (1 = normal, 0 = parado), Time.timeScale = speed (jugador, físicas, animaciones) y el pitch de la música = speed.
-/// Al volver a 1 se resincroniza el reloj con la posición real de la música.
+/// Para frenar el tiempo, el reloj del BeatManager (del que depende todo el nivel) avanza a velocidad 'speed' (1 es
+/// normal y 0, parado), Time.timeScale = speed (jugador, física y animaciones) y el pitch de la música también es
+/// speed. Al volver a 1, el reloj se vuelve a sincronizar con la posición real de la música.
 /// </summary>
 public class TutorialDirector : MonoBehaviour
 {
-    // ── Preferencias ──────────────────────────────────────────────────────────
-    private const string PrefPending = "Tutorial.L1";          // 1 = el tutorial se hará la próxima vez
+    // -=+=- Preferencias -=+=-
+    private const string PrefPending = "Tutorial.L1";          // 1 significa que el tutorial se hará la próxima vez
     private static readonly string[] OncePrefs = { "Tutorial.Energy", "Tutorial.Miss", "Tutorial.Blue", "Tutorial.BlueMiss" };
 
-    /// <summary>¿Se hará el tutorial al entrar en el nivel 1? (Ajustes → TUTORIAL). Al activarlo se repite todo.</summary>
+    /// <summary>Indica si se hará el tutorial al entrar en el nivel 1 (Ajustes > Tutorial). Al activarlo, se repite todo.</summary>
     public static bool Pending
     {
-        get => PlayerPrefs.GetInt(PrefPending, 0) == 1;   // (por defecto, NO: el tutorial ya se hace en la escena Tutorial)
+        get => PlayerPrefs.GetInt(PrefPending, 0) == 1;   // por defecto no, ya que el tutorial se hace en la escena Tutorial
         set
         {
             PlayerPrefs.SetInt(PrefPending, value ? 1 : 0);
@@ -42,21 +42,21 @@ public class TutorialDirector : MonoBehaviour
         }
     }
 
-    /// <summary>¿Está en marcha el guion del tutorial (antes del beat final)? Las pistas no repiten sus notas.</summary>
+    /// <summary>Indica si el guion del tutorial está en marcha (antes del beat final). Las pistas no repiten sus notas.</summary>
     public static bool StepsRunning { get; private set; }
 
     private static bool Shown(int i) => PlayerPrefs.GetInt(OncePrefs[i], 0) == 1;
 
-    /// <summary>La explicación de la energía ya se ha dado.</summary>
+    /// <summary>Indica si ya se ha dado la explicación de la energía.</summary>
     public static void MarkEnergyShown() => MarkShown(0);
 
-    /// <summary>¿Se ha dado ya la explicación de una vez 'i'? (0 energía, 1 primer fallo, 2 sangre azul, 3 fallo con azul)</summary>
+    /// <summary>Indica si ya se ha dado la explicación de una vez 'i' (0 energía, 1 primer fallo, 2 sangre azul y 3 fallo con azul).</summary>
     public static bool OnceShown(int i) => Shown(i);
 
-    /// <summary>¿Se han explicado ya TODAS las interacciones con la barra de energía?</summary>
+    /// <summary>Indica si ya se han explicado todas las interacciones con la barra de energía.</summary>
     public static bool EnergyAllExplained => Shown(0) && Shown(1) && Shown(2) && Shown(3);
 
-    /// <summary>Vuelve a dejar pendientes las explicaciones de la energía (tutorial desde el principio).</summary>
+    /// <summary>Vuelve a dejar pendientes las explicaciones de la energía, para hacer el tutorial desde el principio.</summary>
     public static void ResetOnceExplanations()
     {
         foreach (string k in OncePrefs) PlayerPrefs.DeleteKey(k);
@@ -77,31 +77,31 @@ public class TutorialDirector : MonoBehaviour
         TutorialScript script = TutorialScript.Current;
         if (s.name != script.scene) return;
         if (StudySession.Active && !script.allowInStudy) return;
-        // Guion propio de la escena (nivel tutorial): siempre, sin mirar Ajustes.
+        // La escena del nivel tutorial tiene su propio guion, que se usa siempre, sin mirar los ajustes.
         if (script.alwaysRun)
         {
             if (FindAnyObjectByType<TutorialDirector>() == null) new GameObject("TutorialDirector").AddComponent<TutorialDirector>();
             return;
         }
-        // Interruptor en la escena (objeto «Tutorial»): apagado → nada; «Forzar siempre» → tutorial completo.
+        // Interruptor en la escena (objeto "Tutorial"). Si está apagado, no se hace nada, y con "Forzar siempre" se hace el tutorial completo.
         TutorialSwitch sw = FindAnyObjectByType<TutorialSwitch>(FindObjectsInactive.Include);
         if (sw != null && !sw.tutorialActivo) return;
         if (sw != null && sw.forzarSiempre) Pending = true;
-        // Se crea si toca el tutorial o si queda alguna explicación de una vez por salir (fallo, sangre azul…).
+        // Se crea si toca el tutorial o si queda alguna explicación de una vez por salir (fallo, sangre azul...).
         bool onceLeft = script.eventExplanations && (!Shown(1) || !Shown(2) || !Shown(3));
         if (!Pending && !onceLeft) return;
         if (FindAnyObjectByType<TutorialDirector>() != null) return;
         new GameObject("TutorialDirector").AddComponent<TutorialDirector>();
     }
 
-    // ── Ajustes del efecto ───────────────────────────────────────────────────
+    // -=+=- Ajustes del efecto -=+=-
     private const float SlowLeadBeats   = 1f;     // empieza a frenar 1 beat antes de la acción
     private const float NoteLeadBeats   = HeartMonitorNotes.LeadBeats;   // la nota aparece 3 beats antes
-    private const float ExplainLeadBeat = 0.4f;   // explicaciones por evento: frenada corta
-    private const float ResumeSeconds   = 0.45f;  // vuelta a velocidad normal (tiempo real)
+    private const float ExplainLeadBeat = 0.4f;   // en las explicaciones por evento, la frenada es corta
+    private const float ResumeSeconds   = 0.45f;  // vuelta a la velocidad normal, en tiempo real
     private const float DimAlpha        = 0.8f;
 
-    // ── Referencias ──────────────────────────────────────────────────────────
+    // -=+=- Referencias -=+=-
     private BeatManager _bm;
     private PlayerMovement _pm;
     private EnergyManager _em;
@@ -110,32 +110,32 @@ public class TutorialDirector : MonoBehaviour
     private GameOverManager _gameOver;
     private bool _hooked;
 
-    // ── Control del tiempo ───────────────────────────────────────────────────
+    // -=+=- Control del tiempo -=+=-
     private enum Mode { Run, Slow, Frozen, Resume }
     private Mode _mode = Mode.Run;
     private bool _controlling;
-    private double _songT, _lastDsp;      // reloj propio (segundos de canción) mientras se controla
-    private double _slowTarget, _slowR0;  // frenada: instante de parada y «distancia» inicial
+    private double _songT, _lastDsp;      // reloj propio (segundos de canción) mientras se controla el tiempo
+    private double _slowTarget, _slowR0;  // frenada: instante de la parada y "distancia" inicial
     private float _speed = 1f, _resumeT;
-    private double _audioK; private int _audioKn;   // desfase medio reloj − posición de la música
+    private double _audioK; private int _audioKn;   // desfase medio entre el reloj y la posición de la música
 
-    // ── Pasos ────────────────────────────────────────────────────────────────
+    // -=+=- Pasos -=+=-
     private class Request
     {
-        public int step = -1;          // índice en Steps (−1 = explicación sin acción)
+        public int step = -1;          // índice en Steps (-1 si es una explicación sin acción)
         public int once = -1;          // índice en OncePrefs (explicaciones de una vez)
         public float beat;
         public TutorialKey key;
         public string text, prompt;
         public Transform highlight;
         public bool look;              // al pararse, la vista gira hacia 'highlight'
-        public SyringeHighlight.Side hud;   // jeringuilla del HUD que se resalta mientras está parado
+        public SyringeHighlight.Side hud;   // jeringuilla del HUD que se resalta mientras el tiempo está parado
     }
     private Request _req;
     private int _nextStep;
     private TutorialScript S;      // guion (nivel 1 o nivel tutorial)
     private bool[] _done;
-    private float _lockUntil;      // al pararse: hasta este instante (tiempo real) no se puede hacer la acción
+    private float _lockUntil;      // al pararse, la acción no se puede hacer hasta este instante (en tiempo real)
     private readonly Queue<int> _onceQueue = new Queue<int>();
     private bool _finished;
     private bool _playedFromStart;
@@ -145,7 +145,7 @@ public class TutorialDirector : MonoBehaviour
     private int _pressFrame = -1;
     private int _failedPresses;
 
-    // ── Interfaz ─────────────────────────────────────────────────────────────
+    // -=+=- Interfaz -=+=-
     private RectTransform _canvasRt;
     private RawImage _dim;
     private Texture2D _dimTex;
@@ -157,26 +157,26 @@ public class TutorialDirector : MonoBehaviour
     private float _toastT;
     private HeartMonitorNotes _lane;
 
-    /// <summary>El director de la escena (null si no hay tutorial).</summary>
+    /// <summary>Director de la escena (null si no hay tutorial).</summary>
     public static TutorialDirector Instance { get; private set; }
     private void Awake() => Instance = this;
 
-    // ── Explicaciones pedidas desde fuera (p. ej. moverse a los lados en la tirolina) ──
+    // -=+=- Explicaciones pedidas desde fuera (por ejemplo, moverse a los lados en la tirolina) -=+=-
     private readonly Queue<string> _extraQueue = new Queue<string>();
 
-    /// <summary>Frena, para el juego y explica 'text' en cuanto se pueda (sin acción que hacer: se sigue al cerrar la caja).</summary>
+    /// <summary>En cuanto se pueda, frena, para el juego y explica 'text'. No hay acción que hacer, así que el juego sigue al cerrar la caja.</summary>
     public void Explain(string text) { if (!string.IsNullOrEmpty(text)) _extraQueue.Enqueue(text); }
 
 
-    // =========================================================================
+    // -=+=-
 
     private void Start()
     {
         S = TutorialScript.Current;
         _done = new bool[S.steps.Length];
-        _finished = !S.alwaysRun && !Pending;   // (sin tutorial pendiente: solo las explicaciones de una vez)
+        _finished = !S.alwaysRun && !Pending;   // sin tutorial pendiente, solo las explicaciones de una vez
         StepsRunning = !_finished;
-        TutorialGate.UnlockAll();   // (los bloqueos se ponen al empezar el nivel: en la sala de inicio se puede saltar)
+        TutorialGate.UnlockAll();   // los bloqueos se ponen al empezar el nivel, ya que en la sala de inicio se puede saltar
         BuildUI();
     }
 
@@ -206,10 +206,10 @@ public class TutorialDirector : MonoBehaviour
         if (_bm == null || _pm == null) return;
         _hooked = true;
 
-        // Salto desde el suelo = Jump; en el aire = DoubleJump (así el salto previo no cuenta como el doble salto).
+        // Un salto desde el suelo es Jump y en el aire, DoubleJump, para que el salto anterior no cuente como el doble salto.
         Ensure(ref _pm.OnJumpExecuted).AddListener(() => Act(_groundedLastFrame ? TutorialKey.Jump : TutorialKey.DoubleJump));
         Ensure(ref _pm.OnWalljumped).AddListener(() => Act(TutorialKey.Jump));
-        Ensure(ref _pm.OnKayakJump).AddListener(() => Act(TutorialKey.Jump));   // (salto desde el kayak)
+        Ensure(ref _pm.OnKayakJump).AddListener(() => Act(TutorialKey.Jump));   // salto desde el kayak
         if (_pm.OnDashStarted == null) _pm.OnDashStarted = new UnityEngine.Events.UnityEvent<Vector3>();
         _pm.OnDashStarted.AddListener(_ => Act(TutorialKey.Dash));
         Ensure(ref _pm.OnSlideStarted).AddListener(() => Act(TutorialKey.Slide));
@@ -240,31 +240,29 @@ public class TutorialDirector : MonoBehaviour
     private static UnityEngine.Events.UnityEvent Ensure(ref UnityEngine.Events.UnityEvent e)
         => e ??= new UnityEngine.Events.UnityEvent();
 
-    private void Act(TutorialKey k) { _actionThisFrame = k; _nextSoundScan = 0f; }   // (una acción puede empezar un sonido: se repasan ya)
+    private void Act(TutorialKey k) { _actionThisFrame = k; _nextSoundScan = 0f; }   // una acción puede reproducir un sonido, así que se revisan ya
 
     private void QueueOnce(int i)
     {
-        if (S != null && !S.eventExplanations) return;   // (nivel tutorial: la energía la explica CourseBuilder, cada 4 beats)
+        if (S != null && !S.eventExplanations) return;   // en el nivel tutorial, la energía la explica CourseBuilder, cada 4 beats
         if (Shown(i) || _onceQueue.Contains(i)) return;
         if (_req != null && _req.once == i) return;
         _onceQueue.Enqueue(i);
     }
 
-    // =========================================================================
-    // BUCLE
-    // =========================================================================
+    // -=+=- Bucle -=+=-
 
     private void Update()
     {
         Hook();
-        // Frenando hacia una explicación: su acción espera a que salga el mensaje.
+        // Si el juego está frenando hacia una explicación, su acción espera a que salga el mensaje.
         TutorialGate.HoldBack = _mode == Mode.Slow && _req != null && _req.step >= 0 && !string.IsNullOrEmpty(_req.text)
                                 ? _req.key : TutorialKey.None;
         UpdateToast();
         _dialog?.Tick();
         if (!_hooked || _bm == null) { _actionThisFrame = TutorialKey.None; return; }
 
-        // Muerto: soltar el control (el game over gestiona el tiempo y la escena se recarga).
+        // Si el jugador ha muerto, se suelta el control, ya que el game over gestiona el tiempo y la escena se recarga.
         if (_gameOver != null && _gameOver.IsDead)
         {
             if (_controlling) { _controlling = false; TutorialGate.Frozen = false; TutorialGate.Busy = false; _bm.HoldClock(false); }
@@ -273,7 +271,7 @@ public class TutorialDirector : MonoBehaviour
             _actionThisFrame = TutorialKey.None;
             return;
         }
-        // Final del recorrido (balanza, resultados, sala): fuera avisos, notas del monitor y la caja de texto.
+        // Al final del recorrido (balanza, resultados, sala) se quitan los avisos, las notas del monitor y la caja de texto.
         if ((LevelEndManager.Finished || _pm.IsFreeroam) && !_controlling)
         {
             if (_panel != null && _panel.activeSelf) { _toastT = 0f; _panel.SetActive(false); }
@@ -283,12 +281,12 @@ public class TutorialDirector : MonoBehaviour
         }
         if (PauseMenuManager.IsPaused || !_bm.HasClock || _pm.IsFreeroam || LevelEndManager.Finished) { _actionThisFrame = TutorialKey.None; return; }
 
-        // Al empezar el nivel: las acciones que aún no se han enseñado quedan bloqueadas hasta su primera explicación.
+        // Al empezar el nivel, las acciones que todavía no se han enseñado quedan bloqueadas hasta su primera explicación.
         if (!_locksApplied)
         {
             _locksApplied = true;
-            // (Solo se bloquea una tecla si la PRIMERA vez que se pide es con explicación: p. ej. el salto hacia la
-            //  pared lleva explicación, pero el salto ya se ha enseñado antes y no debe quedar bloqueado.)
+            // Solo se bloquea una tecla si la primera vez que se pide es con explicación. Por ejemplo, el salto hacia la pared
+            // tiene explicación, pero el salto ya se ha enseñado antes y no debe quedar bloqueado.
             if (!_finished)
             {
                 var seen = new HashSet<TutorialKey>();
@@ -301,16 +299,15 @@ public class TutorialDirector : MonoBehaviour
         }
 
         float bd = _bm.BeatDuration;
-        double latency = _bm.SongTimeUnclamped - _bm.CorrectedTimeUnclamped;   // (compensación de latencia)
-        // Al empezar a sonar la canción (también al reaparecer en un checkpoint o tras «Saltar sección»): unos segundos
-        // vigilando el desfase. Si el clip tarda en arrancar (p. ej. al saltar a un trozo de la canción que aún no había
-        // sonado), el reloj —crosshair, metrónomo, notas— se corrige para ir con la música de verdad.
-        // (Desactivado: sin haber medido antes el desfase normal entre reloj y música —unos 110 ms en este equipo— se
-        //  «corregía» lo que no estaba mal y la música quedaba desplazada. Ahora solo se vigila tras las paradas.)
+        double latency = _bm.SongTimeUnclamped - _bm.CorrectedTimeUnclamped;   // compensación de latencia
+        // Vigilancia del desfase al empezar a sonar la canción (también al reaparecer en un punto de control o después de
+        // "Saltar sección"). Está desactivada, ya que sin haber medido antes el desfase normal entre el reloj y la música
+        // (unos 110 ms en el equipo de desarrollo) se corregía algo que no estaba mal y la música quedaba desplazada. Por
+        // eso, el desfase solo se vigila después de las paradas.
         if (_bm.IsPlaying && !_sawMusic) _sawMusic = true;
         if (_mode == Mode.Run && _bm.IsPlaying && !_controlling)
         {
-            // Justo después de una parada se VIGILA el desfase (y se corrige); el resto del tiempo se mide.
+            // Justo después de una parada, el desfase se vigila y se corrige, y el resto del tiempo solo se mide.
             if (Time.unscaledTime < _driftWatchUntil) CheckDrift();
             else MeasureAudioOffset();
         }
@@ -337,7 +334,7 @@ public class TutorialDirector : MonoBehaviour
             case Mode.Slow:
                 if (_req.step >= 0 && Matches(_actionThisFrame, _req.key))
                 {
-                    // Lo ha hecho él solo mientras frenaba: no hace falta parar (salvo que tenga explicación de después).
+                    // Si el jugador ha hecho la acción por su cuenta mientras frenaba, no hace falta parar (salvo que tenga una explicación posterior).
                     CompleteStep();
                     if (!ChainFollow()) BeginResume();
                     break;
@@ -364,16 +361,15 @@ public class TutorialDirector : MonoBehaviour
         UpdateDim();
         PulseGlow();
 
-        // Fin del tutorial.
+        // Fin del tutorial
         if (beatNow < S.energyBeat || !S.requireFromStart) _playedFromStart = true;
-        // (Solo cuenta como completado si se ha jugado desde el principio: empezando en un checkpoint pasado el
-        //  beat 192 antes se daba por hecho sin haberlo visto.)
+        // Solo cuenta como completado si se ha jugado desde el principio, no si se ha empezado en un punto de control posterior.
         if (!_finished && beatNow >= S.endBeat && _mode == Mode.Run && _playedFromStart)
         {
             _finished = true;
             StepsRunning = false;
             TutorialGate.UnlockAll();
-            if (!string.IsNullOrEmpty(S.pendingPref)) { PlayerPrefs.SetInt(S.pendingPref, 0); PlayerPrefs.Save(); }   // (las explicaciones de una vez siguen pendientes)
+            if (!string.IsNullOrEmpty(S.pendingPref)) { PlayerPrefs.SetInt(S.pendingPref, 0); PlayerPrefs.Save(); }   // las explicaciones de una vez siguen pendientes
             S.onCompleted?.Invoke();
             Toast(Loc.T("¡Tutorial completado!", "Tutorial complete!"));
         }
@@ -382,12 +378,12 @@ public class TutorialDirector : MonoBehaviour
         _blockedThisFrame = false;
     }
 
-    // ── Pasos ────────────────────────────────────────────────────────────────
+    // -=+=- Pasos -=+=-
 
-    /// <summary>¿Este paso frena el juego? Solo la primera vez de cada movimiento (los que llevan explicación).</summary>
+    /// <summary>Indica si este paso frena el juego, lo que solo ocurre la primera vez de cada movimiento (los pasos con explicación).</summary>
     private static bool Pauses(TutorialLevel1Steps.Step s) => !string.IsNullOrEmpty(s.text);
 
-    /// <summary>¿La acción hecha vale para la pedida? (el doble salto se detecta como un salto más)</summary>
+    /// <summary>Indica si la acción hecha vale para la pedida. El doble salto se detecta como un salto más.</summary>
     private static bool Matches(TutorialKey done, TutorialKey wanted)
         => done != TutorialKey.None && (done == wanted || (wanted == TutorialKey.Jump && done == TutorialKey.DoubleJump));
 
@@ -398,13 +394,13 @@ public class TutorialDirector : MonoBehaviour
         if (_pm != null) _groundedLastFrame = _pm.IsGroundedNow || _pm.IsOnZipline;
     }
 
-    // Colores: las acciones que FRENAN el juego (primera vez) van en azul; las demás, en amarillo.
+    // Colores. Las acciones que frenan el juego (la primera vez) van en azul, y las demás, en amarillo.
     private static readonly Color PauseCol = new Color(0.35f, 0.85f, 1f);
     private static readonly Color LiveCol  = new Color(1f, 0.85f, 0.25f);
 
     /// <summary>
-    /// Pasos SIN frenada: el aviso («Pulsa ESPACIO para saltar») sale arriba mientras la nota cae, y el paso se da por
-    /// hecho al hacer la acción cerca de su beat (la nota se pone verde) o cuando pasa el beat.
+    /// Pasos sin frenada. El aviso ("Pulsa ESPACIO para saltar") aparece arriba mientras la nota cae, y el paso se da por
+    /// hecho cuando el jugador hace la acción cerca de su beat (la nota se pone verde) o cuando pasa el beat.
     /// </summary>
     private void UpdateLive(float beatNow)
     {
@@ -433,7 +429,7 @@ public class TutorialDirector : MonoBehaviour
         var steps = S.steps;
         while (_nextStep < steps.Length && (_done[_nextStep] || steps[_nextStep].beat < beatNow - (Pauses(steps[_nextStep]) ? 0.05f : 0.4f)))
         {
-            if (Pauses(steps[_nextStep])) TutorialGate.Unlock(steps[_nextStep].key);   // (p. ej. empezando en un checkpoint)
+            if (Pauses(steps[_nextStep])) TutorialGate.Unlock(steps[_nextStep].key);   // por ejemplo, al empezar en un punto de control
             _done[_nextStep] = true;
             _nextStep++;
         }
@@ -445,7 +441,7 @@ public class TutorialDirector : MonoBehaviour
         bool stepsLeft = !_finished && _nextStep < steps.Length && beatNow < S.endBeat;
         float nextBeat = stepsLeft ? steps[_nextStep].beat : float.MaxValue;
 
-        // 1) Energía: antes del primer salto.
+        // 1) La energía se explica antes del primer salto.
         if (S.energyBeat >= 0f && !Shown(0) && !_finished && beatNow >= S.energyBeat - SlowLeadBeats && beatNow < S.energyBeat)
         {
             StartSlow(new Request { once = 0, beat = S.energyBeat, key = TutorialKey.None,
@@ -453,8 +449,8 @@ public class TutorialDirector : MonoBehaviour
             return;
         }
 
-        // 2) Explicaciones por evento (fallo, sangre azul…): si el siguiente paso no está encima.
-        bool energyFirst = S.energyBeat >= 0f && !_finished && !Shown(0) && beatNow < S.energyBeat;   // (la energía va antes)
+        // 2) Las explicaciones por evento (fallo, sangre azul...) salen si el siguiente paso no está demasiado cerca.
+        bool energyFirst = S.energyBeat >= 0f && !_finished && !Shown(0) && beatNow < S.energyBeat;   // la energía va antes
         if (_onceQueue.Count > 0 && !energyFirst && nextBeat - beatNow > SlowLeadBeats + ExplainLeadBeat + 0.6f)
         {
             int i = _onceQueue.Dequeue();
@@ -466,17 +462,17 @@ public class TutorialDirector : MonoBehaviour
             }
         }
 
-        // 2b) Explicaciones pedidas desde fuera (tirolina: moverse a los lados).
+        // 2b) Explicaciones pedidas desde fuera (en la tirolina, moverse a los lados).
         if (_extraQueue.Count > 0 && nextBeat - beatNow > SlowLeadBeats + ExplainLeadBeat + 0.6f)
         {
-            // (Se para justo EN un beat, como las demás explicaciones del guion.)
+            // Se para justo en un beat, como las demás explicaciones del guion.
             float at = Mathf.Ceil(beatNow + ExplainLeadBeat);
             StartSlow(new Request { beat = at, key = TutorialKey.None, text = _extraQueue.Dequeue() }, bd, latency);
             return;
         }
 
-        // 3) Siguiente acción del guion: solo se FRENA en la primera vez de cada movimiento (los pasos con texto).
-        //    El resto solo muestran el aviso y la nota (ver UpdateLive).
+        // 3) Siguiente acción del guion. Solo se frena la primera vez de cada movimiento (los pasos con texto), y el resto
+        //    solo muestran el aviso y la nota (ver UpdateLive).
         if (stepsLeft && beatNow >= nextBeat - SlowLeadBeats && Pauses(steps[_nextStep]))
         {
             StartSlow(MakeRequest(_nextStep), bd, latency);
@@ -497,14 +493,14 @@ public class TutorialDirector : MonoBehaviour
         };
     }
 
-    // ── Paradas seguidas (p. ej. salto hacia un lado → dash un beat después) ──
-    private const float GlideMaxBeats = 1.6f;    // si la siguiente parada está a menos de esto, no se vuelve a velocidad normal
+    // -=+=- Paradas seguidas (por ejemplo, un salto hacia un lado y un dash un beat después) -=+=-
+    private const float GlideMaxBeats = 1.6f;    // si la siguiente parada está a menos de esto, no se vuelve a la velocidad normal
     private const float GlideStartSpeed = 0.8f;  // velocidad con la que arranca hacia la siguiente parada
 
     /// <summary>
-    /// Hecha la acción con el juego parado: si la SIGUIENTE parada está muy cerca (dash justo después del salto), en
-    /// vez de reanudar (acelerar hasta velocidad normal) y volver a frenar enseguida, el juego arranca suave y va
-    /// frenando directamente hasta pararse en ella. Devuelve true si lo ha hecho.
+    /// Una vez hecha la acción con el juego parado, si la siguiente parada está muy cerca (un dash justo después del
+    /// salto), en lugar de volver a la velocidad normal y frenar otra vez enseguida, el juego arranca suave y va frenando
+    /// directamente hasta pararse en ella. Devuelve true si lo ha hecho.
     /// </summary>
     private bool GlideToNext()
     {
@@ -522,7 +518,7 @@ public class TutorialDirector : MonoBehaviour
         EndGuide(true);
         SyringeHighlight.Set(SyringeHighlight.Side.None);
         _dimFade = Mathf.Min(_dimFade, 0.6f);
-        _speed = GlideStartSpeed;   // (StartSlow empieza a esta velocidad y frena hasta pararse en el beat)
+        _speed = GlideStartSpeed;   // StartSlow empieza a esta velocidad y frena hasta pararse en el beat
         StartSlow(MakeRequest(_nextStep), bd, latency);
         return true;
     }
@@ -531,24 +527,24 @@ public class TutorialDirector : MonoBehaviour
     {
         _req = req;
         BeginControl();
-        _slowTarget = req.beat * bd + latency;            // (segundos del reloj en los que cae el beat)
+        _slowTarget = req.beat * bd + latency;            // segundos del reloj en los que cae el beat
         double r = System.Math.Max(0.0005, _slowTarget - _songT);
         float v0 = Mathf.Max(_speed, 0.1f);
-        _slowR0 = r / (v0 * v0);                          // continuidad: empieza a la velocidad actual
+        _slowR0 = r / (v0 * v0);                          // para que haya continuidad, empieza a la velocidad actual
         _mode = Mode.Slow;
     }
 
-    private bool _sideJumpSent;   // (salto hacia un lado ya pedido en esta parada)
+    private bool _sideJumpSent;   // salto hacia un lado ya pedido en esta parada
 
     private void Freeze()
     {
         _sideJumpSent = false;
         _mode = Mode.Frozen;
         TutorialGate.Frozen = true;
-        // Unos segundos para LEER: mientras dura, la acción no sale (Expected = None no deja hacer nada).
+        // Unos segundos para leer, durante los que la acción no sale (con Expected = None no se puede hacer nada).
         _lockUntil = _req.key != TutorialKey.None && S.lockSeconds > 0f ? Time.unscaledTime + S.lockSeconds : 0f;
         TutorialGate.Expected = _lockUntil > 0f ? TutorialKey.None : _req.key;
-        if (_req.key != TutorialKey.None) TutorialGate.Unlock(_req.key);   // (desde ahora ya está enseñada)
+        if (_req.key != TutorialKey.None) TutorialGate.Unlock(_req.key);   // a partir de ahora ya está enseñada
         if (_req.step >= 0) S.onExplained?.Invoke(_req.step);
         _pressFrame = -1;
         _failedPresses = 0;
@@ -556,17 +552,17 @@ public class TutorialDirector : MonoBehaviour
         if (_req.once >= 0) MarkShown(_req.once);
         ShowPanel(_req);
         if (_req.look && _req.highlight != null) BeginGuide(_req.highlight);
-        // El obstáculo del que se habla se pone AZUL (brillando) mientras dura la explicación (la tirolina ya ilumina
-        // su cuerda en BeginGuide).
+        // El obstáculo del que se habla se pone azul y brilla mientras dura la explicación (la tirolina ya ilumina su
+        // cuerda en BeginGuide).
         if (_req.highlight != null && !string.IsNullOrEmpty(_req.text) && _req.highlight.GetComponentInParent<Zipline>() == null
             && _req.highlight.GetComponentInChildren<Zipline>() == null)
             GlowObstacle(_req.highlight);
-        SyringeHighlight.Set(_req.hud);   // (la jeringuilla de la que se habla gira y brilla)
+        SyringeHighlight.Set(_req.hud);   // la jeringuilla de la que se habla gira y brilla
     }
 
     /// <summary>
-    /// Si el paso que se acaba de hacer tiene explicación de DESPUÉS (Step.follow), sale ya, con el juego parado y sin
-    /// volver a frenar (p. ej. al engancharse a la tirolina: «muévete a los lados con A y D»). Devuelve true si la hay.
+    /// Si el paso que se acaba de hacer tiene una explicación posterior (Step.follow), sale ya, con el juego parado y sin
+    /// volver a frenar, por ejemplo al engancharse a la tirolina ("muévete a los lados con A y D"). Devuelve true si la hay.
     /// </summary>
     private bool ChainFollow()
     {
@@ -580,8 +576,8 @@ public class TutorialDirector : MonoBehaviour
         TutorialGate.Frozen = false;
         TutorialGate.Expected = TutorialKey.None;
         S.onFollowShown?.Invoke(step);
-        // Sale UN BEAT DESPUÉS de la acción (p. ej. ya colgado de la tirolina): el juego arranca suave y va frenando
-        // hasta pararse en ese beat (sin volver a velocidad normal entre medias). Si ese beat ya ha pasado, se para ya.
+        // Sale un beat después de la acción (por ejemplo, ya colgado de la tirolina). El juego arranca suave y va frenando
+        // hasta pararse en ese beat, sin volver a la velocidad normal entre medias. Si ese beat ya ha pasado, se para en el momento.
         float bd = _bm.BeatDuration;
         double latency = _bm.SongTimeUnclamped - _bm.CorrectedTimeUnclamped;
         float beatNow = (float)((_songT - latency) / bd);
@@ -601,9 +597,9 @@ public class TutorialDirector : MonoBehaviour
         return true;
     }
 
-    private const float FollowDelayBeats = 1f;   // la explicación de después (Step.follow), este tanto tras la acción
+    private const float FollowDelayBeats = 1f;   // explicación posterior (Step.follow), este tiempo después de la acción
 
-    // ── Mirada guiada y cuerda iluminada (interruptor de mirada, tirolina) ──
+    // -=+=- Mirada guiada y cuerda iluminada (interruptor de mirada y tirolina) -=+=-
     private bool _guiding, _guideReturn;
     private readonly List<(Renderer r, Material[] mats)> _glow = new List<(Renderer, Material[])>();
     private Material _glowMat;
@@ -615,11 +611,11 @@ public class TutorialDirector : MonoBehaviour
         Vector3 point;
         if (z != null)
         {
-            // Tirolina: se mira a la cuerda un poco por delante del jugador, y la cuerda se ILUMINA.
+            // En la tirolina, la vista se dirige a la cuerda, un poco por delante del jugador, y la cuerda se ilumina.
             float k = Mathf.Clamp01(z.GetT(_pm.transform.position) + 0.12f);
             point = z.GetPosition(k);
             GlowRope(z);
-            _guideReturn = true;   // (después vuelve a mirar al frente)
+            _guideReturn = true;   // después vuelve a mirar al frente
         }
         else
         {
@@ -631,7 +627,7 @@ public class TutorialDirector : MonoBehaviour
                 if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds);
             }
             point = b.center;
-            _guideReturn = false;   // (interruptor de mirada: hay que seguir mirándolo)
+            _guideReturn = false;   // en el interruptor de mirada hay que seguir mirándolo
         }
         _guiding = true;
         _pm.SetGuideLook(point);
@@ -645,7 +641,7 @@ public class TutorialDirector : MonoBehaviour
         _glow.Clear();
     }
 
-    /// <summary>La cuerda de la tirolina (TubeRenderer / «RopeMesh») brilla mientras dura la explicación.</summary>
+    /// <summary>La cuerda de la tirolina (TubeRenderer o "RopeMesh") brilla mientras dura la explicación.</summary>
     private void GlowRope(Zipline z)
     {
         if (_glowMat == null) _glowMat = RuntimeMaterials.Colored(new Color(1f, 0.85f, 0.3f), 4f);
@@ -669,17 +665,17 @@ public class TutorialDirector : MonoBehaviour
         if (_obstacleMat != null) _obstacleMat.SetColor("_EmissionColor", ObstacleGlow * (0.6f + 0.25f * k));
     }
 
-    // ── Obstáculo resaltado: material azul brillante solo durante la explicación ──
+    // -=+=- Obstáculo resaltado con un material azul brillante solo durante la explicación -=+=-
     private static readonly Color ObstacleGlow = new Color(0.25f, 0.6f, 1f);
     private Material _obstacleMat;
 
-    /// <summary>Pinta de azul (con brillo que late) el obstáculo de la explicación; EndGuide lo devuelve como estaba.</summary>
+    /// <summary>Pinta de azul, con un brillo que late, el obstáculo de la explicación. EndGuide lo devuelve a como estaba.</summary>
     private void GlowObstacle(Transform t)
     {
         if (_obstacleMat == null) _obstacleMat = RuntimeMaterials.Colored(ObstacleGlow, 1.5f);
         foreach (MeshRenderer r in t.GetComponentsInChildren<MeshRenderer>())
         {
-            if (!r.enabled) continue;   // (paredes invisibles: se quedan invisibles)
+            if (!r.enabled) continue;   // las paredes invisibles se quedan invisibles
             _glow.Add((r, r.sharedMaterials));
             var m = new Material[r.sharedMaterials.Length];
             for (int i = 0; i < m.Length; i++) m[i] = _obstacleMat;
@@ -691,14 +687,14 @@ public class TutorialDirector : MonoBehaviour
     {
         if (_req.key == TutorialKey.None)
         {
-            if (_dialogClosed) { CompleteStep(); BeginResume(); }   // (mantener el clic en la caja de texto, o se cierra sola)
+            if (_dialogClosed) { CompleteStep(); BeginResume(); }   // hay que mantener el clic en la caja de texto, o se cierra sola
             return;
         }
 
-        // Tiempo de lectura: la acción aún no se puede hacer.
+        // Tiempo de lectura, durante el que la acción todavía no se puede hacer.
         if (_lockUntil > 0f)
         {
-            float left = _dialogClosed ? 0f : _lockUntil - Time.unscaledTime;   // (cerrar la caja = ya leído)
+            float left = _dialogClosed ? 0f : _lockUntil - Time.unscaledTime;   // cerrar la caja significa que ya se ha leído
             if (left > 0f)
             {
                 _hint.text = Loc.T($"Lee el aviso…  {Mathf.CeilToInt(left)}", $"Read the tip…  {Mathf.CeilToInt(left)}");
@@ -710,14 +706,14 @@ public class TutorialDirector : MonoBehaviour
             _hint.text = Loc.T("¡Ahora!", "Now!");
         }
 
-        // Salto HACIA UN LADO (parte guiada del dash): solo vale saltando con la dirección pulsada. Sin ella, el salto
-        // no sale (Expected = None) y se avisa.
+        // Salto hacia un lado (parte guiada del dash). Solo vale si se salta con la dirección pulsada. Sin ella, el salto
+        // no sale (Expected = None) y se avisa al jugador.
         if (_req.key == TutorialKey.Jump && _req.step >= 0 && S.steps[_req.step].side != 0)
         {
             Keybinds.Bind dirBind = S.steps[_req.step].side < 0 ? Keybinds.Bind.Left : Keybinds.Bind.Right;
             bool held = Keybinds.Held(dirBind);
             TutorialGate.Expected = held ? TutorialKey.Jump : TutorialKey.None;
-            // Da igual el orden: si se pulsó primero el salto y luego la dirección, con las dos pulsadas se salta ya.
+            // El orden da igual, ya que si se pulsó primero el salto y después la dirección, con las dos pulsadas se salta en ese momento.
             if (held && Keybinds.Held(Keybinds.Bind.Jump) && !Keybinds.Pressed(Keybinds.Bind.Jump) && !_sideJumpSent)
             {
                 _sideJumpSent = true;
@@ -746,8 +742,8 @@ public class TutorialDirector : MonoBehaviour
                                    $"Hold {dir} while you press {Keybinds.Name(Keybinds.Bind.Dash)}");
             }
         }
-        // Ha pulsado la tecla pero la acción no ha salido: NO se sigue (chocaría). Se avisa, y solo tras varios
-        // intentos se continúa igualmente (por si la acción es imposible en ese momento y no quedarse atascado).
+        // Si el jugador ha pulsado la tecla pero la acción no ha salido, no se sigue, ya que chocaría. Se le avisa y, solo
+        // después de varios intentos, se continúa igualmente, por si la acción es imposible en ese momento, para no quedarse atascado.
         if (_pressFrame >= 0 && Time.frameCount > _pressFrame + 3)
         {
             _pressFrame = -1;
@@ -779,37 +775,37 @@ public class TutorialDirector : MonoBehaviour
         _dialog?.Hide();
         EndGuide(true);
         SyringeHighlight.Set(SyringeHighlight.Side.None);
-        _resumeT = _speed * ResumeSeconds;   // (si venía frenando, sigue desde su velocidad)
+        _resumeT = _speed * ResumeSeconds;   // si venía frenando, sigue desde su velocidad
         _mode = Mode.Resume;
         _req = null;
     }
 
-    // ── Reloj ────────────────────────────────────────────────────────────────
+    // -=+=- Reloj -=+=-
 
     private static double AudioPos(AudioSource s) => s != null && s.clip != null ? s.timeSamples / (double)s.clip.frequency : 0.0;
 
-    /// <summary>Media del desfase entre el reloj y la posición real de la música (se mide jugando a velocidad normal).</summary>
+    /// <summary>Media del desfase entre el reloj y la posición real de la música, que se mide jugando a velocidad normal.</summary>
     private void MeasureAudioOffset()
     {
         AudioSource s = _bm.CurrentSource;
         if (s == null || s.clip == null || s.pitch != 1f || _bm.ClockSeconds < 0.5) return;
         double x = _bm.ClockSeconds - AudioPos(s);
-        // Canción en bucle: al dar la vuelta la posición vuelve a 0 → se cuenta en la misma «vuelta» que la media.
+        // Si la canción está en bucle, al dar la vuelta la posición vuelve a 0, así que se cuenta en la misma vuelta que la media.
         if (s.loop && _audioKn > 0) x += s.clip.length * System.Math.Round((_audioK - x) / s.clip.length);
         _audioKn = Mathf.Min(_audioKn + 1, 600);
         _audioK += (x - _audioK) / _audioKn;
     }
 
-    // ── Corrección del desfase tras una parada ──
-    // Al cambiar el pitch, la música no avanza exactamente lo que dice el reloj (el audio aplica el pitch por bloques).
-    // La resincronización de EndControl usa UNA lectura de la posición de la música (que va a saltos de un bloque de
-    // audio); si la parada fue corta (p. ej. al saltarse rápido un aviso) o hubo dos seguidas, el reloj podía quedarse
-    // unos milisegundos desfasado y el metrónomo (programado con el reloj) dejaba de coincidir con la canción.
-    // Durante unos segundos después de cada parada se compara el reloj con la música (mediana de muchas lecturas) y
-    // se corrige; esas lecturas no entran en la media «buena» (_audioK) para no contaminarla con el desfase.
+    // -=+=- Corrección del desfase después de una parada -=+=-
+    // Al cambiar el pitch, la música no avanza exactamente lo que indica el reloj, ya que el audio aplica el pitch por
+    // bloques. La resincronización de EndControl usa una sola lectura de la posición de la música, que avanza a saltos de
+    // un bloque de audio, por lo que, si la parada fue corta o hubo dos seguidas, el reloj podía quedar unos milisegundos
+    // desfasado y el metrónomo dejaba de coincidir con la canción. Por eso, durante unos segundos después de cada parada
+    // se compara el reloj con la música (con la mediana de muchas lecturas) y se corrige. Esas lecturas no entran en la
+    // media normal (_audioK), para no alterarla con el desfase.
     private const float DriftWatchSeconds = 3f;
     private const int DriftSamples = 24;
-    private const double DriftTolerance = 0.006;   // s
+    private const double DriftTolerance = 0.006;   // segundos
     private float _driftWatchUntil;
     private bool _sawMusic;
     private const float StartWatchSeconds = 5f;
@@ -818,18 +814,18 @@ public class TutorialDirector : MonoBehaviour
     private void CheckDrift()
     {
         AudioSource s = _bm.CurrentSource;
-        if (_audioKn <= 10 || s == null || s.clip == null || s.pitch != 1f || !s.isPlaying) return;   // (sin medida fiable: nada)
+        if (_audioKn <= 10 || s == null || s.clip == null || s.pitch != 1f || !s.isPlaying) return;   // sin una medida fiable, no se hace nada
         double x = _bm.ClockSeconds - AudioPos(s);
         if (s.loop) x += s.clip.length * System.Math.Round((_audioK - x) / s.clip.length);
         _drift.Add(x);
         if (_drift.Count < DriftSamples) return;
         _drift.Sort();
-        double d = _drift[_drift.Count / 2] - _audioK;   // (mediana: sin los saltos de bloque del audio)
+        double d = _drift[_drift.Count / 2] - _audioK;   // la mediana elimina los saltos de bloque del audio
         _drift.Clear();
         if (System.Math.Abs(d) < DriftTolerance) return;
-        // Se mueve la MÚSICA (no el reloj): el reloj manda sobre todo lo demás (dónde está el jugador, cuándo llegan las
-        // acciones, el crosshair…). Antes se movía el reloj y, si la música había arrancado tarde, el jugador quedaba
-        // descolocado respecto a los obstáculos (se paraba antes de tiempo y la acción ya no cuadraba).
+        // Se mueve la música, no el reloj, ya que el reloj es el que manda sobre todo lo demás (dónde está el jugador,
+        // cuándo llegan las acciones, el punto de mira...). Si se moviera el reloj y la música hubiera empezado tarde, el
+        // jugador quedaría descolocado respecto a los obstáculos.
         double target = _bm.ClockSeconds - _audioK;
         double len = s.clip.length;
         if (s.loop && len > 0.5) target -= len * System.Math.Floor(target / len);
@@ -844,7 +840,7 @@ public class TutorialDirector : MonoBehaviour
         if (_controlling) return;
         RefreshRewindables();
         _controlling = true;
-        _bm.HoldClock(true);   // (reloj fijo durante el frame: sin temblores)
+        _bm.HoldClock(true);   // el reloj queda fijo durante el fotograma, para que no haya temblores
         _songT = _bm.ClockSeconds;
         _lastDsp = AudioSettings.dspTime;
         _speed = 1f;
@@ -859,7 +855,7 @@ public class TutorialDirector : MonoBehaviour
         _lastDsp = dsp;
         if (_mode == Mode.Slow)
         {
-            // Frenada «de velocidad ∝ √distancia»: llega a la parada justo en el beat.
+            // La frenada tiene una velocidad proporcional a la raíz de la distancia, para llegar a la parada justo en el beat.
             double r = _slowTarget - _songT;
             double v = r <= 0 ? 0 : System.Math.Min(1.0, System.Math.Sqrt(r / _slowR0));
             _songT = System.Math.Min(_slowTarget, _songT + dd * v);
@@ -870,14 +866,14 @@ public class TutorialDirector : MonoBehaviour
     private void ApplySpeed()
     {
         if (!_controlling) return;
-        if (!float.IsFinite(_speed)) _speed = 0f;   // (nunca un valor raro al motor: tiempo y pitch)
+        if (!float.IsFinite(_speed)) _speed = 0f;   // nunca se pasa un valor no válido al motor (tiempo y pitch)
         _bm.SetClockSongTime(_songT);
         Time.timeScale = _speed;
         AudioSource s = _bm.CurrentSource;
-        if (s != null) s.pitch = _speed;   // (pitch 0 = música parada pero «sonando»: el resto del juego no se entera)
+        if (s != null) s.pitch = _speed;   // con pitch 0 la música está parada pero "sonando", así que el resto del juego no nota nada
         SlowLoopingSounds();
-        // FÍSICA a cámara lenta: con el paso fijo normal, a velocidad 0,1 la física solo daba un paso cada muchos
-        // fotogramas y el kayak (y lo que lleva) iba a saltos. Se reduce el paso fijo con la velocidad.
+        // Física a cámara lenta. Con el paso fijo normal, a velocidad 0,1 la física solo daría un paso cada muchos
+        // fotogramas y el kayak (y lo que lleva) iría a saltos, por lo que el paso fijo se reduce con la velocidad.
         if (_baseFixedDelta < 0f) _baseFixedDelta = Time.fixedDeltaTime;
         if (_speed > 0f) Time.fixedDeltaTime = _baseFixedDelta * Mathf.Max(0.05f, _speed);
         SyncRewindables();
@@ -886,15 +882,15 @@ public class TutorialDirector : MonoBehaviour
 
     private void RestoreFixedDelta() { if (_baseFixedDelta > 0f) Time.fixedDeltaTime = _baseFixedDelta; }
 
-    // ── Efectos que suenan mientras se frena (tirolina, kayak…): también a cámara lenta ──
-    // Time.timeScale no afecta al audio: los sonidos que suenan en BUCLE mientras se frena (el deslizamiento de la
-    // tirolina…) se ralentizan con el pitch, como la música. Al terminar vuelven a su pitch.
+    // -=+=- Efectos que suenan mientras se frena (tirolina, kayak...), también a cámara lenta -=+=-
+    // Time.timeScale no afecta al audio, así que los sonidos en bucle que suenan mientras se frena (como el
+    // deslizamiento de la tirolina) se ralentizan con el pitch, igual que la música. Al terminar, vuelven a su pitch.
     private readonly Dictionary<AudioSource, float> _slowedPitch = new Dictionary<AudioSource, float>();
 
     private void SlowLoopingSounds()
     {
         AudioSource music = _bm != null ? _bm.CurrentSource : null;
-        // (La lista de fuentes se repasa cada cuarto de segundo, no en cada fotograma: buscar en toda la escena es caro.)
+        // La lista de fuentes se revisa cada cuarto de segundo, no en cada fotograma, ya que buscar en toda la escena es costoso.
         if (Time.unscaledTime >= _nextSoundScan)
         {
             _nextSoundScan = Time.unscaledTime + 0.25f;
@@ -905,8 +901,8 @@ public class TutorialDirector : MonoBehaviour
     }
 
     /// <summary>
-    /// Pitch de un efecto a cámara lenta: nunca 0 (mínimo 0,05) ni un valor no válido. Con pitch 0 en algunos efectos
-    /// (p. ej. los programados con PlayScheduled) el motor de audio podía cerrar el juego en el build.
+    /// Pitch de un efecto a cámara lenta, que nunca es 0 (como mínimo 0,05) ni un valor no válido, ya que con pitch 0
+    /// algunos efectos (por ejemplo, los programados con PlayScheduled) podían hacer que el motor de audio cerrase el juego en la build.
     /// </summary>
     private float SfxPitch(float basePitch)
     {
@@ -921,13 +917,12 @@ public class TutorialDirector : MonoBehaviour
     {
         foreach (AudioSource a in FindObjectsByType<AudioSource>())
         {
-            // (Todos los efectos que estén sonando: el deslizamiento de la tirolina puede no estar marcado como bucle.)
+            // Todos los efectos que estén sonando, ya que el deslizamiento de la tirolina puede no estar marcado como bucle.
             if (a == null || a == music || !a.isPlaying || a.ignoreListenerPause) continue;
-            // (Ni los que aún no han empezado —programados con PlayScheduled, p. ej. los tics del metrónomo— ni los
-            //  sonidos cortos: cambiarles el pitch no aporta nada y con los programados es arriesgado.)
+            // No se cambian los que todavía no han empezado (programados con PlayScheduled, como los tics del metrónomo) ni
+            // los sonidos cortos, ya que cambiarles el pitch no aporta nada y, con los programados, es arriesgado.
             if (a.clip == null || a.clip.length < 0.3f || a.timeSamples == 0) continue;
-            // (Música: la del nivel y la de los lobbies, no. Antes se excluían los clips largos, pero el deslizamiento
-            //  de la tirolina es un clip largo en bucle y se quedaba sonando normal.)
+            // La música del nivel y la de las salas no se cambian.
             if (a.GetComponentInParent<BeatManager>() != null || a.GetComponentInParent<LobbyMusic>() != null) continue;
             if (!_slowedPitch.ContainsKey(a)) _slowedPitch[a] = a.pitch;
         }
@@ -941,18 +936,19 @@ public class TutorialDirector : MonoBehaviour
         _slowedPitch.Clear();
     }
 
-    // ── Obstáculos que calculan sus instantes con el reloj (bloques que caen, osciladores, bolas de fuego…) ──
-    // Guardan instantes DSP calculados al empezar; al frenar el reloj se quedarían con los antiguos y caerían a
-    // velocidad normal. Igual que hace el Rebobinado, se les pide cada frame que se recoloquen con el reloj actual
-    // (OnTimeRewind es idempotente). El reloj del tutorial solo avanza, así que nada «vuelve atrás».
+    // -=+=- Obstáculos que calculan sus instantes con el reloj (bloques que caen, osciladores, bolas de fuego...) -=+=-
+    // Guardan instantes DSP calculados al empezar, por lo que, al frenar el reloj, se quedarían con los antiguos y
+    // caerían a velocidad normal. Igual que en el Rebobinado, en cada fotograma se les pide que se recoloquen con el reloj
+    // actual (OnTimeRewind da el mismo resultado aunque se llame varias veces). El reloj del tutorial solo avanza, así que
+    // nada vuelve atrás.
     private readonly List<IRewindable> _rewindables = new List<IRewindable>();
 
     private void RefreshRewindables()
     {
         _rewindables.Clear();
         foreach (var mb in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include))
-            // (Bloques rompibles y monedas solo «deshacen» al ir hacia atrás: aquí no hacen falta, y un pequeño
-            //  reajuste del reloj al resincronizar podría devolver un bloque ya roto.)
+            // Los bloques rompibles y las monedas solo se deshacen al ir hacia atrás, por lo que aquí no hacen falta, y un
+            // pequeño reajuste del reloj al resincronizar podría devolver un bloque ya roto.
             if (mb is IRewindable r && !(mb is BreakableBlock) && !(mb is Coin) && mb.gameObject.scene.IsValid()) _rewindables.Add(r);
     }
 
@@ -977,23 +973,23 @@ public class TutorialDirector : MonoBehaviour
         RestoreLoopingSounds();
         RestoreFixedDelta();
         _nextSoundScan = 0f;
-        // Resincroniza el reloj con la posición real de la música (lo que haya derivado al cambiar el pitch).
-        // (Solo con el desfase normal ya medido: suponerlo 0 movía el reloj ~110 ms en falso.)
+        // Se vuelve a sincronizar el reloj con la posición real de la música, corrigiendo lo que haya derivado al cambiar
+        // el pitch. Solo se hace con el desfase normal ya medido, ya que suponerlo 0 movería el reloj unos 110 ms sin motivo.
         if (_audioKn > 10 && s != null && s.clip != null)
         {
             double t = AudioPos(s) + _audioK;
-            if (s.loop) t += s.clip.length * System.Math.Round((_songT - t) / s.clip.length);   // (misma vuelta del bucle)
+            if (s.loop) t += s.clip.length * System.Math.Round((_songT - t) / s.clip.length);   // misma vuelta del bucle
             _bm.SetClockSongTime(t);
         }
-        SyncRewindables();   // (que los obstáculos usen ya el reloj resincronizado)
+        SyncRewindables();   // para que los obstáculos usen ya el reloj resincronizado
         _bm.HoldClock(false);
         _drift.Clear();
-        _driftWatchUntil = Time.unscaledTime + DriftWatchSeconds;   // (y se vigila un rato, ver CheckDrift)
+        _driftWatchUntil = Time.unscaledTime + DriftWatchSeconds;   // y se vigila durante un rato (ver CheckDrift)
         TutorialGate.Busy = false;
         TutorialGate.Frozen = false;
     }
 
-    // ── Textos ───────────────────────────────────────────────────────────────
+    // -=+=- Textos -=+=-
 
     public static Keybinds.Bind BindOf(TutorialKey k) => k switch
     {
@@ -1014,7 +1010,7 @@ public class TutorialDirector : MonoBehaviour
             case TutorialKey.Jump:
                 if (side != 0)
                 {
-                    // Salto hacia un lado (dash): hay que mantener la dirección al saltar.
+                    // Salto hacia un lado (dash). Hay que mantener la dirección al saltar.
                     string d = K(side < 0 ? Keybinds.Bind.Left : Keybinds.Bind.Right);
                     string es = side < 0 ? "a la izquierda" : "a la derecha", en = side < 0 ? "left" : "right";
                     return Loc.T($"Mantén {d} y pulsa {K(Keybinds.Bind.Jump)}: salta {es}", $"Hold {d} and press {K(Keybinds.Bind.Jump)}: jump {en}");
@@ -1044,7 +1040,7 @@ public class TutorialDirector : MonoBehaviour
         return key;
     }
 
-    // ── Objeto iluminado ─────────────────────────────────────────────────────
+    // -=+=- Objeto iluminado -=+=-
 
     private Transform FindHighlight(TutorialLevel1Steps.Step s)
     {
@@ -1065,7 +1061,7 @@ public class TutorialDirector : MonoBehaviour
             }
             return best != null ? best.transform : null;
         }
-        // Sin ruta: el obstáculo más cercano que tiene delante.
+        // Sin ruta, se usa el obstáculo más cercano que tiene delante.
         int layer = LayerMask.NameToLayer("Obstacle");
         if (layer < 0) return null;
         Collider bestC = null; float bestS = float.MaxValue;
@@ -1079,7 +1075,7 @@ public class TutorialDirector : MonoBehaviour
         return bestC != null ? bestC.transform : null;
     }
 
-    /// <summary>Rectángulo en pantalla (píxeles) que ocupa el objeto (sus mallas), o false si no se ve.</summary>
+    /// <summary>Rectángulo en pantalla (en píxeles) que ocupan las mallas del objeto, o false si no se ve.</summary>
     private static bool ScreenRect(Transform t, out Rect rect)
     {
         rect = default;
@@ -1115,9 +1111,7 @@ public class TutorialDirector : MonoBehaviour
         return true;
     }
 
-    // =========================================================================
-    // INTERFAZ
-    // =========================================================================
+    // -=+=- Interfaz -=+=-
 
     private void BuildUI()
     {
@@ -1142,7 +1136,7 @@ public class TutorialDirector : MonoBehaviour
 
         _text = Lbl("Texto", panel.transform, "", FontMid + 8f, TextAlignmentOptions.Center);
         _text.textWrappingMode = TextWrappingModes.Normal;
-        _text.enableAutoSizing = true; _text.fontSizeMin = 18f; _text.fontSizeMax = FontMid + 8f;   // (textos largos: caben)
+        _text.enableAutoSizing = true; _text.fontSizeMin = 18f; _text.fontSizeMax = FontMid + 8f;   // para que quepan los textos largos
         Place(_text.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -18f), new Vector2(1240f, 120f), new Vector2(0.5f, 1f));
 
         _prompt = Lbl("Accion", panel.transform, "", FontBig + 10f, TextAlignmentOptions.Center);
@@ -1158,9 +1152,9 @@ public class TutorialDirector : MonoBehaviour
     }
 
     /// <summary>
-    /// Aviso al pararse: la EXPLICACIÓN va en la caja de texto de abajo (letra a letra; el clic la completa y mantenerlo
-    /// la cierra) y, si se pide una acción, la TECLA arriba (con la cuenta atrás de lectura).
-    /// Explicaciones sin acción: al cerrar la caja, sigue el juego. Con acción: cerrarla acaba la espera de lectura.
+    /// Aviso al pararse. La explicación va en la caja de texto de abajo, letra a letra (un clic la completa y mantenerlo la
+    /// cierra) y, si se pide una acción, la tecla va arriba, con la cuenta atrás de lectura. En las explicaciones sin
+    /// acción, el juego sigue al cerrar la caja, y en las que tienen acción, cerrarla termina la espera de lectura.
     /// </summary>
     private void ShowPanel(Request r)
     {
@@ -1168,7 +1162,7 @@ public class TutorialDirector : MonoBehaviour
         _dialogClosed = false;
         bool hasText = !string.IsNullOrEmpty(r.text);
         if (hasText || r.key == TutorialKey.None)
-            _dialog.Show("", Keybinds.Fix(r.text ?? ""), true, () => _dialogClosed = true, autoClose: false);   // (parado: hasta llenar el aro)
+            _dialog.Show("", Keybinds.Fix(r.text ?? ""), true, () => _dialogClosed = true, autoClose: false);   // parado, hasta que se llene el aro
         if (r.key == TutorialKey.None) { _panel.SetActive(false); return; }
         _panel.SetActive(true);
         _text.text = "";
@@ -1183,7 +1177,7 @@ public class TutorialDirector : MonoBehaviour
 
     private void HidePanel() { if (_toastT <= 0f && _panel != null) _panel.SetActive(false); }
 
-    /// <summary>Aviso sin frenar: solo la acción, en una franja más pequeña.</summary>
+    /// <summary>Aviso sin frenar, que solo muestra la acción en una franja más pequeña.</summary>
     private void ShowLive(string prompt)
     {
         if (_toastT > 0f) return;
@@ -1211,7 +1205,7 @@ public class TutorialDirector : MonoBehaviour
         if (_toastT <= 0f && _mode != Mode.Frozen) _panel.SetActive(false);
     }
 
-    // ── Oscurecer con «agujeros» de luz (obstáculo y monitor del corazón) ────
+    // -=+=- Oscurecer la pantalla con "agujeros" de luz (obstáculo y monitor del corazón) -=+=-
 
     private readonly List<Rect> _holes = new List<Rect>();
     private Request _dimReq;
@@ -1219,13 +1213,13 @@ public class TutorialDirector : MonoBehaviour
     private void UpdateDim()
     {
         if (_dim == null) return;
-        // (Explicación de un elemento del HUD: sin oscurecer; lo resalta SyringeHighlight con brillo, latido y flecha.)
+        // En la explicación de un elemento del HUD no se oscurece la pantalla, y SyringeHighlight lo resalta con brillo, latido y una flecha.
         bool hudExplain = (_req ?? _dimReq) != null && (_req ?? _dimReq).hud != SyringeHighlight.Side.None;
         bool show = _dimFade > 0.01f && !HudHider.IsHidden && !hudExplain;
         if (_dim.enabled != show) _dim.enabled = show;
         if (!show) { if (_req == null) _dimReq = null; return; }
 
-        if (_req != null) _dimReq = _req;   // (al reanudar se sigue viendo la luz mientras se aclara)
+        if (_req != null) _dimReq = _req;   // al reanudar, la luz se sigue viendo mientras la pantalla se aclara
         Request q = _dimReq;
         _holes.Clear();
         if (q != null && q.highlight != null && ScreenRect(q.highlight, out Rect r)) _holes.Add(Pad(r, 0.35f, 40f));
@@ -1258,7 +1252,7 @@ public class TutorialDirector : MonoBehaviour
         return Rect.MinMaxRect(r.xMin - px, r.yMin - py, r.xMax + px, r.yMax + py);
     }
 
-    // ── Notas en el monitor del corazón (ver HeartMonitorNotes) ─────────────
+    // -=+=- Notas en el monitor del corazón (ver HeartMonitorNotes) -=+=-
 
     private void UpdateNotes(float beatNow)
     {
@@ -1267,7 +1261,7 @@ public class TutorialDirector : MonoBehaviour
             for (int i = _nextStep; i < steps.Length && steps[i].beat <= beatNow + HeartMonitorNotes.LeadBeats; i++)
                 if (!_done[i] && !_lane.Has(i) && steps[i].key != TutorialKey.None)
                     _lane.Spawn(i, steps[i].beat, NoteLabel(steps[i].key, steps[i].side), Pauses(steps[i]) ? PauseCol : LiveCol, 1);
-        foreach (int id in new List<int>(_lane.Ids)) if (_done[id]) _lane.Fade(id);   // (las acertadas ya están en verde)
+        foreach (int id in new List<int>(_lane.Ids)) if (_done[id]) _lane.Fade(id);   // las acertadas ya están en verde
         _lane.Update(beatNow);
     }
 }

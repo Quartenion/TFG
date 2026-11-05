@@ -3,19 +3,18 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Controlador principal del HUD rítmico.
-/// Spawna círculos concéntricos que viajan hacia el crosshair al ritmo de la música.
-/// Cuando el jugador acierta, genera una onda roja que se contrae hacia el corazón.
+/// Controlador principal del HUD rítmico. Crea círculos concéntricos que viajan hacia el punto de mira al ritmo de
+/// la música, y cuando el jugador acierta, genera una onda roja que se contrae hacia el corazón.
 ///
-/// SETUP EN UNITY:
-/// 1. Canvas (Screen Space - Overlay) → añade este componente.
-/// 2. Dentro del Canvas, crea un GameObject vacío "CrosshairCenter" en posición (0,0).
-/// 3. Dentro de CrosshairCenter:
-///      - "TargetRing"   → Image con sprite de anillo, 120x120 px, color gris oscuro (referencia visual).
-///      - "CrosshairImg" → tu crosshair actual (cambia su color a gris oscuro en el Inspector).
-///      - "RingContainer" → GameObject vacío, aquí se spawnean los anillos entrantes.
-/// 4. Crea el prefab del anillo (ver RhythmRingVisual) y asígnalo aquí.
-/// 5. Asigna BeatManager y RhythmInput.
+/// Configuración en Unity.
+/// 1. Se añade este componente a un Canvas (Screen Space - Overlay).
+/// 2. Dentro del Canvas se crea un GameObject vacío, "CrosshairCenter", en la posición (0,0).
+/// 3. Dentro de CrosshairCenter se crean estos objetos.
+///      - "TargetRing", un Image con el sprite de un anillo, de 120x120 px y gris oscuro, que sirve de referencia.
+///      - "CrosshairImg", el punto de mira, con su color cambiado a gris oscuro en el Inspector.
+///      - "RingContainer", un GameObject vacío en el que se crean los anillos que llegan.
+/// 4. Se crea el prefab del anillo (ver RhythmRingVisual) y se asigna aquí.
+/// 5. Se asignan BeatManager y RhythmInput.
 /// </summary>
 public class RhythmHUDController : MonoBehaviour
 {
@@ -53,17 +52,15 @@ public class RhythmHUDController : MonoBehaviour
     [Range(0.1f, 1.5f)]
     public float absorbProgressWindow = 0.6f;
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -=+=-
 
     private readonly List<RhythmRingVisual> _activeRings = new List<RhythmRingVisual>();
 
-    // =========================================================================
-    // UNITY
-    // =========================================================================
+    // -=+=- Unity -=+=-
 
     private void Start()
     {
-        // Por si se pierde la referencia entre prefabs (Canvas ↔ Managers): se buscan en la escena.
+        // Por si se pierde la referencia entre prefabs (Canvas y Managers), se buscan en la escena.
         if (beatManager == null) beatManager = BeatManager.Instance != null ? BeatManager.Instance : FindAnyObjectByType<BeatManager>();
         if (rhythmInput == null) rhythmInput = FindAnyObjectByType<RhythmInput>();
         if (beatManager == null || rhythmInput == null)
@@ -75,14 +72,13 @@ public class RhythmHUDController : MonoBehaviour
 
         rhythmInput.OnTimingResult.AddListener(HandleTimingResult);
 
-        // ORDEN DE DIBUJO: el aro del crosshair («Ring», gris) estaba por ENCIMA del contenedor de las notas, así que
-        // cuando una nota llegaba al punto de mira su aro blanco («hittable») quedaba tapado por el gris del crosshair.
-        // Las notas pasan a dibujarse justo encima de ese aro.
+        // Orden de dibujo. Las notas se dibujan justo encima del aro gris del punto de mira ("Ring"), ya que, si no, el
+        // aro blanco de una nota que llega al punto de mira ("hittable") quedaría tapado por el gris.
         if (crosshair != null && ringContainer != null)
         {
             Transform xr = crosshair.transform.Find("Ring");
             if (xr != null && xr.parent == ringContainer.parent && ringContainer.GetSiblingIndex() < xr.GetSiblingIndex())
-                ringContainer.SetSiblingIndex(xr.GetSiblingIndex());   // (queda justo después del aro)
+                ringContainer.SetSiblingIndex(xr.GetSiblingIndex());   // queda justo después del aro
         }
     }
 
@@ -91,15 +87,11 @@ public class RhythmHUDController : MonoBehaviour
         if (rhythmInput  != null) rhythmInput.OnTimingResult.RemoveListener(HandleTimingResult);
     }
 
-    // =========================================================================
-    // SPAWN DE ANILLOS (guiado por el TIEMPO DE LA CANCIÓN, no por eventos)
-    // =========================================================================
-    //
-    // Cada nota sabe en qué segundo de la canción tiene que llegar (su beat) y su posición se calcula con el reloj
-    // de la música. Cada frame se asegura de que existen las notas de los próximos 'beatsAhead' beats:
-    //   • Al empezar la canción (tras el 3-2-1-¡YA!) ya salen bien desde el primer beat, sin notas "de más" ni
-    //     huecos (antes, un evento de beat disparado con la canción aún programada lanzaba una nota a destiempo).
-    //   • Tras un rebobinado se rehacen solas desde el nuevo punto.
+    // -=+=- Creación de los anillos, guiada por el tiempo de la canción y no por eventos -=+=-
+    // Cada nota sabe en qué segundo de la canción tiene que llegar (su beat), y su posición se calcula con el reloj de
+    // la música. En cada fotograma se comprueba que existan las notas de los próximos 'beatsAhead' beats. Así, al empezar
+    // la canción después de la cuenta atrás, las notas salen bien desde el primer beat, sin notas de más ni huecos, y
+    // después de un rebobinado se vuelven a crear solas desde el nuevo punto.
 
     [Header("Medios beats (contrato «Al compás»)")]
     [Tooltip("Tamaño de los spikes de las notas de MEDIO beat respecto a las normales.")]
@@ -111,7 +103,7 @@ public class RhythmHUDController : MonoBehaviour
     private void Update()
     {
         bool rew = TimeRewinder.IsRewinding;
-        if (rew && !_wasRewinding) ClearRings();   // empieza el rebobinado: fuera todas las notas en vuelo
+        if (rew && !_wasRewinding) ClearRings();   // empieza el rebobinado, así que se quitan todas las notas que están en camino
         _wasRewinding = rew;
         if (rew) return;
 
@@ -120,8 +112,8 @@ public class RhythmHUDController : MonoBehaviour
     }
 
     /// <summary>
-    /// Tutorial parado justo en un beat: la nota de ESE beat se queda en el punto de mira, en «hittable» (blanca), para
-    /// que se vea que es el momento del latido. (Si aún no existe, se crea.)
+    /// Con el tutorial parado justo en un beat, la nota de ese beat se queda en el punto de mira en estado "hittable"
+    /// (blanca), para que se vea que es el momento del latido. Si todavía no existe, se crea.
     /// </summary>
 
     private bool NearBeat()
@@ -142,7 +134,7 @@ public class RhythmHUDController : MonoBehaviour
         if (beatDur <= 0f) return;
         float now = beatManager.CorrectedTimeUnclamped;
         float arrival = Mathf.Round(now / beatDur) * beatDur;
-        if (Mathf.Abs(now - arrival) > beatManager.GoodWindow) return;   // (parado lejos de un beat: nada)
+        if (Mathf.Abs(now - arrival) > beatManager.GoodWindow) return;   // parado lejos de un beat, no se hace nada
         RhythmRingVisual ring = null;
         foreach (RhythmRingVisual r in _activeRings)
             if (r != null && Mathf.Abs(r.ArrivalSongTime - arrival) < 0.01f) { ring = r; break; }
@@ -155,7 +147,7 @@ public class RhythmHUDController : MonoBehaviour
             RhythmRingVisual created = ring;
             ring.OnExpired += () => _activeRings.Remove(created);
         }
-        if (ring.transform.GetSiblingIndex() != ring.transform.parent.childCount - 1) ring.transform.SetAsLastSibling();   // (encima de la siguiente nota)
+        if (ring.transform.GetSiblingIndex() != ring.transform.parent.childCount - 1) ring.transform.SetAsLastSibling();   // encima de la siguiente nota
         ring.HoldHittable();
     }
 
@@ -165,20 +157,19 @@ public class RhythmHUDController : MonoBehaviour
         _activeRings.Clear();
     }
 
-    /// <summary>Crea las notas que falten para los beats (y medios beats con «Al compás») de los próximos 'beatsAhead'.</summary>
+    /// <summary>Crea las notas que falten para los próximos 'beatsAhead' beats (y medios beats con "Al compás").</summary>
     private void EnsureUpcomingRings()
     {
         if (ringPrefab == null || ringContainer == null || beatManager == null) return;
-        // (También mientras la canción está programada y aún no suena: así sale la nota del PRIMER beat, el 0.
-        //  Antes se usaba el tiempo recortado a 0 y el bucle empezaba en el beat 1: la primera nota no aparecía.)
+        // También mientras la canción está programada y todavía no suena, para que salga la nota del primer beat, el 0.
         if (!beatManager.IsPlaying && !(beatManager.HasClock && beatManager.ClockSeconds < 0.0)) return;
-        // Las notas entrantes solo se ven con el «Crosshair rítmico» de la tienda.
+        // Las notas solo se ven con el "Crosshair rítmico" de la tienda.
         if (PlayerProgress.GetLevel(ShopIds.RhythmSight) <= 0) return;
         float beatDur = beatManager.BeatDuration;
         if (beatDur <= 0f) return;
 
         float travel = beatsAhead * beatDur;
-        float bt     = beatManager.CorrectedTimeUnclamped / beatDur;     // posición actual, en beats (< 0 antes de empezar)
+        float bt     = beatManager.CorrectedTimeUnclamped / beatDur;     // posición actual en beats (negativa antes de empezar)
         bool  halves = BeatManager.HalfBeatMoves;
         float step   = halves ? 0.5f : 1f;
 
@@ -188,8 +179,8 @@ public class RhythmHUDController : MonoBehaviour
             if (HasRingFor(arrival)) continue;
             bool half = Mathf.Abs(n - Mathf.Round(n)) > 0.01f;
             RhythmRingVisual ring = Instantiate(ringPrefab, ringContainer);
-            // La nota nueva va DEBAJO de las anteriores: su aro (gris, «lejos») tiene el tamaño del punto de mira y,
-            // dibujada encima, tapaba el aro blanco de la nota que estaba llegando («hittable»).
+            // La nota nueva va debajo de las anteriores, ya que su aro (gris, lejos) tiene el tamaño del punto de mira y, si
+            // se dibujara encima, taparía el aro blanco de la nota que está llegando ("hittable").
             ring.transform.SetAsFirstSibling();
             ring.Init(startDiameter, targetDiameter, travel, beatManager, crosshair);
             if (half) ring.MakeHalfBeat(halfBeatSpikeScale);
@@ -206,23 +197,19 @@ public class RhythmHUDController : MonoBehaviour
         return false;
     }
 
-    // =========================================================================
-    // FEEDBACK DE TIMING
-    // =========================================================================
+    // -=+=- Indicación del resultado -=+=-
 
     private void HandleTimingResult(TimingResult result)
     {
         if (result == TimingResult.Miss) return;
 
-        // Absorber el anillo más cercano a la posición objetivo
+        // Se absorbe el anillo más cercano a la posición objetivo.
         RhythmRingVisual targetRing = FindNearestToTarget();
         targetRing?.TriggerHitAbsorption();
 
     }
 
-    /// <summary>
-    /// Devuelve el anillo cuyo progreso está más cerca de 1.0 (= en el objetivo).
-    /// </summary>
+    /// <summary>Devuelve el anillo cuyo progreso está más cerca de 1, es decir, del objetivo.</summary>
     private RhythmRingVisual FindNearestToTarget()
     {
         RhythmRingVisual best    = null;
@@ -230,13 +217,13 @@ public class RhythmHUDController : MonoBehaviour
 
         foreach (RhythmRingVisual r in _activeRings)
         {
-            if (r == null || r.IsConsumed || r.IsHalfBeat) continue;   // saltar destruidos, absorbidos y los de medio beat
+            if (r == null || r.IsConsumed || r.IsHalfBeat) continue;   // se saltan los destruidos, los absorbidos y los de medio beat
             float err = Mathf.Abs(r.Progress - 1f);
             if (err < bestErr) { bestErr = err; best = r; }
         }
 
-        // Sólo absorber si hay un anillo razonablemente cerca del centro; si no,
-        // no comerse uno lejano que todavía se está acercando.
+        // Solo se absorbe si hay un anillo razonablemente cerca del centro, para no quitar uno lejano que todavía se está
+        // acercando.
         return bestErr <= absorbProgressWindow ? best : null;
     }
 

@@ -3,18 +3,16 @@ using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Mecanica de bloqueo (tecla Q).
+/// Mecánica para romper bloques (tecla Q).
 ///
-/// Al PULSAR Q (una sola vez, no mantener):
-///   - Se abre una ventana de rotura durante breakWindowDuration segundos.
-///   - Cada frame se comprueba si hay BreakableBlocks dentro de
-///     (CC.radius + breakProximityMargin) del jugador y se rompen automaticamente.
-///   - Esto permite romper bloques justo antes de que el jugador los toque
-///     sin necesidad de colision fisica.
+/// Al pulsar Q (una vez, sin mantenerla) se abre una ventana de rotura durante breakWindowDuration segundos. En cada
+/// fotograma se comprueba si hay BreakableBlocks a menos de CC.radius + breakProximityMargin del jugador, y se rompen
+/// automáticamente. Así, los bloques se rompen justo antes de que el jugador los toque, sin necesidad de una
+/// colisión física.
 ///
-/// SETUP:
-///   1. Añade este componente al mismo GameObject que PlayerMovement.
-///   2. Asigna las referencias en el Inspector.
+/// Configuración.
+///   1. Se añade este componente al mismo GameObject que PlayerMovement.
+///   2. Se asignan las referencias en el Inspector.
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
 public class BlockAbility : MonoBehaviour
@@ -49,7 +47,7 @@ public class BlockAbility : MonoBehaviour
     public UnityEvent OnBlockEnded;
     public UnityEvent OnBreakableDestroyed;
 
-    /// <summary>True mientras la ventana de rotura esta activa.</summary>
+    /// <summary>Es true mientras la ventana de rotura está activa.</summary>
     public bool IsBlocking { get; private set; }
 
     private InputAction _blockAction;
@@ -57,7 +55,7 @@ public class BlockAbility : MonoBehaviour
     private float _breakWindowTimer;
     private CameraDashEffect _camFx;
 
-    // -------------------------------------------------------------------------
+    // -=+=-
 
     void Start()
     {
@@ -67,7 +65,7 @@ public class BlockAbility : MonoBehaviour
     void OnEnable()
     {
         _blockAction = new InputAction("Block", binding: "<Keyboard>/q");
-        Keybinds.Apply(_blockAction, Keybinds.Bind.Block);   // (Ajustes → Controles)
+        Keybinds.Apply(_blockAction, Keybinds.Bind.Block);   // Ajustes > Controles
         Keybinds.Changed += ApplyKey;
         _blockAction.Enable();
     }
@@ -86,17 +84,17 @@ public class BlockAbility : MonoBehaviour
 
     void Update()
     {
-        // Activar ventana con una pulsacion (no mantener)
-        // (Sin cooldown: se puede volver a pulsar aunque la ventana siga abierta → la reinicia.)
+        // La ventana se activa con una pulsación, sin mantener la tecla. No hay tiempo de espera, así que se puede volver
+        // a pulsar aunque la ventana siga abierta, y en ese caso se reinicia.
         if (_blockAction != null && _blockAction.WasPressedThisFrame() && TutorialGate.Allows(TutorialKey.Block))
             TryStartBreakWindow();
 
         if (!IsBlocking) return;
 
-        // Countdown de la ventana
+        // Cuenta atrás de la ventana
         _breakWindowTimer -= Time.deltaTime;
 
-        // Drenar energia durante la ventana si esta configurado
+        // Se gasta energía durante la ventana, si está configurado.
         if (blockDrainPerSecond > 0f && EnergyManager.Instance != null)
         {
             if (!EnergyManager.Instance.TrySpend(blockDrainPerSecond * Time.deltaTime))
@@ -106,7 +104,7 @@ public class BlockAbility : MonoBehaviour
             }
         }
 
-        // Comprobar bloques cercanos y romperlos
+        // Se comprueban los bloques cercanos y se rompen.
         CheckNearbyBreakables();
 
         // Fin de la ventana
@@ -114,11 +112,11 @@ public class BlockAbility : MonoBehaviour
             EndBreakWindow();
     }
 
-    // -------------------------------------------------------------------------
+    // -=+=-
 
     private void TryStartBreakWindow()
     {
-        // Solo con el nivel en marcha (no en la zona de inicio ni durante el 3-2-1-¡YA!).
+        // Solo con el nivel en marcha, no en la zona de inicio ni durante la cuenta atrás.
         BeatManager bmNow = beatManager != null ? beatManager : BeatManager.Instance;
         if (bmNow == null || !bmNow.IsPlaying || (EnergyManager.Instance != null && !EnergyManager.Instance.isActiveAndEnabled))
             return;
@@ -135,10 +133,10 @@ public class BlockAbility : MonoBehaviour
 
         PlaySfx(blockStartSound);
 
-        // Brazos en X («preparándose para el impacto») mientras dura la ventana de rotura.
+        // Los brazos se cruzan en X, preparándose para el impacto, mientras dura la ventana de rotura.
         ViewmodelPhysics.Instance?.Brace(breakWindowDuration);
 
-        // Feedback de cámara: golpe de FOV rápido, como un dash hacia delante.
+        // Efecto de cámara, con un cambio rápido del campo de visión, como en un dash hacia delante.
         if (_camFx == null) _camFx = FindAnyObjectByType<CameraDashEffect>();
         if (_camFx != null) _camFx.OnBlockPunch();
         OnBlockStarted?.Invoke();
@@ -148,16 +146,16 @@ public class BlockAbility : MonoBehaviour
     {
         if (_cc == null) return;
 
-        // Radio de deteccion: capsula del jugador + margen configurado + lo que va a avanzar este frame (a mucha
-        // velocidad —dash— o con pocos FPS, el jugador recorría más que el margen en un frame y chocaba antes de
-        // que el bloque se rompiera).
+        // Radio de detección, que es la cápsula del jugador más el margen configurado más lo que va a avanzar en este
+        // fotograma, ya que a mucha velocidad (en un dash) o con pocos FPS el jugador puede recorrer más que el margen en un
+        // solo fotograma y chocar antes de que el bloque se rompa.
         float range  = _cc.radius + breakProximityMargin + _cc.velocity.magnitude * Time.deltaTime;
         Vector3 center = transform.position + _cc.center;
 
         Collider[] hits = Physics.OverlapSphere(center, range);
         foreach (Collider col in hits)
         {
-            BreakableBlock block = col.GetComponentInParent<BreakableBlock>();   // (el collider puede estar en un hijo)
+            BreakableBlock block = col.GetComponentInParent<BreakableBlock>();   // el collider puede estar en un hijo
             if (block == null) continue;
 
             block.Break();

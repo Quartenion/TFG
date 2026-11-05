@@ -3,8 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Visualiza la sangre de la jeringuilla (no la energia del jugador).
-/// Cambia entre rojo (modo normal) y azul (modo bonus).
+/// Muestra la sangre de la jeringuilla, no la energía del jugador, y cambia entre rojo (modo normal) y azul (modo bonus).
 /// </summary>
 public class EnergyBarUI : MonoBehaviour
 {
@@ -58,18 +57,18 @@ public class EnergyBarUI : MonoBehaviour
     {
         if (EnergyManager.Instance != null && _fillImage != null)
         {
-            // La barra muestra la sangre en la jeringuilla, no la energia del jugador
+            // La barra muestra la sangre que hay en la jeringuilla, no la energía del jugador.
             float target = EnergyManager.Instance.SyringePercent;
             _displayedPercent = Mathf.Lerp(_displayedPercent, target, Time.deltaTime * _smoothing);
             _fillImage.fillAmount = _displayedPercent;
         }
 
-        // Color en funcion del modo (rojo / azul)
+        // Color según el modo (rojo o azul)
         bool blueMode = EnergyManager.Instance != null && EnergyManager.Instance.IsBlueMode;
         Color targetColor = blueMode ? _blueColor : _redColor;
         _currentColor = Color.Lerp(_currentColor, targetColor, Time.deltaTime * _colorLerpSpeed);
 
-        // Parpadeo mientras un BloodSucker te chupa la sangre.
+        // Parpadea mientras un BloodSucker drena la sangre del jugador.
         Color shown = _currentColor;
         if (EnergyManager.Instance != null && EnergyManager.Instance.IsBeingDrained)
         {
@@ -78,7 +77,7 @@ public class EnergyBarUI : MonoBehaviour
         }
         if (_fillImage != null) _fillImage.color = shown;
 
-        // % en texto (de la sangre)
+        // Porcentaje de sangre en texto
         if (_percentText != null && EnergyManager.Instance != null)
         {
             int pct = Mathf.RoundToInt(EnergyManager.Instance.SyringePercent * 100f);

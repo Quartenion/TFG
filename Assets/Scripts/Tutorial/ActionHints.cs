@@ -3,10 +3,10 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// PISTAS (Ajustes → PISTAS: SÍ / NO): durante TODO el nivel 1 caen notas en el monitor del corazón con la acción que
-/// toca y su tecla (las de <see cref="TutorialLevel1Hints"/>). Son solo de referencia: si se ignoran no pasa nada.
-/// Si la haces cerca de su beat, la nota se pone verde; si no, se apaga.
-/// Mientras el tutorial está en marcha, sus pasos ya tienen nota propia, así que las pistas no las repiten.
+/// Pistas (Ajustes > Pistas: Sí o No). Durante todo el nivel 1 caen notas en el monitor del corazón con la acción que
+/// toca y su tecla (las de <see cref="TutorialLevel1Hints"/>). Son solo de referencia, así que no pasa nada si se
+/// ignoran. Si el jugador hace la acción cerca de su beat, la nota se pone verde, y si no, se apaga. Mientras el
+/// tutorial está en marcha, sus pasos ya tienen su propia nota, por lo que las pistas no los repiten.
 /// </summary>
 public class ActionHints : MonoBehaviour
 {
@@ -14,7 +14,7 @@ public class ActionHints : MonoBehaviour
     private const string SceneName = "Level1";
     private static readonly Color HintCol = new Color(0.92f, 0.92f, 0.92f);
 
-    /// <summary>¿Están activadas las pistas? (Ajustes)</summary>
+    /// <summary>Indica si las pistas están activadas en los ajustes.</summary>
     public static bool On
     {
         get => PlayerPrefs.GetInt(PrefKey, 0) == 1;
@@ -31,7 +31,7 @@ public class ActionHints : MonoBehaviour
 
     private static void OnSceneLoaded(Scene s, LoadSceneMode m) => Refresh();
 
-    /// <summary>Crea o quita las pistas en la escena actual según el ajuste (se puede cambiar desde la pausa).</summary>
+    /// <summary>Crea o quita las pistas en la escena actual según el ajuste, que se puede cambiar desde la pausa.</summary>
     private static void Refresh()
     {
         ActionHints existing = FindAnyObjectByType<ActionHints>();
@@ -50,7 +50,7 @@ public class ActionHints : MonoBehaviour
 
     private void Start()
     {
-        Canvas c = UIKit.CreateCanvas("PistasCanvas", 690, transform);   // (debajo del tutorial)
+        Canvas c = UIKit.CreateCanvas("PistasCanvas", 690, transform);   // debajo del tutorial
         _lane = new HeartMonitorNotes((RectTransform)c.transform);
     }
 
@@ -91,10 +91,10 @@ public class ActionHints : MonoBehaviour
         float beatNow = _bm.CorrectedTimeUnclamped / _bm.BeatDuration;
         var all = TutorialLevel1Hints.All;
 
-        // Saltar las que ya pasaron (p. ej. empezando en un checkpoint).
+        // Se saltan las que ya han pasado, por ejemplo al empezar en un punto de control.
         while (_next < all.Length && all[_next].beat < beatNow - 0.5f) _next++;
 
-        // Crear las que tocan (salvo las que ya enseña el tutorial).
+        // Se crean las que tocan, salvo las que ya enseña el tutorial.
         for (int i = _next; i < all.Length && all[i].beat <= beatNow + HeartMonitorNotes.LeadBeats; i++)
         {
             if (_lane.Has(i) || _hit.Contains(i)) continue;
@@ -102,7 +102,7 @@ public class ActionHints : MonoBehaviour
             _lane.Spawn(i, all[i].beat, TutorialDirector.NoteLabel(all[i].key, all[i].side), HintCol);
         }
 
-        // Acierto: la acción correcta cerca de su beat → verde. Pasada → se apaga.
+        // Si el jugador hace la acción correcta cerca de su beat, la nota se pone verde, y si pasa sin hacerla, se apaga.
         foreach (int id in new List<int>(_lane.Ids))
         {
             float b = all[id].beat;
