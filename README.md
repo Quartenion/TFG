@@ -24,7 +24,7 @@ Cada latido a tiempo genera energía, y la gastas al hacer acciones como saltar,
 - **TAB:** ver los controles
 - **Esc / P:** pausa
 
-Las teclas se pueden cambiar en Ajustes → Controles.
+Las teclas se pueden cambiar en Ajustes -> Controles.
 
 **Requisitos:** Windows 10/11 (64 bits) o Linux (64 bits), un ratón con clic izquierdo y derecho (no se puede jugar con el touchpad) y auriculares con cable (los Bluetooth retrasan el sonido).
 
