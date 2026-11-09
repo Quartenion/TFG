@@ -142,3 +142,5 @@ InitTestScene*.unity*
 /[Aa]ssets/SFX/Flatline*
 # Archivo de prueba de 24 MB que no usa el juego
 /[Aa]ssets/StreamingAssets/test.wav*
+/TFG_Fernando_Lanzarot_Facio.pdf
+/_entregas_anteriores/
